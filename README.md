@@ -43,8 +43,8 @@ et intégrable à la partie back-end.
 
 Certains élèments seront communs aux différents modes de jeux tel que l'UHD affichant des statistiques
 relatives à la partie ou encore le scoreboard (affichant la liste des joueurs ainsi que leur stat). Aussi,
-certaines choses devront être pensé de manière universelle par exemple les intéractions utilisateurs de bases
-seront définie pour des touches spécifiques.
+certaines choses devront être pensées de manière universelle par exemple les intéractions utilisateurs de bases
+seront définies pour des touches spécifiques.
 
 **_État d'avancement:_**
 - [ ] UHD
@@ -52,7 +52,7 @@ seront définie pour des touches spécifiques.
 - [ ] Scene 3D universelle
 - [ ] Modèle de partie universelle
 - [ ] Textures et modèles
-- [ ] Intégration du modèle des jeux
+- [ ] Intégration du modèle de chacun des jeux
 - [ ] Intéractions utilisateurs
 
 ## Menu de l'Application
@@ -67,7 +67,7 @@ sur la même page.
 - [ ] Navbar
 - [ ] Grille de sélection des jeux
 - [ ] Interface liste des parties public
-- [ ] Formulaire partie privé
+- [ ] Formulaire partie privée
 
 
 # VueJS
