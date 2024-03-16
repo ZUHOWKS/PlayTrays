@@ -57,7 +57,7 @@ seront définies pour des touches spécifiques.
 
 ## Menu de l'Application
 
-Le menu permet aux utilisateurs de sélectionner un jeu, créer des parties, rejoindre des parties public/privées ou via à
+Le menu permet aux utilisateurs de sélectionner un jeu, créer des parties, rejoindre des parties public/privées ou via
 un système de matchmaking.
 
 Le but est de concevoir un Menu similaire aux applications mobiles, ergonomique et donnant l'illusion de rester constament
