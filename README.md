@@ -10,7 +10,7 @@ Le site sera construit en 3 parties:
 - L'interface en jeu
 
 La première partie du développement s'accera sur la conception de la landing page. Ensuite nous
-procéderons à réalisation de l'interface en jeu avec une interface du menu provisoire. Nous finaliserons
+procéderons à la réalisation de l'interface en jeu avec une interface du menu provisoire. Nous finaliserons
 le site sur l'interface du menu de l'application, avec des fonctionnalités bonus: paramètre du compte, 
 profil utilisateur, cosmetique.
 
