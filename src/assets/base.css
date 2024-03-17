@@ -1,0 +1,16 @@
+/*
+    Cette feuille de style sera utilisé dans le but de définir des styles normalisées, par défaut,
+    pour des élèments primaires tels que les titres, les paragraphe, les couleurs primaires,
+    secondaires, etc...
+ */
+
+/* Variable de base */
+:root {
+    --primary-color: 247, 255, 247; /* #F7FFF7 in decimal RGB */
+    --secondary-color: 255, 230, 109; /* #FFE66D in decimal RGB */
+
+    --text-color: 30, 30, 30; /* #1E1E1E in decimal RGB */
+    --link-color: 107, 103, 117; /* #6B6775 in decimal RGB */
+
+}
+
