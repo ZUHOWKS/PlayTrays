@@ -9,10 +9,10 @@ Ce projet a été développé dans le cadre de notre cursus **préparatoire aux 
 avec l'**Université Savoie Mont Blanc** et est encadré par **Flavien VERNIER**.
 
 L'application a été developpée par :
-- Joris VILARDELL (aka ZUHOWKS)
-- Mathias HELLAL (aka Majurax)
-- Mathilde VARAGNAT
-- Othmane GARTANI
+- **Joris VILARDELL** (aka ZUHOWKS)
+- **Mathias HELLAL** (aka Majurax)
+- **Mathilde VARAGNAT**
+- **Othmane GARTANI**
 
 
 # Développement du Front avec VueJS
