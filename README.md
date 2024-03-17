@@ -1,6 +1,7 @@
 # PlayTrays
 
-L'objectif est de développer une application de jeux sur plateau en reproduisant certains jeux existant.
+L'objectif est de développer une application de jeux sur plateau, érgonomique, moderne et ouverte à tout type de publics.
+
 
 # Développement du Front avec VueJS
 
