@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
+
 /*
     Cette feuille de style sera utilisé dans le but de définir des styles normalisées, par défaut,
     pour des élèments primaires tels que les titres, les paragraphe, les couleurs primaires,
@@ -12,5 +14,34 @@
     --text-color: 30, 30, 30; /* #1E1E1E in decimal RGB */
     --link-color: 107, 103, 117; /* #6B6775 in decimal RGB */
 
+}
+
+/* Reset */
+body, h1, h2, h3, p, a {
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    /* Définie la police et sa taille par défaut */
+    font-family: Manrope, sans-serif;
+    font-size: 16px;
+}
+
+h1, .h1 {
+    font-size: 164px;
+}
+
+h2, .h2 {
+    font-size: 72px;
+}
+
+h3, .h3 {
+    font-size: 32px;
+}
+
+p, .p {
+    font-size: 20px;
 }
 
