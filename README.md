@@ -6,7 +6,7 @@ de public.
 ## Crédits
 
 Ce projet a été développé dans le cadre de notre cursus **préparatoire aux écoles d'ingénieurs de Polytech** en partenariat
-avec l'**Université Savoie Mont Blanc** et est encadré par **Flavien VERNIER**.
+avec l'**Université Savoie Mont Blanc** et avec l'encadrement de **Flavien VERNIER**.
 
 L'application a été developpée par :
 - **Joris VILARDELL** (aka ZUHOWKS)
