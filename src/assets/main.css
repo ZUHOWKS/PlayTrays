@@ -1,1 +1,24 @@
 @import './base.css';
+
+/* Style par défaut des boutons */
+button {
+    border: 2px solid rgb(var(--primary-color));
+    border-radius: 30px;
+    background: rgb(var(--primary-color));
+    cursor: pointer;
+    transition: background-color .25s, border-color .25s;
+}
+
+button>p {
+    font-size: 30px;
+    font-weight: 300;
+    text-decoration: none;
+    text-align: center;
+    color: rgb(var(--text-color));
+}
+
+/* Style par défaut  */
+button:hover {
+    border-color: rgb(var(--primary-color));
+    background: white;
+}
