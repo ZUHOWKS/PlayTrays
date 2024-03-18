@@ -62,10 +62,29 @@
   .s-navbar>div:nth-child(1)>a {
     font-size: 32px;
     font-weight: 300;
-    color:rgb(var(--link-color));
+    position: relative;
   }
 
-  /* style du logo */
+  .s-navbar>div:nth-child(1)>a::after {
+    content: '';
+    transform-origin: -2.5% 0;
+    transform: scaleX(0);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: .4em;
+    background: rgb(var(--primary-color));
+    z-index: -1;
+    opacity: 0.8;
+    transition: transform .2s ease-in;
+  }
+
+  .s-navbar>div:nth-child(1)>a:hover::after {
+    transform: scaleX(1.05);
+  }
+
+    /* style du logo */
   #logo {
     padding-bottom: 1%;
   }
@@ -105,5 +124,5 @@
     border-color: rgb(var(--primary-color));
     background-color: white;
   }
-  
+
 </style>
