@@ -53,6 +53,7 @@ p, .p {
 a {
     font-size: 20px;
     color: rgb(var(--link-color));
+    cursor: pointer;
 }
 
 /* Classe par défaut */
