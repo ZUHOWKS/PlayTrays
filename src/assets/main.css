@@ -19,3 +19,11 @@ button:hover {
     border-color: rgb(var(--primary-color));
     background: white;
 }
+
+a {
+    transition: color .25s;
+}
+
+a:hover {
+    color: rgb(var(--text-color));
+}
