@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import SNavbar from "@/components/home/SNavbar.vue";
 </script>
 
