@@ -8,8 +8,8 @@
 
 /* Variable de base */
 :root {
-    --primary-color: 247, 255, 247; /* #F7FFF7 in decimal RGB */
-    --secondary-color: 255, 230, 109; /* #FFE66D in decimal RGB */
+    --primary-color: 255, 230, 109; /* #FFE66D in decimal RGB */
+    --secondary-color: 247, 255, 247; /* #F7FFF7 in decimal RGB */
 
     --text-color: 30, 30, 30; /* #1E1E1E in decimal RGB */
     --link-color: 107, 103, 117; /* #6B6775 in decimal RGB */
@@ -27,6 +27,9 @@ body {
     /* Définie la police et sa taille par défaut */
     font-family: Manrope, sans-serif;
     font-size: 16px;
+
+    /* couleur de l'arrière-plan par défaut */
+    background: rgb(var(--secondary-color));
 }
 
 /* Définie la police et sa taille */
