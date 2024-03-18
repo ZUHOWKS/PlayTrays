@@ -50,6 +50,11 @@ p, .p {
     font-size: 20px;
 }
 
+a {
+    font-size: 20px;
+    color: rgb(var(--link-color));
+}
+
 /* Classe par défaut */
 .row {
     /* définie l'affichage des élèments enfants avec un alignement en ligne */
