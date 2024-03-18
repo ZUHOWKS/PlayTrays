@@ -30,6 +30,7 @@ body {
 
     /* couleur de l'arrière-plan par défaut */
     background: rgb(var(--secondary-color));
+    max-width: 100vw;
 }
 
 /* Définie la police et sa taille */
