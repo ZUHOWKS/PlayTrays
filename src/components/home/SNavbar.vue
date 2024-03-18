@@ -87,6 +87,7 @@
     /* style du logo */
   #logo {
     padding-bottom: 1%;
+    cursor: default;
   }
 
   /* style de la police du logo */
