@@ -100,4 +100,10 @@
     border-color: rgb(var(--text-color));
     background-color: transparent;
   }
+
+  .sign-up-button:hover {
+    border-color: rgb(var(--primary-color));
+    background-color: white;
+  }
+  
 </style>
