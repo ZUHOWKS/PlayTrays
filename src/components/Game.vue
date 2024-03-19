@@ -4,18 +4,20 @@ import {computed, onMounted, type Ref, ref} from "vue";
 import {useWindowSize} from "@vueuse/core";
 import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
+import HUD from "@/components/game/HUD.vue";
+import TrayGame from "@/modules/game/TrayGame";
+import SceneController from "@/modules/game/SceneController";
 
-const experience = ref<HTMLCanvasElement | null>(null);
-let renderer: Ref<THREE.WebGLRenderer | null> = ref(null);
-let camera: THREE.PerspectiveCamera;
-let controls: OrbitControls;
-let scene: THREE.Scene;
+let gameTray: TrayGame; // Game Manager
 
-declare var require: any;
+const experience: Ref<HTMLCanvasElement | null> = ref<HTMLCanvasElement | null>(null);
+let renderer: Ref<THREE.WebGLRenderer>;
+let camera: Ref<THREE.PerspectiveCamera>;
+let controls: Ref<OrbitControls | null> = ref<OrbitControls | null>(null);
+let scene: THREE.Scene
 
 let {width, height} = useWindowSize(); // Permet d'obtenir la taille de l'écran actuel pour le responsive
 const aspectRatio = computed(() => width.value / height.value) // rapport largeur/hauteur
-
 
 /**
  * Permet de setup la scène 3D avec ThreeJS
@@ -24,8 +26,20 @@ function init(): void {
 
   scene = new THREE.Scene();  // Créer la scène
 
-  camera = new THREE.PerspectiveCamera(80, aspectRatio.value, 0.1, 1000); // Définie la perspective de la caméra
-  camera.position.set(0, 0, 15); // set camera position
+  camera = ref(new THREE.PerspectiveCamera(80, aspectRatio.value, 0.1, 1000)); // Définie la perspective de la caméra
+  camera.value.position.set(0, 0, 15); // set camera position
+
+  // ajout d'un contrôle de la caméra
+
+  gameTray = new TrayGame(
+      "local",
+      "waiting",
+      new SceneController(
+          scene,
+          camera,
+          controls
+      )
+  )
 
   // setup de la lumière ambiante
   setupLight()
@@ -33,25 +47,35 @@ function init(): void {
   // setup des modèles de la scène.
   setupModels()
 
+
+
+  const loop = () => {
+    updateRender(); // mise à jour du rendu
+
+    if (controls.value != null) {
+      controls.value.update(); // ajoute un control fluide
+    }
+
+    requestAnimationFrame(loop); // permet de relancer la fonction à la frame suivante
+  }
+
   // methode executé lors de la montée du composant dans le DOM.
   onMounted(() => {
     // configuration du renderer
-    renderer.value = new THREE.WebGLRenderer({
+    renderer = ref(new THREE.WebGLRenderer({
       canvas: experience.value as unknown as HTMLCanvasElement,
       antialias: true, // affine le rendu des bordures des élèments de la scène
-    });
+    }));
 
     // configuration du pixel ration en fonction de la fenêtre
-    renderer.value.setPixelRatio(window.devicePixelRatio)
+    renderer.value.setPixelRatio(window.devicePixelRatio);
 
-    // aj
-    controls = new OrbitControls(camera, renderer.value.domElement);
-    controls.enableDamping = true; // autoriser le control de la caméra (distance, rotation, déplacement)
-    controls.enablePan = false //désactiver les déplacements de la caméra
-    controls.minDistance = 2.5;
-    controls.maxDistance = 220;
-
-    controls.update(); // actualise les paramètres associés au control de la caméra
+    controls.value = new OrbitControls(camera.value, renderer.value.domElement);
+    controls.value.enableDamping = true; // autoriser le contrôle de la caméra (distance, rotation, déplacement)
+    controls.value.enablePan = false //désactiver les déplacements de la caméra
+    controls.value.minDistance = 2.5;
+    controls.value.maxDistance = 220;
+    controls.value.update(); // actualise les paramètres associés au control de la caméra
 
     // Actualisation des paramètres du renderer et de la caméra
     updateCamera();
@@ -60,14 +84,8 @@ function init(): void {
     // Lancer la boucle
     loop();
 
-    renderer.value.render(scene, camera);
+    renderer.value.render(scene, camera.value);
   })
-
-  const loop = () => {
-    updateRender(); // mise à jour du rendu
-    controls.update(); // ajoute un control fluide
-    requestAnimationFrame(loop); // permet de relancer la fonction à la frame suivante
-  }
 }
 
 /**
@@ -84,8 +102,8 @@ function updateRenderer(): void {
  * Mettre à jour la caméra
  */
 function updateCamera(): void {
-  camera.aspect = aspectRatio.value; // actualisation du rapport d'aspect de la caméra
-  camera.updateProjectionMatrix(); // mettre à jour la matrice de projection de la caméra
+  camera.value.aspect = aspectRatio.value; // actualisation du rapport d'aspect de la caméra
+  camera.value.updateProjectionMatrix(); // mettre à jour la matrice de projection de la caméra
 }
 
 /**
@@ -93,7 +111,7 @@ function updateCamera(): void {
  */
 function updateRender(): void {
   if (renderer.value != null) {
-    renderer.value.render(scene, camera);
+    renderer.value.render(scene, camera.value);
   }
 }
 
@@ -102,7 +120,7 @@ function updateRender(): void {
  */
 function setupLight(): void {
   const light: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
-  scene.add( light );
+  scene.add(light);
 
 
 }
@@ -111,23 +129,17 @@ function setupLight(): void {
  * Setup les models de la scène
  */
 function setupModels(): void {
-
   const skyBox: THREE.Mesh = new THREE.Mesh(
       new THREE.BoxGeometry( 850, 850, 800),
-      getSkyMeshMaterial("stormydays")
+      getSkyMeshMaterial("anime")
   )
 
   scene.add(skyBox); // ajout de la SkyBox
 
-  // cube de test
-  const cube: THREE.Mesh  = new THREE.Mesh(
-      new THREE.BoxGeometry( 150, 1, 150),
-      new THREE.MeshBasicMaterial( { color: 0xffffff } )
-  );
-
-  scene.add(cube); // ajout du cube à la scène
-
-
+  const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+  const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+  const cube = new THREE.Mesh( geometry, material );
+  gameTray.sceneController.scene.add(cube)
 }
 
 /**
@@ -157,8 +169,6 @@ function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
   return meshMaterials;
 }
 
-
-
 init(); //lancer l'initialisation de la scène Three
 
 </script>
@@ -167,13 +177,25 @@ init(); //lancer l'initialisation de la scène Three
   <div class="game">
     <canvas ref="experience"/>
   </div>
-
+  <HUD class="hud"></HUD>
 </template>
 
 <style scoped>
 .game {
-  width: 100vw !important;
-  height: 100vh !important;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
+}
+
+.game canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
 }
 </style>
