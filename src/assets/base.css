@@ -24,6 +24,13 @@ body, h1, h2, h3, p, a {
 
 
 body {
+    /* Position et taille par défaut du body */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    overflow-x: hidden; /* tout ce qui dépasse la largeur est cachée => empêche le scroll horizontal */
+
     /* Définie la police et sa taille par défaut */
     font-family: Manrope, sans-serif;
     font-size: 16px;
