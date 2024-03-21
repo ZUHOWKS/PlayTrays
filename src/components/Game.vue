@@ -7,6 +7,8 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
 import SceneController from "@/modules/game/SceneController";
+import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
+import type {Object3D} from "three";
 
 let gameTray: TrayGame; // Game Manager
 
@@ -26,7 +28,7 @@ function init(): void {
 
   scene = new THREE.Scene();  // Créer la scène
 
-  camera = ref(new THREE.PerspectiveCamera(80, aspectRatio.value, 0.1, 1000)); // Définie la perspective de la caméra
+  camera = ref(new THREE.PerspectiveCamera(75, aspectRatio.value, 0.1, 1000)); // Définie la perspective de la caméra
   camera.value.position.set(0, 0, 15); // set camera position
 
   // ajout d'un contrôle de la caméra
@@ -120,6 +122,8 @@ function updateRender(): void {
  */
 function setupLight(): void {
   const light: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+  const directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+  scene.add( directionalLight );
   scene.add(light);
 
 
@@ -130,16 +134,17 @@ function setupLight(): void {
  */
 function setupModels(): void {
   const skyBox: THREE.Mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 850, 850, 800),
+      new THREE.BoxGeometry( 900, 900, 900),
       getSkyMeshMaterial("anime")
   )
 
   scene.add(skyBox); // ajout de la SkyBox
 
-  const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-  const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-  const cube = new THREE.Mesh( geometry, material );
-  gameTray.sceneController.scene.add(cube)
+  // test chargement d'un model de plateau d'échec
+  const loader = new GLTFLoader();
+  gameTray.sceneController.loadGLTFSceneModel(loader, "checkers_plateau.glb").then((object: Object3D) => gameTray.sceneController.scene.add(object))
+
+
 }
 
 /**
