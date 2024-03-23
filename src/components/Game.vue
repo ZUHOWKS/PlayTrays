@@ -6,9 +6,6 @@ import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
-import SceneController from "@/modules/game/SceneController";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import type {Object3D} from "three";
 
 let gameTray: TrayGame; // Game Manager
 
@@ -32,16 +29,7 @@ function init(): void {
   camera.value.position.set(0, 0, 15); // set camera position
 
   // ajout d'un contrôle de la caméra
-
-  gameTray = new TrayGame(
-      "local",
-      "waiting",
-      new SceneController(
-          scene,
-          camera,
-          controls
-      )
-  )
+  //TODO: gameTray init
 
   // setup de la lumière ambiante
   setupLight()
@@ -139,10 +127,6 @@ function setupModels(): void {
   )
 
   scene.add(skyBox); // ajout de la SkyBox
-
-  // test chargement d'un model de plateau d'échec
-  const loader = new GLTFLoader();
-  gameTray.sceneController.loadGLTFSceneModel(loader, "checkers_plateau.glb").then((object: Object3D) => gameTray.sceneController.scene.add(object))
 
 
 }
