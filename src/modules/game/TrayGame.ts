@@ -22,4 +22,8 @@ export default class TrayGame {
         this.player = player; //TODO: remplacer any par la User class
         this.controller = controller;
     }
+
+    setup(): void {
+        this.controller.setup();
+    }
 }
