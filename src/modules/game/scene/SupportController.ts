@@ -2,16 +2,16 @@ import {Object3D, PerspectiveCamera, Scene} from "three";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import type {Ref} from "vue";
 import {type GLTF, GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import type Object from "@/modules/game/scene/objects/Object";
+import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
 
 export default abstract class SupportController {
     scene: Scene;
     cameraRef: Ref<PerspectiveCamera>;
     orbitControlsRef: Ref<OrbitControls | null>;
-    objectRegistry: Map<string, Object>;
+    objectRegistry: Map<string, PTObject>;
     actuatorRegistry: Map<string, Actuator>;
-    selectedObject: Object | null = null;
+    selectedObject: PTObject | null = null;
     selectedActuator: Actuator | null = null;
 
     /**
@@ -29,7 +29,7 @@ export default abstract class SupportController {
         this.scene = scene;
         this.cameraRef = cameraRef;
         this.orbitControlsRef = orbitControlsRef;
-        this.objectRegistry = new Map<string, Object>();
+        this.objectRegistry = new Map<string, PTObject>();
         this.actuatorRegistry = new Map<string, Actuator>();
         
     }
@@ -83,18 +83,18 @@ export default abstract class SupportController {
      *
      * @param name identifiant de l'objet
      *
-     * @return Object si l'objet est bien enregistré, undefined s'il n'existe pas
+     * @return PTObject si l'objet est bien enregistré, undefined s'il n'existe pas
      */
-    getObject(name: string): Object | undefined {
+    getObject(name: string): PTObject | undefined {
         return this.objectRegistry.get(name);
     }
 
     /**
      * Permet d'obtenir l'objet courant sélectionné
      *
-     * @return un Object si un objet est en cours de sélection, sinon null.
+     * @return un PTObject si un objet est en cours de sélection, sinon null.
      */
-    getSelectedObject(): Object | null {
+    getSelectedObject(): PTObject | null {
         return this.selectedObject
     }
 
@@ -103,16 +103,17 @@ export default abstract class SupportController {
      *
      * @param object objet à enregistrer
      */
-    addObject(object: Object): void {
+    registerObject(object: PTObject): void {
         this.objectRegistry.set(object.getName(), object);
+        this.scene.add(object.getObject3D());
     }
 
     /**
-     * Supprimer un objet enregistré
+     * Supprimer un objet enregistré du registre
      *
      * @param name identifiant de l'objet à supprimer
      */
-    removeObject(name: string): void {
+    unregisterObject(name: string): void {
         this.objectRegistry.delete(name);
     }
 
@@ -122,7 +123,7 @@ export default abstract class SupportController {
      * @param name identifiant de l'objet à sélectionner
      */
     selectObject(name: string): void {
-        const object: Object | undefined = this.getObject(name);
+        const object: PTObject | undefined = this.getObject(name);
         if (object != undefined) {
             this.selectedObject = object;
             this.selectedObject.select();
@@ -159,7 +160,7 @@ export default abstract class SupportController {
      */
     abstract getSelectedActuator(): Actuator | null;
 
-    abstract showSelectedObjectActuators(object: Object | null): void
+    abstract showSelectedObjectActuators(object: PTObject | null): void
 
     /**
      * Désélectionner l'objet et l'actionneur.
