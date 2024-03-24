@@ -1,6 +1,6 @@
 import type {Object3D} from "three";
 
-export default abstract class Object {
+export default abstract class PTObject {
     name: string;
     object3D: Object3D;
 
