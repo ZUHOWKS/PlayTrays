@@ -6,6 +6,7 @@ import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
+import CheckersClient from "@/modules/game/scene/controllers/CheckersClient";
 
 let gameTray: TrayGame; // Game Manager
 
@@ -27,9 +28,6 @@ function init(): void {
 
   camera = ref(new THREE.PerspectiveCamera(75, aspectRatio.value, 0.1, 1000)); // Définie la perspective de la caméra
   camera.value.position.set(0, 0, 15); // set camera position
-
-  // ajout d'un contrôle de la caméra
-  //TODO: gameTray init
 
   // setup de la lumière ambiante
   setupLight()
@@ -60,12 +58,22 @@ function init(): void {
     // configuration du pixel ration en fonction de la fenêtre
     renderer.value.setPixelRatio(window.devicePixelRatio);
 
+    // Paramètre par défaut du contrôle de la caméra
     controls.value = new OrbitControls(camera.value, renderer.value.domElement);
     controls.value.enableDamping = true; // autoriser le contrôle de la caméra (distance, rotation, déplacement)
     controls.value.enablePan = false //désactiver les déplacements de la caméra
     controls.value.minDistance = 2.5;
     controls.value.maxDistance = 220;
     controls.value.update(); // actualise les paramètres associés au control de la caméra
+
+    // test
+    gameTray = new TrayGame(
+        "checkers-test",
+        "waiting",
+        "",
+        new CheckersClient(scene, camera, controls)
+    );
+    gameTray.setup();
 
     // Actualisation des paramètres du renderer et de la caméra
     updateCamera();
