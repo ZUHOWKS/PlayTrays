@@ -1,61 +1,182 @@
-import {Server} from "socket.io";
+import {Server, Socket} from "socket.io";
 import PTLobby from "./lobby/PTLobby";
+import Checkers from "./lobby/games/Checkers";
 
+/**
+ * Permet de modéliser les données d'authentification serveur
+ */
 interface AuthServerData {
-    id: string;
+    identifier: string;
     key: string;
 }
 
+/**
+ * Permet de modéliser les données d'authentification utilisateur
+ */
+interface AuthUserData {
+    user: string;
+    lobbyUUID: string;
+}
+
+/**
+ * Cette classe permet d'instancier un serveur jeu PlayTrays pour créer un lobby et gérer
+ * le lobby en jeu.
+ */
 export default class PTServer {
-    io: Server
-    lobbies: Map<string, PTLobby>
-    capacity: number
+    io: Server;
+    lobbies: Map<string, PTLobby>;
+    capacity: number;
+    games: Map<string, any> = new Map<string, PTLobby>();
 
     constructor(httpServer: any, lobbyMax: number) {
         this.io = new Server(httpServer, {
             cors: {
                 origin: "*",
-                methods: ["GET","HEAD","PUT","PATCH","POST","DELETE"],
-                credentials: true,
-                optionsSuccessStatus: 204
             }
         });
         this.lobbies = new Map<string, PTLobby>();
         this.capacity = lobbyMax;
+
+
     }
 
+    /**
+     * Initialiser le serveur
+     */
     init(): void {
+        this.initGames();
+        this.initWebSocketServer();
+    }
+
+    /**
+     * Initialiser les jeux jouables sur le lobby.
+     * @private
+     */
+    private initGames(): void {
+        this.games.set("checkers", Checkers);
+    }
+
+    /**
+     * Initialiser le middleware et les évènements serveur
+     * @private
+     */
+    private initWebSocketServer(): void {
         this.io.use((socket, next) => this.middleware(socket, next));
         this.io.on("connection", (socket) => {
+            if (socket.data.authType == "server") {
+                this.setupServerEvents(socket);
+            } else if (socket.data.authType == "user") {
 
+            } else {
+                socket.disconnect();
+            }
         })
-
         this.io.listen(25525);
     }
 
+    /**
+     * Middleware d'authentification (serveur & utilisateur).
+     *
+     * @param socket Socket du serveur ou de l'utilisateur communicant avec le serveur
+     * @param next Fonction qui permet de passer au middleware suivant s'il n'y a rien
+     * en, sinon la communication est interrompue.
+     * @private
+     */
     private middleware(socket: any, next: any): void {
         const auth = socket.handshake.auth;
         if (auth) {
+            socket.data = {};
             if (this.isServerAuthentificationValid(auth)) {
                 socket.data.authType = "server";
-                next();
+                return next();
+            } else if(this.isUserAuthentificationValid(auth)) {
+                socket.data.authType = "user";
+                return next();
             } else {
-                console.log("invalid");
+                console.log("middleware: authentification invalid");
             }
         }
-        next(new Error("not authorized"));
+
+        next(new Error("not authenticated"));
+
     }
 
+    /**
+     * Détermine si l'authentification de type serveur est valide.
+     *
+     * @param auth Données d'authentification
+     * @return boolean
+     * @private
+     */
     private isServerAuthentificationValid(auth: any): boolean {
         try {
             const authServerData: AuthServerData = auth as AuthServerData;
-            if (authServerData.id == process.env.SERVER_ID && authServerData.key == process.env.SERVER_KEY) {
+            if (authServerData.identifier == process.env.SERVER_IDENTIFIER && authServerData.key == process.env.SERVER_KEY) {
                 return true;
             }
         } catch (e) {
-
+            console.error(e);
         }
 
         return false;
+    }
+
+    /**
+     * Détermine si l'authentification de type utilisateur est valide.
+     *
+     * @param auth Données d'authentification
+     * @return boolean
+     * @private
+     */
+    private isUserAuthentificationValid(auth: any): boolean {
+        try {
+            const authUserData: AuthUserData = auth as AuthUserData;
+            if (authUserData.user && Array.from(this.lobbies.keys()).includes(authUserData.lobbyUUID)) {
+                return true;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Mettre en place les évènements pour le socket de type serveur.
+     *
+     * @param socket Socket du serveur connecté au serveur jeu
+     * @private
+     */
+    private setupServerEvents(socket: Socket) {
+        socket.join("adonis");
+
+        socket.on("create lobby", (uuid: string, game: string, visibility: string,  callback) => {
+            if ((visibility === "public" || visibility === "private") && this.games.get(game) && uuid && this.lobbies.size < this.capacity) {
+                this.lobbies.set(uuid, new (this.games.get(game))(uuid, game, visibility, this));
+
+                const response = {
+                    status: "Ok",
+                    lobbies: this.getLobbiesList()
+                };
+                return callback(undefined, response);
+            } else {
+                return callback("Failed authentification", {status: "Failed"});
+            }
+        });
+
+        socket.emit("update lobbies", this.getLobbiesList());
+
+    }
+
+    /**
+     * Obtenir la liste sous format JSON des lobbies.
+     *
+     * @private
+     * @return Array
+     */
+    private getLobbiesList(): {uuid: string, game: string, status: string, visibility: string}[] {
+        const lobbies: { uuid: string, game: string, status: string, visibility: string }[] = [];
+        Array.from(this.lobbies.values()).forEach((lobby: PTLobby) => lobbies.push(lobby.getJSON()));
+        return lobbies;
     }
 }
