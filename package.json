@@ -10,11 +10,13 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@types/socket.io": "^3.0.2",
+    "@types/uuid": "^9.0.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.5",
     "socket.io": "^4.7.5",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",
