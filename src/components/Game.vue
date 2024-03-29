@@ -6,18 +6,21 @@ import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
-import {io} from "socket.io-client";
+import {io, type Socket} from "socket.io-client";
 
 let gameTray: TrayGame; // Game Manager
 
-const experience: Ref<HTMLCanvasElement | null> = ref<HTMLCanvasElement | null>(null);
-let renderer: Ref<THREE.WebGLRenderer>;
-let camera: Ref<THREE.PerspectiveCamera>;
-let controls: Ref<OrbitControls | null> = ref<OrbitControls | null>(null);
-let scene: THREE.Scene
+const experience: Ref<HTMLCanvasElement | null> = ref<HTMLCanvasElement | null>(null); // VueJS variable, canvas de la scène 3d
+let renderer: Ref<THREE.WebGLRenderer>; // Renderer de la caméra
+let camera: Ref<THREE.PerspectiveCamera>; // Caméra (vue du joueur)
+let controls: Ref<OrbitControls | null> = ref<OrbitControls | null>(null); // Contrôles orbitaux de la caméra
+let scene: THREE.Scene; // Scène 3D
+
+let ws: Socket; // WebSocket pour se connecter au serveur jeu
 
 let {width, height} = useWindowSize(); // Permet d'obtenir la taille de l'écran actuel pour le responsive
 const aspectRatio = computed(() => width.value / height.value) // rapport largeur/hauteur
+
 /**
  * Permet de setup la scène 3D avec ThreeJS
  */
@@ -65,34 +68,8 @@ function init(): void {
     controls.value.maxDistance = 220;
     controls.value.update(); // actualise les paramètres associés au control de la caméra
 
-    // test
-    const socketAdonis = io("localhost:25525", {
-      auth: {
-        identifier: "Abc",
-        key: "Abc"
-      }
-    });
-
-    const ws = io("localhost:25525", {
-      auth: {
-        user: "ZUHOWKS",
-        lobbyUUID: "testCheckers"
-      }
-    });
-
-    socketAdonis.emit("create lobby", "testCheckers", "checkers", "public", (err: any, response: any) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(response);
-        //socket.connect();
-      }
-    });
-
-
-
-    gameTray = new TrayGame("checkers-test", "waiting", "ZUHOWKS", ws, "checkers", scene, camera, controls);
-    gameTray.setup();
+    // Connection à la partie + setup du jeu
+    establishConnectionWithGameServer("checkers");
 
     // Actualisation des paramètres du renderer et de la caméra
     updateCamera();
@@ -154,8 +131,23 @@ function setupModels(): void {
   )
 
   scene.add(skyBox); // ajout de la SkyBox
+}
 
+/**
+ * Établir la connection avec le serveur jeu + la partie
+ *
+ * @param game
+ */
+function establishConnectionWithGameServer(game: string): void {
+  ws = io("http://localhost:25525", {
+    auth: {
+      user: "ZUHOWKS",
+      lobbyUUID: "testCheckers"
+    }
+  });
 
+  gameTray = new TrayGame("checkers-test", "waiting", "ZUHOWKS", ws, game, scene, camera, controls);
+  gameTray.setup();
 }
 
 /**
