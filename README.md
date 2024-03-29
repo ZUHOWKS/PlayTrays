@@ -8,7 +8,7 @@ de public.
 Ce projet a été développé dans le cadre de notre cursus **préparatoire aux écoles d'ingénieurs de Polytech** en partenariat
 avec l'**Université Savoie Mont Blanc** et est encadré par **Flavien VERNIER**.
 
-L'application a été developpée par :
+L'application a été développée par :
 - **Joris VILARDELL** (aka ZUHOWKS)
 - **Mathias HELLAL** (aka Majurax)
 - **Mathilde VARAGNAT**
