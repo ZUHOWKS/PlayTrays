@@ -1,7 +1,9 @@
 import {Socket} from "socket.io";
 import PTServer from "../PTServer";
 
-
+/**
+ * Permet d'instancier un lobby
+ */
 export default abstract class PTLobby {
     protected uuid: string;
     protected game: string;
@@ -10,6 +12,15 @@ export default abstract class PTLobby {
     protected sockets: Map<string, Socket>;
     protected server: PTServer;
 
+    /**
+     * Permet d'instancier un lobby.
+     *
+     * @param uuid Identifiant unique du lobby
+     * @param game Jeu du lobby
+     * @param visibility Visibilité du lobby
+     * @param server Instance du serveur jeu
+     * @protected
+     */
     protected constructor(uuid: string, game: string, visibility: "public" | "private", server: PTServer) {
         this.uuid = uuid;
         this.game = game;
@@ -18,11 +29,17 @@ export default abstract class PTLobby {
         this.server = server;
     }
 
+    /**
+     * Setup les élèments du jeu.
+     *
+     * @private
+     */
+    protected abstract setupGame(): void;
 
     /**
-     * Enregistrer un socket utilisateur qui a rejoint le lobby.
+     * Enregistrer un socket utilisateur qui a rejoint le lobby et initialiser tous les évènements lier au lobby.
      *
-     * @param socket
+     * @param socket Socket de l'utilisateur
      */
     abstract registerNewSocket(socket: Socket): void;
 
