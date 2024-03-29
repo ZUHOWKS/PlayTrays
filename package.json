@@ -1,5 +1,5 @@
 {
-  "name": "Playtray-back",
+  "name": "PlayTrays-back",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -38,7 +38,7 @@
     "@adonisjs/tsconfig": "^1.2.1",
     "@japa/api-client": "^2.0.2",
     "@japa/assert": "^2.1.0",
-    "@japa/plugin-adonisjs": "^1.0.5",
+    "@japa/plugin-adonisjs": "^3.0.0",
     "@japa/runner": "^3.1.1",
     "@swc/core": "^1.3.107",
     "@types/luxon": "^3.4.2",
@@ -50,13 +50,13 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@adonisjs/auth": "github:adonisjs/auth",
+    "@adonisjs/auth": "^9.1.1",
     "@adonisjs/core": "^6.2.2",
     "@adonisjs/cors": "^2.2.1",
-    "@adonisjs/lucid": "^20.4.0",
+    "@adonisjs/lucid": "^20.1.0",
     "@vinejs/vine": "^1.7.1",
     "luxon": "^3.4.4",
-    "mysql2": "^3.9.2",
+    "mysql2": "^3.9.3",
     "reflect-metadata": "^0.2.1"
   },
   "eslintConfig": {
