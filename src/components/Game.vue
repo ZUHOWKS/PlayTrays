@@ -6,7 +6,7 @@ import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
-import CheckersClient from "@/modules/game/scene/controllers/CheckersClient";
+import {io} from "socket.io-client";
 
 let gameTray: TrayGame; // Game Manager
 
@@ -18,7 +18,6 @@ let scene: THREE.Scene
 
 let {width, height} = useWindowSize(); // Permet d'obtenir la taille de l'écran actuel pour le responsive
 const aspectRatio = computed(() => width.value / height.value) // rapport largeur/hauteur
-
 /**
  * Permet de setup la scène 3D avec ThreeJS
  */
@@ -67,12 +66,32 @@ function init(): void {
     controls.value.update(); // actualise les paramètres associés au control de la caméra
 
     // test
-    gameTray = new TrayGame(
-        "checkers-test",
-        "waiting",
-        "",
-        new CheckersClient(scene, camera, controls)
-    );
+    const socketAdonis = io("localhost:25525", {
+      auth: {
+        identifier: "Abc",
+        key: "Abc"
+      }
+    });
+
+    const ws = io("localhost:25525", {
+      auth: {
+        user: "ZUHOWKS",
+        lobbyUUID: "testCheckers"
+      }
+    });
+
+    socketAdonis.emit("create lobby", "testCheckers", "checkers", "public", (err: any, response: any) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(response);
+        //socket.connect();
+      }
+    });
+
+
+
+    gameTray = new TrayGame("checkers-test", "waiting", "ZUHOWKS", ws, "checkers", scene, camera, controls);
     gameTray.setup();
 
     // Actualisation des paramètres du renderer et de la caméra
