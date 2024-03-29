@@ -31,7 +31,7 @@ export default class PTServer {
     constructor(httpServer: any, lobbyMax: number) {
         this.io = new Server(httpServer, {
             cors: {
-                origin: "*",
+                origin: "http://localhost:5173",
             }
         });
         this.lobbies = new Map<string, PTLobby>();
@@ -66,6 +66,13 @@ export default class PTServer {
             if (socket.data.authType == "server") {
                 this.setupServerEvents(socket);
             } else if (socket.data.authType == "user") {
+                const lobby: PTLobby | undefined = this.lobbies.get(socket.data.lobbyUUID);
+
+                if (lobby) {
+                    lobby.registerNewSocket(socket);
+                } else {
+                    socket.disconnect();
+                }
 
             } else {
                 socket.disconnect();
@@ -85,12 +92,15 @@ export default class PTServer {
     private middleware(socket: any, next: any): void {
         const auth = socket.handshake.auth;
         if (auth) {
-            socket.data = {};
             if (this.isServerAuthentificationValid(auth)) {
+                socket.data = {};
                 socket.data.authType = "server";
                 return next();
             } else if(this.isUserAuthentificationValid(auth)) {
+                socket.data = {};
                 socket.data.authType = "user";
+                socket.data.user = auth.user;
+                socket.data.lobbyUUID = auth.lobbyUUID;
                 return next();
             } else {
                 console.log("middleware: authentification invalid");
@@ -131,7 +141,7 @@ export default class PTServer {
     private isUserAuthentificationValid(auth: any): boolean {
         try {
             const authUserData: AuthUserData = auth as AuthUserData;
-            if (authUserData.user && Array.from(this.lobbies.keys()).includes(authUserData.lobbyUUID)) {
+            if (authUserData.user && authUserData.lobbyUUID) {
                 return true;
             }
         } catch (e) {
@@ -152,12 +162,13 @@ export default class PTServer {
 
         socket.on("create lobby", (uuid: string, game: string, visibility: string,  callback) => {
             if ((visibility === "public" || visibility === "private") && this.games.get(game) && uuid && this.lobbies.size < this.capacity) {
-                this.lobbies.set(uuid, new (this.games.get(game))(uuid, game, visibility, this));
+                this.createLobby(uuid, game, visibility);
 
                 const response = {
                     status: "Ok",
                     lobbies: this.getLobbiesList()
                 };
+
                 return callback(undefined, response);
             } else {
                 return callback("Failed authentification", {status: "Failed"});
@@ -166,6 +177,18 @@ export default class PTServer {
 
         socket.emit("update lobbies", this.getLobbiesList());
 
+    }
+
+    /**
+     * Créer un lobby.
+     *
+     * @param uuid Identifiant unique du lobby
+     * @param game Jeu du lobby
+     * @param visibility Visibilité du lobby
+     * @private
+     */
+    public createLobby(uuid: string, game: string, visibility: string) {
+        this.lobbies.set(uuid, new (this.games.get(game))(uuid, game, visibility, this));
     }
 
     /**
