@@ -4,6 +4,7 @@ import type {Ref} from "vue";
 import {type GLTF, GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
+import type {Socket} from "socket.io-client";
 
 export default abstract class SupportController {
     scene: Scene;
@@ -13,6 +14,7 @@ export default abstract class SupportController {
     actuatorRegistry: Map<string, Actuator>;
     selectedObject: PTObject | null = null;
     selectedActuator: Actuator | null = null;
+    ws: Socket
 
     /**
      * Cette classe permet d'ajouter un contrôleur sur le support de la partie
@@ -21,16 +23,18 @@ export default abstract class SupportController {
      *
      * @param scene Scene 3D
      * @param cameraRef Caméra du joueur (vue du joueur)
-     * @param orbitControlsRef Contrôles orbitales de la caméra (autour d'un point,
-     * par défaut le point de coordonnée x=0;y=0;z=0);
+     * @param orbitControlsRef Contrôles orbitaux de la caméra (autour d'un point,
+     * par défaut le point de coordonnée x=0;y=0;z=0)
+     * @param ws Socket connecté au serveur jeu
      * @protected
      */
-    protected constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>) {
+    protected constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>, ws: Socket) {
         this.scene = scene;
         this.cameraRef = cameraRef;
         this.orbitControlsRef = orbitControlsRef;
         this.objectRegistry = new Map<string, PTObject>();
         this.actuatorRegistry = new Map<string, Actuator>();
+        this.ws = ws;
         
     }
 
@@ -49,7 +53,7 @@ export default abstract class SupportController {
     }
 
     /**
-     * Obtenir les contrôles orbitales de la caméra.
+     * Obtenir les contrôles orbitaux de la caméra.
      *
      * @return OrbitControls s'il y en a une, null si elle n'est pas définie
      */

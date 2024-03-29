@@ -6,12 +6,13 @@ import Tray from "@/modules/game/scene/objects/Tray";
 import {PerspectiveCamera, Scene} from "three";
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
+import type {Socket} from "socket.io-client";
 
 
 export default class CheckersClient extends SupportController {
 
-    constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>) {
-        super(scene, cameraRef, orbitControlsRef);
+    constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>, ws: Socket) {
+        super(scene, cameraRef, orbitControlsRef, ws);
     }
 
     confirmAction(): void {
