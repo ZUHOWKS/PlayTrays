@@ -108,6 +108,11 @@ export default abstract class SupportController {
      * @param object objet à enregistrer
      */
     registerObject(object: PTObject): void {
+        const _obj: PTObject | undefined = this.objectRegistry.get(object.getName())
+        if (_obj) {
+            this.scene.remove(_obj.getObject3D())
+        }
+
         this.objectRegistry.set(object.getName(), object);
         this.scene.add(object.getObject3D());
     }
