@@ -38,6 +38,9 @@ export default class TrayGame {
         }
     }
 
+    /**
+     * Setup de la partie
+     */
     setup(): void {
         if (this.controller) {
             this.controller.setup();
