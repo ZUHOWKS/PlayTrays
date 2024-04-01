@@ -9,11 +9,11 @@ import type {Socket} from "socket.io-client";
 export default abstract class SupportController {
     scene: Scene;
     cameraRef: Ref<PerspectiveCamera>;
-    orbitControlsRef: Ref<OrbitControls | null>;
+    orbitControlsRef: Ref<OrbitControls>;
     objectRegistry: Map<string, PTObject>;
     actuatorRegistry: Map<string, Actuator>;
-    selectedObject: PTObject | null = null;
-    selectedActuator: Actuator | null = null;
+    selectedObject: PTObject | undefined;
+    selectedActuator: Actuator | undefined;
     ws: Socket
 
     /**
@@ -28,7 +28,7 @@ export default abstract class SupportController {
      * @param ws Socket connecté au serveur jeu
      * @protected
      */
-    protected constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>, ws: Socket) {
+    protected constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
         this.scene = scene;
         this.cameraRef = cameraRef;
         this.orbitControlsRef = orbitControlsRef;
@@ -57,7 +57,7 @@ export default abstract class SupportController {
      *
      * @return OrbitControls s'il y en a une, null si elle n'est pas définie
      */
-    getOrbitControls(): OrbitControls | null {
+    getOrbitControls(): OrbitControls {
         return this.orbitControlsRef.value;
     }
 
@@ -98,7 +98,7 @@ export default abstract class SupportController {
      *
      * @return un PTObject si un objet est en cours de sélection, sinon null.
      */
-    getSelectedObject(): PTObject | null {
+    getSelectedObject(): PTObject | undefined {
         return this.selectedObject
     }
 
@@ -115,6 +115,7 @@ export default abstract class SupportController {
 
         this.objectRegistry.set(object.getName(), object);
         this.scene.add(object.getObject3D());
+        this.scene.children[this.scene.children.length - 1].name = object.getName();
     }
 
     /**
@@ -123,7 +124,11 @@ export default abstract class SupportController {
      * @param name identifiant de l'objet à supprimer
      */
     unregisterObject(name: string): void {
-        this.objectRegistry.delete(name);
+        const _obj: PTObject | undefined = this.objectRegistry.get(name);
+        if (_obj) {
+            this.objectRegistry.delete(name);
+            this.scene.remove(_obj.getObject3D());
+        }
     }
 
     /**
@@ -133,7 +138,7 @@ export default abstract class SupportController {
      */
     selectObject(name: string): void {
         const object: PTObject | undefined = this.getObject(name);
-        if (object != undefined) {
+        if (object) {
             this.selectedObject = object;
             this.selectedObject.select();
         }
@@ -144,10 +149,14 @@ export default abstract class SupportController {
      * Désélectionner l'objet courant
      */
     unselectObject(): void {
-        if (this.selectedObject != null) {
+        if (this.selectedObject) {
             this.selectedObject.unselect();
-            this.selectedObject = null;
+            this.selectedObject = undefined;
         }
+    }
+
+    isActuator(name: string): boolean {
+        return this.actuatorRegistry.get(name) != undefined;
     }
 
     /**
@@ -169,11 +178,13 @@ export default abstract class SupportController {
      */
     abstract getSelectedActuator(): Actuator | null;
 
-    abstract showSelectedObjectActuators(object: PTObject | null): void
+    abstract showSelectedObjectActuators(): void
 
     /**
      * Désélectionner l'objet et l'actionneur.
      */
     abstract unselectAll(): void;
+
+    abstract defaultCamera(): void;
 
 }
