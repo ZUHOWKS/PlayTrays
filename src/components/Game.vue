@@ -7,19 +7,28 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
 import {io, type Socket} from "socket.io-client";
+import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
+import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
+import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
+
 
 let gameTray: TrayGame; // Game Manager
 
 const experience: Ref<HTMLCanvasElement | null> = ref<HTMLCanvasElement | null>(null); // VueJS variable, canvas de la scène 3d
 let renderer: Ref<THREE.WebGLRenderer>; // Renderer de la caméra
 let camera: Ref<THREE.PerspectiveCamera>; // Caméra (vue du joueur)
-let controls: Ref<OrbitControls | null> = ref<OrbitControls | null>(null); // Contrôles orbitaux de la caméra
+let controls: Ref<OrbitControls>; // Contrôles orbitaux de la caméra
 let scene: THREE.Scene; // Scène 3D
+let composer: EffectComposer;
+let outlinePass: OutlinePass;
 
 let ws: Socket; // WebSocket pour se connecter au serveur jeu
 
 let {width, height} = useWindowSize(); // Permet d'obtenir la taille de l'écran actuel pour le responsive
 const aspectRatio = computed(() => width.value / height.value) // rapport largeur/hauteur
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
 
 /**
  * Permet de setup la scène 3D avec ThreeJS
@@ -37,36 +46,46 @@ function init(): void {
   // setup des modèles de la scène.
   setupModels()
 
-
-
-  const loop = () => {
-    updateRender(); // mise à jour du rendu
-
-    if (controls.value != null) {
-      controls.value.update(); // ajoute un control fluide
-    }
-
-    requestAnimationFrame(loop); // permet de relancer la fonction à la frame suivante
-  }
-
   // methode executé lors de la montée du composant dans le DOM.
   onMounted(() => {
     // configuration du renderer
     renderer = ref(new THREE.WebGLRenderer({
       canvas: experience.value as unknown as HTMLCanvasElement,
-      antialias: true, // affine le rendu des bordures des élèments de la scène
+      powerPreference: "high-performance",
+      antialias: false,
     }));
 
     // configuration du pixel ration en fonction de la fenêtre
     renderer.value.setPixelRatio(window.devicePixelRatio);
 
+    // setup composer
+    composer = new EffectComposer(renderer.value);
+    composer.addPass(new RenderPass(scene, camera.value));
+    composer.setSize(width.value, height.value);
+
+    // outline object
+    outlinePass = new OutlinePass(new THREE.Vector2(width.value, height.value), scene, camera.value);
+    outlinePass.edgeStrength = 6.0;
+    outlinePass.edgeGlow = 0.9;
+    outlinePass.edgeThickness = 2.0;
+    outlinePass.pulsePeriod = 3.0;
+    outlinePass.visibleEdgeColor.set(0x1ba9e7);
+
+    composer.addPass(outlinePass);
+
+
     // Paramètre par défaut du contrôle de la caméra
-    controls.value = new OrbitControls(camera.value, renderer.value.domElement);
-    controls.value.enableDamping = true; // autoriser le contrôle de la caméra (distance, rotation, déplacement)
-    controls.value.enablePan = false //désactiver les déplacements de la caméra
-    controls.value.minDistance = 2.5;
-    controls.value.maxDistance = 220;
-    controls.value.update(); // actualise les paramètres associés au control de la caméra
+    controls = ref(new OrbitControls(camera.value, renderer.value.domElement));
+    controls.value.listenToKeyEvents(window);
+    controls.value.keys = {
+      LEFT: 'KeyA', //left arrow
+      UP: 'KeyW', // up arrow
+      RIGHT: 'KeyD', // right arrow
+      BOTTOM: 'KeyS' // down arrow
+    }
+    controls.value.keyPanSpeed = 60;
+    controls.value.saveState();
+    controls.value.update();
 
     // Connection à la partie + setup du jeu
     establishConnectionWithGameServer("checkers");
@@ -76,9 +95,13 @@ function init(): void {
     updateRenderer();
 
     // Lancer la boucle
-    loop();
+    animate();
 
     renderer.value.render(scene, camera.value);
+
+    // event listener
+    addEventListener('mousemove', (e) => onPointerMove(e));
+    addEventListener('dblclick', (e) => selectOnClick(e));
   })
 }
 
@@ -86,9 +109,8 @@ function init(): void {
  * Mettre à jour le renderer
  */
 function updateRenderer(): void {
-  if (renderer.value != null) {
-    renderer.value.setSize(width.value, height.value); //
-  }
+  renderer.value.setSize(width.value, height.value); //
+  composer.setSize(width.value, height.value);
 
 }
 
@@ -104,9 +126,8 @@ function updateCamera(): void {
  * Mettre à jour le rendu
  */
 function updateRender(): void {
-  if (renderer.value != null) {
-    renderer.value.render(scene, camera.value);
-  }
+  renderer.value.render(scene, camera.value);
+  composer.render(500);
 }
 
 /**
@@ -114,7 +135,7 @@ function updateRender(): void {
  */
 function setupLight(): void {
   const light: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
-  const directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+  const directionalLight = new THREE.DirectionalLight( 0xffffff, 4 );
   scene.add( directionalLight );
   scene.add(light);
 
@@ -129,7 +150,7 @@ function setupModels(): void {
       new THREE.BoxGeometry( 900, 900, 900),
       getSkyMeshMaterial("anime")
   )
-
+  skyBox.name = "skyBox";
   scene.add(skyBox); // ajout de la SkyBox
 }
 
@@ -175,6 +196,61 @@ function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
   })
 
   return meshMaterials;
+}
+
+function onPointerMove(event: any) {
+  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+
+function renderOutlineSelection() {
+
+  // update the picking ray with the camera and pointer position
+  raycaster.setFromCamera( pointer, camera.value );
+
+  // calculate objects intersecting the picking ray
+  const intersects = raycaster.intersectObject( scene, true );
+  if (intersects.length > 0) {
+    let obj: THREE.Object3D = intersects[0].object;
+    while (obj.parent && obj.parent != scene) {
+      obj = obj.parent
+    }
+    outlinePass.selectedObjects = [];
+    outlinePass.selectedObjects.push(obj);
+  }
+
+
+}
+
+function selectOnClick(event: any) {
+  const intersects = raycaster.intersectObject( scene, true );
+  if (intersects.length > 0 && gameTray.controller) {
+    let obj: THREE.Object3D = intersects[0].object;
+    while (obj.parent && obj.parent != scene) {
+      obj = obj.parent
+    }
+    if (!(obj.name.includes("Tray") || obj.name.includes("skyBox"))) {
+      if (gameTray.controller.isActuator(obj.name)) {
+
+      } else {
+
+        gameTray.controller.unselectObject();
+        gameTray.controller.selectObject(obj.name);
+        gameTray.controller.showSelectedObjectActuators();
+      }
+    } else {
+      gameTray.controller.defaultCamera();
+    }
+  }
+}
+
+function animate() {
+
+  renderOutlineSelection();
+
+  controls.value.update(); // met à jour le contrôle
+  updateRender(); // mise à jour du rendu
+  requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
 
 init(); //lancer l'initialisation de la scène Three
