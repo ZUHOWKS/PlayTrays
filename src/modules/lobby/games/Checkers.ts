@@ -29,13 +29,13 @@ export default class Checkers extends PTLobby {
     protected setupGame(): void {
 
         // Setup des pions blancs
-        for(let i: number=0; i < 8; i++) {
-            this.pawns.push(new Pawn("white-" + i, i, i % 2)); // nom, position x, position y
+        for(let i: number=0; i < 12; i++) {
+            this.pawns.push(new Pawn("white-" + i, (-21 + ((Math.floor(i/4)+1) % 2) * 6) + (i % 4) * 12, 0,-21 + Math.floor(i/4) * 6)); // nom, position x, position y
         }
 
         // Setup des pions noirs
-        for(let i: number = 0; i < 8; i++) {
-            this.pawns.push(new Pawn("black-" + i, i, 7 - (i % 2))); // nom, position x, position y
+        for(let i: number = 0; i < 12; i++) {
+            this.pawns.push(new Pawn("black-" + i, (-21 + ((Math.floor(i/4)) % 2) * 6) + (i % 4) * 12, 0, 21 - Math.floor(i/4) * 6)); // nom, position x, position y
         }
     }
 
@@ -51,23 +51,23 @@ export default class Checkers extends PTLobby {
         socket.emit("update game", this.getPawnsJSON());
 
         // évènement de déconnection du socket
-        socket.on('disconnect', (user) => {
+        socket.on("disconnect", (user) => {
             this.removeSocket(user);
-            console.log("The user " + socket.data.user + " leave the lobby " + this.uuid + ".")
+            console.log("The user " + socket.data.user + " leave the lobby " + this.uuid + ".");
         });
-
 
 
         console.log("The user " + socket.data.user + " join the lobby " + this.uuid + ".")
     }
 
-    private getPawnsJSON(): { name: string; x: number; y: number; dead: boolean; }[] {
-        const pawns: { name: string; x: number; y: number; dead: boolean; }[] = [];
+    private getPawnsJSON(): { name: string; x: number; y: number; z: number; dead: boolean; }[] {
+        const pawns: { name: string; x: number; y: number; z: number; dead: boolean; }[] = [];
 
         this.pawns.forEach((pawn) => pawns.push({
             name: pawn.name,
             x: pawn.x,
             y: pawn.y,
+            z: pawn.z,
             dead: pawn.dead
         }))
 
