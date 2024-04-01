@@ -14,10 +14,8 @@ export default class Tray extends PTObject {
     rotate(x: number, y: number, z: number): void {
     }
 
-    select(): void {
-    }
+    select(): void {}
 
-    unselect(): void {
-    }
+    unselect(): void {}
 
 }
