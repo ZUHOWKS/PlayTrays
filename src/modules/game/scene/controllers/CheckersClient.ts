@@ -117,10 +117,10 @@ export default class CheckersClient extends SupportController {
             }
 
             const obj: Object3D = this.selectedObject.getObject3D();
-            const geometry = new BoxGeometry( 6, 1, 6);
-            const material = new MeshBasicMaterial( { color: 0x00ff00 } );
+            const geometry: BoxGeometry = new BoxGeometry( 6, 0.5, 6);
+            const material: MeshBasicMaterial = new MeshBasicMaterial( { color: 0x68d0fc } );
             material.transparent = true;
-            material.opacity = 0.35;
+            material.opacity = 0.65;
 
             const pawns: Pawn[] = this.getPawns();
 
@@ -133,7 +133,7 @@ export default class CheckersClient extends SupportController {
                 if (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !this.anyPawnAt(new Vector3(x, 0, z), pawns)) {
                     const actuatorObj = new Mesh(geometry, material);
                     actuatorObj.position.x = x;
-                    actuatorObj.position.y = 0;
+                    actuatorObj.position.y = obj.position.y + 0.025;
                     actuatorObj.position.z = z;
 
                     const actuator: ActuatorObject = new ActuatorObject("actuator-" + this.selectedObject.name + "" + i, actuatorObj, this.selectedObject);
