@@ -1,9 +1,10 @@
 import PTObject from "@/modules/game/scene/objects/PTObject";
-import type {Object3D} from "three";
+import {BoxGeometry, Mesh, MeshBasicMaterial, type Object3D} from "three";
 
 
 export default class Pawn extends PTObject {
     dead: boolean;
+    selectEffect: Object3D | undefined;
 
     constructor(name: string, obj: Object3D, dead: boolean) {
         super(name, obj);
@@ -17,9 +18,21 @@ export default class Pawn extends PTObject {
     }
 
     select(): void {
+        const geometry = new BoxGeometry( 6, 0.05, 6);
+        const material = new MeshBasicMaterial( { color: 0xffd500 } );
+        material.transparent = true;
+        material.opacity = 0.65;
+
+        this.selectEffect = new Mesh(geometry, material);
+        this.object3D.add(this.selectEffect);
     }
 
     unselect(): void {
+        if (this.selectEffect) {
+            this.object3D.remove(this.selectEffect);
+            this.selectEffect = undefined;
+        }
+
     }
 
 }
