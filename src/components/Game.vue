@@ -134,10 +134,28 @@ function updateRender(): void {
  * Setup les paramètres de la lumière
  */
 function setupLight(): void {
-  const light: THREE.AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
-  const directionalLight = new THREE.DirectionalLight( 0xffffff, 4 );
-  scene.add( directionalLight );
-  scene.add(light);
+  const ambientLight: THREE.AmbientLight = new THREE.AmbientLight( 0xffffff ); // soft white light
+  const hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0x080820, 1 );
+  const directionalLight = new THREE.DirectionalLight( 0xffffff, 2);
+
+  const target = new THREE.Object3D;
+  target.position.set(0, 0, 0);
+  directionalLight.target = target;
+
+
+  scene.add(ambientLight);
+  scene.add(hemisphereLight);
+
+  for (let i: number = -1; i <= 1; i+=2) {
+    const _directionalLight = directionalLight.clone();
+    _directionalLight.position.set(i*20, 75, 20 * i);
+
+    scene.add(_directionalLight);
+  }
+
+
+
+
 
 
 }
