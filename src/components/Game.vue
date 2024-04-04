@@ -101,7 +101,7 @@ function init(): void {
 
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
-    addEventListener('dblclick', (e) => selectOnClick(e));
+    addEventListener('dblclick', selectOnClick);
   })
 }
 
@@ -216,7 +216,7 @@ function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
   return meshMaterials;
 }
 
-function onPointerMove(event: any) {
+function onPointerMove(event: MouseEvent) {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
@@ -240,7 +240,7 @@ function renderOutlineSelection() {
 
 }
 
-function selectOnClick(event: any) {
+function selectOnClick() {
   const intersects = raycaster.intersectObject( scene, true );
   if (intersects.length > 0 && gameTray.controller) {
     let obj: THREE.Object3D = intersects[0].object;
@@ -256,8 +256,10 @@ function selectOnClick(event: any) {
         gameTray.controller.selectObject(obj.name);
         gameTray.controller.showSelectedObjectActuators();
       }
-    } else {
+    } else if (obj.name.includes("Tray")) {
       gameTray.controller.defaultCamera();
+    } else {
+      gameTray.controller.unselectAll();
     }
   }
 }
