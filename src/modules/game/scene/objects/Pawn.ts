@@ -4,11 +4,13 @@ import {BoxGeometry, Mesh, MeshBasicMaterial, type Object3D} from "three";
 
 export default class Pawn extends PTObject {
     dead: boolean;
-    selectEffect: Object3D | undefined;
+    queen: boolean;
+    selectEffect: Mesh<BoxGeometry, MeshBasicMaterial> | undefined;
 
-    constructor(name: string, obj: Object3D, dead: boolean) {
+    constructor(name: string, obj: Object3D, dead: boolean, queen: boolean) {
         super(name, obj);
-        this.dead = dead
+        this.dead = dead;
+        this.queen = queen;
     }
 
     moveTo(x: number, y: number, z: number): void {
@@ -19,7 +21,7 @@ export default class Pawn extends PTObject {
 
     select(): void {
         const geometry = new BoxGeometry( 6, 0.05, 6);
-        const material = new MeshBasicMaterial( { color: 0xffd500 } );
+        const material = new MeshBasicMaterial( { color: 0x9ffc9a } );
         material.transparent = true;
         material.opacity = 0.65;
 
