@@ -6,6 +6,8 @@ import Pawn from "../../checkers/Pawn";
 
 export default class Checkers extends PTLobby {
     pawns: Pawn[];
+    whitePlayer: string | undefined;
+    blackPlayer: string | undefined;
 
     /**
      * Permet d'instancier un lobby pour le jeu des dames.
@@ -45,14 +47,16 @@ export default class Checkers extends PTLobby {
      * @param socket Socket de l'utilisateur
      */
     registerNewSocket(socket: Socket): void {
+        this.sockets.set(socket.data.user, socket);
+
         socket.join(this.uuid);
 
         // émettre une update de la partie
-        socket.emit("update game", this.getPawnsJSON());
+        socket.emit("setup game", this.getPawnsJSON(), this.setTeam(socket.data.user));
 
         // évènement de déconnection du socket
-        socket.on("disconnect", (user) => {
-            this.removeSocket(user);
+        socket.on("disconnect", (reason, description) => {
+            this.removeSocket(socket.data.user);
             console.log("The user " + socket.data.user + " leave the lobby " + this.uuid + ".");
         });
 
@@ -60,15 +64,28 @@ export default class Checkers extends PTLobby {
         console.log("The user " + socket.data.user + " join the lobby " + this.uuid + ".")
     }
 
-    private getPawnsJSON(): { name: string; x: number; y: number; z: number; dead: boolean; }[] {
-        const pawns: { name: string; x: number; y: number; z: number; dead: boolean; }[] = [];
+    private setTeam(user: string): "white" | "black" | "spectator" {
+        if (!this.blackPlayer || this.blackPlayer == user) {
+            this.blackPlayer = user;
+            return "black";
+        } else if (!this.whitePlayer || this.whitePlayer == user) {
+            this.whitePlayer = user;
+            return "white";
+        } else {
+            return "spectator";
+        }
+    }
+
+    private getPawnsJSON(): { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean}[] {
+        const pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean}[] = [];
 
         this.pawns.forEach((pawn) => pawns.push({
             name: pawn.name,
             x: pawn.x,
             y: pawn.y,
             z: pawn.z,
-            dead: pawn.dead
+            dead: pawn.dead,
+            queen : pawn.queen
         }))
 
         return pawns;
