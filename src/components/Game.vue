@@ -88,7 +88,8 @@ function init(): void {
     controls.value.update();
 
     // Connection à la partie + setup du jeu
-    establishConnectionWithGameServer("checkers");
+    const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
+    establishConnectionWithGameServer("checkers", user);
 
     // Actualisation des paramètres du renderer et de la caméra
     updateCamera();
@@ -177,10 +178,11 @@ function setupModels(): void {
  *
  * @param game
  */
-function establishConnectionWithGameServer(game: string): void {
+function establishConnectionWithGameServer(game: string, user: number): void {
   ws = io("http://localhost:25525", {
     auth: {
-      user: "ZUHOWKS",
+      user: user,
+      token: "",
       lobbyUUID: "testCheckers"
     }
   });
@@ -249,7 +251,7 @@ function selectOnClick() {
     }
     if (!(obj.name.includes("Tray") || obj.name.includes("skyBox"))) {
       if (gameTray.controller.isActuator(obj.name)) {
-
+        gameTray.controller.selectActuator(obj.name);
       } else {
 
         gameTray.controller.unselectObject();
