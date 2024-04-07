@@ -4,10 +4,11 @@
  * @param duration
  * @param animationCallback
  * @param finalCallback
+ * @deprecated Préférable de gérer les animations via la file d'exécution AnimationQueue
  */
 export function animate(duration:number, animationCallback: any, finalCallback?: any): number {
     let start: number | undefined = undefined;
-    console.log("start animation")
+
     const step = (timestamp: number) => {
 
         if(!start) {
@@ -16,7 +17,7 @@ export function animate(duration:number, animationCallback: any, finalCallback?:
 
         const runtime = timestamp - start;
         const relativeProgress = runtime / duration;
-        console.log(relativeProgress, runtime, timestamp)
+
         if (relativeProgress < 1) {
             animationCallback(relativeProgress);
             requestAnimationFrame(step);
@@ -26,5 +27,4 @@ export function animate(duration:number, animationCallback: any, finalCallback?:
     }
 
     return requestAnimationFrame(step);
-
 }
