@@ -22,12 +22,65 @@ import ActuatorObject from "@/modules/game/scene/objects/ActuatorObject";
 export default class CheckersClient extends SupportController {
 
     team: string | undefined;
+    canPlay: boolean = false;
 
     constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
         super(scene, cameraRef, orbitControlsRef, ws);
     }
 
     confirmAction(): void {
+        if (this.selectedActuator) {
+
+
+            // Lorsque l'actionneur est un objet
+            if (this.selectedActuator instanceof ActuatorObject) {
+
+                // Lorsque que le sujet est pion
+                this.performPawnAction();
+            }
+        }
+    }
+
+    private performPawnAction() {
+
+        const subject: PTObject | undefined = this.selectedActuator?.getSubject();
+        if (subject instanceof Pawn && this.team && this.canPlay) {
+            if (true && subject.name.includes(this.team)) {
+
+                // position de l'actionneur dans l'espace
+                const actPos: Vector3 = (this.selectedActuator as ActuatorObject).getObject3D().position;
+
+                this.unselectAll();
+                const animationId: number = subject.moveTo(actPos.x, actPos.y, actPos.z);
+
+                this.ws.emit("pawn action",
+                    {
+                        pawn: subject.getName(),
+                        moveX: actPos.x,
+                        moveY: actPos.y,
+                        moveZ: actPos.z,
+                    }, (error: any, response: any) => {
+                        if (error) {
+                            console.error(error);
+
+                            cancelAnimationFrame(animationId);
+                            response.pawns.forEach((pawn: any) => {
+                                const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
+                                if (pawnObj) {
+                                    pawnObj.setPositionTo(pawn.x, pawn.y, pawn.z);
+                                }
+                            })
+                        } else if (response) {
+                            this.team = response.team;
+                            this.canPlay = response.canPlay
+                            this.killPawn(response.pawnKilled);
+                        }
+
+                        console.log(response)
+                    }
+                );
+            }
+        }
     }
 
     getSelectedActuator(): Actuator | null {
@@ -35,6 +88,20 @@ export default class CheckersClient extends SupportController {
     }
 
     selectActuator(name: string): void {
+        const act: Actuator | undefined = this.actuatorRegistry.get(name);
+
+        if (act) {
+            if (this.selectedActuator) {
+                if (this.selectedActuator.name != act.name) {
+                    this.selectedActuator = act;
+                    this.confirmAction();
+                }
+            } else {
+                this.selectedActuator = act;
+                this.confirmAction();
+            }
+
+        }
     }
 
     setup(): void {
@@ -48,44 +115,99 @@ export default class CheckersClient extends SupportController {
         const modelWhitePawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_white.glb")
         const modelBlackPawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_black.glb");
 
-        this.ws.on("setup game", (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], team: string): void => {
+        this.ws.on("setup game", (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}): void => {
+            this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
+        })
+
+        this.ws.on("rollback game", (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], team: string): void => {
             pawns.forEach((pawn) => {
+                const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
+                if (pawnObj) {
+                    pawnObj.setPositionTo(pawn.x, pawn.y, pawn.z);
+                }
+            })
+        })
+
+        this.ws.on("pawn action", (action: {
+            pawn: string,
+            moveX: number,
+            moveY: number,
+            moveZ: number,
+        }, pawnKilledName: string, gameInfo: {team: string, canPlay: boolean}) => {
+            const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
+            if (pawn) {
+                pawn.moveTo(action.moveX, action.moveY, action.moveZ);
+                this.showSelectedObjectActuators();
+                if (pawnKilledName) {
+                    this.killPawn(pawnKilledName);
+                }
+            }
+
+            if (gameInfo) {
+                this.team = gameInfo.team;
+                this.canPlay = gameInfo.canPlay;
+            }
+        })
+
+
+    }
+
+    /**
+     * Initialise la partie.
+     *
+     * @param pawns liste des pions
+     * @param modelWhitePawn modèle des pions blanc
+     * @param modelBlackPawn modèles des pions noire
+     * @param team équipe du joueur
+     * @private
+     */
+    private setupGame(pawns: {
+        name: string;
+        x: number;
+        y: number;
+        z: number;
+        dead: boolean;
+        queen: boolean
+    }[], modelWhitePawn: Promise<Object3D>, modelBlackPawn: Promise<Object3D>, gameInfo: {team: string, canPlay: boolean}) {
+
+        pawns.forEach((pawn) => {
+            // filtre pour les pions mort
+            if (!pawn.dead) {
                 if (pawn.name.includes("white")) {
                     this.registerPawn(modelWhitePawn, pawn);
                 } else if (pawn.name.includes("black")) {
                     this.registerPawn(modelBlackPawn, pawn);
                 }
-            })
-
-            this.team = team;
-
-            if (this.team == "white" || this.team == "black") {
-
-                const side: number = this.team == "white" ? -1 : 1;
-                const camera: PerspectiveCamera = this.getCamera();
-                camera.position.y = 40;
-                camera.position.z = 35 * side;
-
-                const controls: OrbitControls = this.getOrbitControls();
-                controls.enableDamping = true; // autoriser le contrôle de la caméra (distance, rotation, déplacement)
-                //controls.enablePan = false; //désactiver les déplacements de la caméra
-                controls.minAzimuthAngle = -10/(Math.PI * 2.5) * side;
-                controls.maxAzimuthAngle = 10/(Math.PI * 2.5) * side;
-                controls.minDistance = 15;
-                controls.maxTargetRadius = 25;
-                controls.rotateSpeed = 0.5;
-                controls.maxDistance = 85;
-
-                controls.saveState();
-
-
-
-                this.getOrbitControls().saveState();
             }
 
         })
 
+        this.team = gameInfo.team;
+        this.canPlay = gameInfo.canPlay;
 
+        if (this.team == "white" || this.team == "black") {
+
+            const side: number = this.team == "white" ? -1 : 1;
+            const camera: PerspectiveCamera = this.getCamera();
+            camera.position.y = 40;
+            camera.position.z = 35 * side;
+
+            const controls: OrbitControls = this.getOrbitControls();
+            controls.enableDamping = true; // autoriser le contrôle de la caméra (distance, rotation, déplacement)
+            //controls.enablePan = false; //désactiver les déplacements de la caméra
+            let angle = 6 * Math.PI / 10;
+            controls.minAzimuthAngle = -angle + (side > 0 ? 0 : Math.PI);
+            controls.maxAzimuthAngle = angle + (side > 0 ? 0 : Math.PI);
+            controls.minDistance = 15;
+            controls.maxTargetRadius = 25;
+            controls.rotateSpeed = 0.5;
+            controls.maxDistance = 85;
+
+            controls.saveState();
+
+
+            this.getOrbitControls().saveState();
+        }
     }
 
     defaultCamera(): void {
@@ -147,8 +269,8 @@ export default class CheckersClient extends SupportController {
 
 
         if (this.selectedObject && this.selectedObject instanceof Pawn) { // vérifie s'il s'agit d'un pion
-            if (!(this.selectedObject as Pawn).dead) {
-                const obj: Object3D = this.selectedObject.getObject3D();
+            if (!((this.selectedObject as Pawn).dead)) {
+                const pos: Vector3 = (this.selectedObject as Pawn).position;
                 const geometry: BoxGeometry = new BoxGeometry( 6, 0.5, 6);
 
                 let canUse = false
@@ -172,22 +294,31 @@ export default class CheckersClient extends SupportController {
                 // vérifie et affiche les cases jouables
                 for (let queen: number = 1; queen >= ((this.selectedObject as Pawn).queen ? -1 : 0); queen-=2) { // On parcourt une deuxième fois la boucle si c'est une reine
                     for (let i: number = -1; i <= 1; i+=2) {
-                        const x: number = obj.position.x + i * 6;
-                        const z: number = obj.position.z + queen * sideMoveUp * 6; // devant ou derrière selon que le pion est une reine ou non
+                        let x: number = pos.x + i * 6;
+                        let z: number = pos.z + queen * sideMoveUp * 6; // devant ou derrière selon que le pion est une reine ou non
 
-                        const pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, 0, z), pawns);
+                        let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
                         if (Math.abs(x) <= 21 && Math.abs(z) <= 21) {
-                            if (!pawn) { // s'il n'y a aucun pion alors...
-                                this.registerPawnActuator(geometry, material, x, obj.position.y + 0.025, z, "actuator-" + this.selectedObject.name + "" + n, this.selectedObject);
+                            if (!_pawn) { // s'il n'y a aucun pion alors...
+                                this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + this.selectedObject.name + "" + n, this.selectedObject);
                                 n++;
-                            } else if (!this.selectedObject.getName().includes(pawn.getName().split("-")[0])) {
-                                this.registerPawnActuator(geometry, material, x + i * 6, obj.position.y + 0.025, z + sideMoveUp * 6, "actuator-" + this.selectedObject.name + "" + n, this.selectedObject);
-                                n++;
+                            } else if (!this.selectedObject.getName().includes(_pawn.getName().split("-")[0])) {
+                                x+=i * 6;
+                                z+=sideMoveUp * 6;
+
+                                _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                                if (!_pawn && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                                    this.registerPawnActuator(geometry, material, x , pos.y, z, "actuator-" + this.selectedObject.name + "" + n, this.selectedObject);
+                                    n++;
+                                }
                             }
 
                         }
                     }
                 }
+            } else {
+                // enlever la sélection
+                this.unselectAll();
             }
         }
     }
@@ -223,6 +354,7 @@ export default class CheckersClient extends SupportController {
     unselectAll(): void {
         this.unselectObject();
         this.removeActuators();
+        this.selectedActuator = undefined;
     }
 
     /**
@@ -240,14 +372,12 @@ export default class CheckersClient extends SupportController {
 
         for (let i:number = 0; i < pawns.length; i++) {
             const pawn: Pawn = pawns[i];
-            const obj: Object3D = pawn.getObject3D();
-
-            if (obj.position.equals(pos)) {
+            if (pawn.position.equals(pos)) {
                 return pawn;
             }
         }
 
-        return undefined;
+        return;
     }
 
     /**
@@ -265,6 +395,18 @@ export default class CheckersClient extends SupportController {
         })
 
         return pawns
+    }
+
+    private killPawn(name: string) {
+        const pawnKilled: Pawn | undefined = this.getObject(name) as Pawn;
+
+        if (pawnKilled) {
+            pawnKilled.kill();
+            this.objectRegistry.delete(name);
+            if (this.selectedObject?.getName() == pawnKilled.getName()) {
+                this.unselectAll();
+            }
+        }
     }
 
 }
