@@ -14,7 +14,8 @@ interface AuthServerData {
  * Permet de modéliser les données d'authentification utilisateur
  */
 interface AuthUserData {
-    user: string;
+    user: number;
+    token: string;
     lobbyUUID: string;
 }
 
@@ -31,7 +32,7 @@ export default class PTServer {
     constructor(httpServer: any, lobbyMax: number) {
         this.io = new Server(httpServer, {
             cors: {
-                origin: "http://localhost:5173",
+                origin: "*",
             }
         });
         this.lobbies = new Map<string, PTLobby>();
@@ -100,6 +101,7 @@ export default class PTServer {
                 socket.data = {};
                 socket.data.authType = "user";
                 socket.data.user = auth.user;
+                socket.data.token = auth.token;
                 socket.data.lobbyUUID = auth.lobbyUUID;
                 return next();
             } else {
