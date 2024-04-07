@@ -51,7 +51,7 @@ export default class CheckersClient extends SupportController {
                 const actPos: Vector3 = (this.selectedActuator as ActuatorObject).getObject3D().position;
 
                 this.unselectAll();
-                const animationId: number = subject.moveTo(actPos.x, actPos.y, actPos.z);
+                subject.moveTo(actPos.x, actPos.y, actPos.z);
 
                 this.ws.emit("pawn action",
                     {
@@ -63,7 +63,6 @@ export default class CheckersClient extends SupportController {
                         if (error) {
                             console.error(error);
 
-                            cancelAnimationFrame(animationId);
                             response.pawns.forEach((pawn: any) => {
                                 const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
                                 if (pawnObj) {
