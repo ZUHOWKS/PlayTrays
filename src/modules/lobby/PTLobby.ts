@@ -9,7 +9,7 @@ export default abstract class PTLobby {
     protected game: string;
     protected visibility: "public" | "private";
     protected status: "waiting" | "running" | "finished" = "waiting";
-    protected sockets: Map<string, Socket>;
+    protected sockets: Map<number, Socket>;
     protected server: PTServer;
 
     /**
@@ -25,7 +25,7 @@ export default abstract class PTLobby {
         this.uuid = uuid;
         this.game = game;
         this.visibility = visibility;
-        this.sockets = new Map<string, Socket>();
+        this.sockets = new Map<number, Socket>();
         this.server = server;
     }
 
@@ -49,8 +49,24 @@ export default abstract class PTLobby {
      * @param user
      * @protected
      */
-    protected removeSocket(user: string): boolean {
+    protected removeSocket(user: number): boolean {
         return this.sockets.delete(user);
+    }
+
+    /**
+     * Émettre sur tous les sockets clients du lobby sauf celui passé en paramètre.
+     *
+     * @param socketNotEmit socket client où l'on ne veut pas émettre l'évènement.
+     * @param event évènement à émettre
+     * @param args arguments de l'évènement
+     */
+    emitWithout(socketNotEmit: Socket, event: string, ...args: any[]) {
+        const socketArray: Socket[] = Array.from(this.sockets.values());
+        socketArray.forEach((socket) => {
+            if (socket.data.user != socketNotEmit.data.user) {
+                socket.emit(event, ...args);
+            }
+        })
     }
 
     /**
