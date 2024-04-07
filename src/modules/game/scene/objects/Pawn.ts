@@ -1,22 +1,25 @@
 import PTObject from "@/modules/game/scene/objects/PTObject";
 import {BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3} from "three";
-import * as AnimationHelper from "@/modules/utils/AnimationHelper";
+import {AnimationQueue, type AnimationQueueInterface} from "@/modules/utils/AnimationQueue";
 
 
-export default class Pawn extends PTObject {
+export default class Pawn extends PTObject implements AnimationQueueInterface {
     position: Vector3;
     dead: boolean;
     queen: boolean;
     selectEffect: Mesh<BoxGeometry, MeshBasicMaterial> | undefined;
+    animationQueue: AnimationQueue;
+
 
     constructor(name: string, obj: Object3D, dead: boolean, queen: boolean) {
         super(name, obj);
         this.dead = dead;
         this.queen = queen;
         this.position = new Vector3(this.object3D.position.x, this.object3D.position.y, this.object3D.position.z);
+        this.animationQueue = new AnimationQueue();
     }
 
-    moveTo(x: number, y: number, z: number): number {
+    moveTo(x: number, y: number, z: number) {
 
 
         const position: Vector3 = this.object3D.position;
@@ -27,43 +30,45 @@ export default class Pawn extends PTObject {
 
         this.position.set(x, y, z);
 
-        return AnimationHelper.animate(
-            duration,
-            (relativeProgress: number) => {
+        this.animationQueue.push({
+            duration: duration,
+            animationCallback: (relativeProgress: number) => {
                 position.x = basicPosition.x + movVec.x * relativeProgress;
                 position.y = basicPosition.y + movVec.y * relativeProgress;
                 position.z = basicPosition.z + movVec.z * relativeProgress;
-
-                console.log(position)
             },
-            () => {
+            finalCallback: () => {
 
                 position.x = x;
                 position.y = y;
                 position.z = z;
-            })
+            }
+        })
     }
 
     setPositionTo(x: number, y: number, z: number) {
+        this.animationQueue.clear();
+        this.animationQueue.cancel();
         this.position.set(x, y, z);
 
         const position: Vector3 = this.getObject3D().position;
         let doIt: number = 20;
 
-        return AnimationHelper.animate(
-            doIt,
-            (relativeProgress: number) => {
+        this.animationQueue.push({
+            duration: doIt,
+            animationCallback: () => {
                 position.x = x;
                 position.y = y;
                 position.z = z;
             },
-            () => {
+            finalCallback: () => {
                 position.x = x;
                 position.y = y;
                 position.z = z;
                 this.position.set(x, y, z);
             }
-        )
+        })
+
     }
 
     rotate(x: number, y: number, z: number): void {
