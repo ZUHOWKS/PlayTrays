@@ -1,8 +1,10 @@
 import PTObject from "@/modules/game/scene/objects/PTObject";
-import {BoxGeometry, Mesh, MeshBasicMaterial, type Object3D} from "three";
+import {BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3} from "three";
+import * as AnimationHelper from "@/modules/utils/AnimationHelper";
 
 
 export default class Pawn extends PTObject {
+    position: Vector3;
     dead: boolean;
     queen: boolean;
     selectEffect: Mesh<BoxGeometry, MeshBasicMaterial> | undefined;
@@ -11,12 +13,61 @@ export default class Pawn extends PTObject {
         super(name, obj);
         this.dead = dead;
         this.queen = queen;
+        this.position = new Vector3(this.object3D.position.x, this.object3D.position.y, this.object3D.position.z);
     }
 
-    moveTo(x: number, y: number, z: number): void {
+    moveTo(x: number, y: number, z: number): number {
+
+
+        const position: Vector3 = this.object3D.position;
+        let duration: number = 150;
+
+        const movVec: Vector3 = new Vector3((x - position.x), (y - position.y), (z - position.z))
+        const basicPosition: Vector3 = new Vector3(position.x, position.y, position.z);
+
+        this.position.set(x, y, z);
+
+        return AnimationHelper.animate(
+            duration,
+            (relativeProgress: number) => {
+                position.x = basicPosition.x + movVec.x * relativeProgress;
+                position.y = basicPosition.y + movVec.y * relativeProgress;
+                position.z = basicPosition.z + movVec.z * relativeProgress;
+
+                console.log(position)
+            },
+            () => {
+
+                position.x = x;
+                position.y = y;
+                position.z = z;
+            })
+    }
+
+    setPositionTo(x: number, y: number, z: number) {
+        this.position.set(x, y, z);
+
+        const position: Vector3 = this.getObject3D().position;
+        let doIt: number = 20;
+
+        return AnimationHelper.animate(
+            doIt,
+            (relativeProgress: number) => {
+                position.x = x;
+                position.y = y;
+                position.z = z;
+            },
+            () => {
+                position.x = x;
+                position.y = y;
+                position.z = z;
+                this.position.set(x, y, z);
+            }
+        )
     }
 
     rotate(x: number, y: number, z: number): void {
+
     }
 
     select(): void {
@@ -35,6 +86,11 @@ export default class Pawn extends PTObject {
             this.selectEffect = undefined;
         }
 
+    }
+
+    kill(): void {
+        this.dead = true;
+        this.getObject3D().removeFromParent();
     }
 
 }
