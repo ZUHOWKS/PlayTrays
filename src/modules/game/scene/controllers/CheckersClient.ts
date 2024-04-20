@@ -18,6 +18,13 @@ import Pawn from "@/modules/game/scene/objects/Pawn";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import ActuatorObject from "@/modules/game/scene/objects/ActuatorObject";
 
+interface Action {
+    pawn: string;
+    moveX: number;
+    moveY: number;
+    moveZ: number;
+    pawnKilled: string | undefined;
+}
 
 export default class CheckersClient extends SupportController {
 
@@ -39,6 +46,8 @@ export default class CheckersClient extends SupportController {
                 this.performPawnAction();
             }
         }
+
+        this.selectedActuator = undefined;
     }
 
     private performPawnAction() {
@@ -54,12 +63,12 @@ export default class CheckersClient extends SupportController {
                 subject.moveTo(actPos.x, actPos.y, actPos.z);
 
                 this.ws.emit("pawn action",
-                    {
+                    ({
                         pawn: subject.getName(),
                         moveX: actPos.x,
                         moveY: actPos.y,
                         moveZ: actPos.z,
-                    }, (error: any, response: any) => {
+                    } as Action), (error: any, response: any) => {
                         if (error) {
                             console.error(error);
 
@@ -70,9 +79,44 @@ export default class CheckersClient extends SupportController {
                                 }
                             })
                         } else if (response) {
+                            const actions: Action[] = response.actions as Action[];
+
                             this.team = response.team;
                             this.canPlay = response.canPlay
-                            this.killPawn(response.pawnKilled);
+
+                            const firstPawnToKill = response.actions[0].pawnKilled;
+
+                            // s'il un premier pion a été tué alors régle de la prise maxiamle obligatoire
+                            if (firstPawnToKill) {
+                                const toKill: any[] = [() => {this.killPawn(firstPawnToKill);}];
+
+                                actions.shift(); // première animation de déplacement déjà en cours
+
+                                // boucle pour animer les prises suivantes
+                                actions.forEach((action) => {
+                                    const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
+                                    if (pawn) {
+
+                                        if (action.pawnKilled) {
+
+                                            toKill.push(() => {
+                                                //@ts-ignore
+                                                this.killPawn(action.pawnKilled);
+                                            });
+                                        }
+
+                                        if (actions.indexOf(action) == actions.length-1) {
+                                            pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
+                                                toKill.forEach((kill) => kill());
+                                            });
+                                        }
+                                    }
+                                });
+
+                                if (actions.length == 0) {
+                                    toKill[0]();
+                                }
+                            }
                         }
 
                         console.log(response)
@@ -127,25 +171,37 @@ export default class CheckersClient extends SupportController {
             })
         })
 
-        this.ws.on("pawn action", (action: {
-            pawn: string,
-            moveX: number,
-            moveY: number,
-            moveZ: number,
-        }, pawnKilledName: string, gameInfo: {team: string, canPlay: boolean}) => {
-            const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
-            if (pawn) {
-                pawn.moveTo(action.moveX, action.moveY, action.moveZ);
-                this.showSelectedObjectActuators();
-                if (pawnKilledName) {
-                    this.killPawn(pawnKilledName);
-                }
-            }
+        this.ws.on("pawn action", (actions: Action[], gameInfo: {team: string, canPlay: boolean}) => {
 
-            if (gameInfo) {
-                this.team = gameInfo.team;
-                this.canPlay = gameInfo.canPlay;
-            }
+            const toKill: any[] = [];
+            actions.forEach((action) => {
+                const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
+                if (pawn) {
+
+                    if (action.pawnKilled) {
+
+                        toKill.push(() => {
+                            //@ts-ignore
+                            this.killPawn(action.pawnKilled);
+                        });
+                    }
+
+                    if (actions.indexOf(action) == actions.length-1) {
+                        pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
+                            toKill.forEach((kill) => kill());
+
+                            if (gameInfo) {
+                                this.team = gameInfo.team;
+                                this.canPlay = gameInfo.canPlay;
+                            }
+                        });
+                    } else {
+                        pawn.moveTo(action.moveX, action.moveY, action.moveZ);
+                    }
+                }
+            });
+
+            this.showSelectedObjectActuators();
         })
 
 
@@ -268,56 +324,104 @@ export default class CheckersClient extends SupportController {
 
 
         if (this.selectedObject && this.selectedObject instanceof Pawn) { // vérifie s'il s'agit d'un pion
-            if (!((this.selectedObject as Pawn).dead)) {
-                const pos: Vector3 = (this.selectedObject as Pawn).position;
-                const geometry: BoxGeometry = new BoxGeometry( 6, 0.5, 6);
-
-                let canUse = false
-                if (this.team) {
-                    canUse = this.selectedObject.getName().includes(this.team);
-                }
-
-                const material: MeshBasicMaterial = new MeshBasicMaterial( { color: canUse ? 0x68d0fc : 0xfcdf03 } );
-                material.transparent = true;
-                material.opacity = 0.65;
-
-                const pawns: Pawn[] = this.getPawns(); // optimale
-                let n: number = 1; // compte le nombre d'actionneurs enregistré
-
-
-                let sideMoveUp: number = 1; // Sens primaire du pion
-                if (this.selectedObject.getName().includes("black")) {
-                    sideMoveUp = -1;
-                }
-
-                // vérifie et affiche les cases jouables
-                for (let queen: number = 1; queen >= ((this.selectedObject as Pawn).queen ? -1 : 0); queen-=2) { // On parcourt une deuxième fois la boucle si c'est une reine
-                    for (let i: number = -1; i <= 1; i+=2) {
-                        let x: number = pos.x + i * 6;
-                        let z: number = pos.z + queen * sideMoveUp * 6; // devant ou derrière selon que le pion est une reine ou non
-
-                        let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
-                        if (Math.abs(x) <= 21 && Math.abs(z) <= 21) {
-                            if (!_pawn) { // s'il n'y a aucun pion alors...
-                                this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + this.selectedObject.name + "" + n, this.selectedObject);
-                                n++;
-                            } else if (!this.selectedObject.getName().includes(_pawn.getName().split("-")[0])) {
-                                x+=i * 6;
-                                z+=sideMoveUp * 6;
-
-                                _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
-                                if (!_pawn && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
-                                    this.registerPawnActuator(geometry, material, x , pos.y, z, "actuator-" + this.selectedObject.name + "" + n, this.selectedObject);
-                                    n++;
-                                }
-                            }
-
-                        }
-                    }
-                }
+            const pawn: Pawn = (this.selectedObject as Pawn);
+            if (!(pawn.dead)) {
+                this.showPawnActuators(pawn);
             } else {
                 // enlever la sélection
                 this.unselectAll();
+            }
+        }
+    }
+
+    private showPawnActuators(pawn: Pawn) {
+        const pos: Vector3 = pawn.position;
+        const geometry: BoxGeometry = new BoxGeometry(6, 0.5, 6);
+
+        let canUse = false
+        if (this.team) {
+            canUse = pawn.getName().includes(this.team);
+        }
+
+        const material: MeshBasicMaterial = new MeshBasicMaterial({color: canUse ? 0x68d0fc : 0xfcdf03});
+        material.transparent = true;
+        material.opacity = 0.65;
+
+        const pawns: Pawn[] = this.getPawns(); // optimale
+        let n: number = 1; // compte le nombre d'actionneurs enregistré
+
+
+        let sideMoveUp: number = 1; // Sens primaire du pion
+        if (pawn.getName().includes("black")) {
+            sideMoveUp = -1;
+        }
+        if (pawn.queen) {
+            for (let i: number = -1; i <= 1; i+=2) {
+                const pasZ = i * 6;
+                for (let j: number = -1; j <= 1; j+=2) {
+                    const pasX = j * 6;
+
+                    let x: number = pos.x + pasX;
+                    let z: number = pos.z + pasZ;
+                    let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+
+                    while (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !(_pawn && pawn.getName().includes(_pawn.getName().split("-")[0]))) {
+                        if (!_pawn) {
+                            this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
+                            n++;
+                        }
+
+                        x+=pasX;
+                        z+=pasZ;
+                        _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                    }
+
+                }
+            }
+        } else {
+            // actions des mouvements en avant simple + prises en avant
+            for (let i: number = -1; i <= 1; i += 2) {
+                let x: number = pos.x + i * 6;
+                let z: number = pos.z + sideMoveUp * 6; // devant
+
+                let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                if (Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                    if (!_pawn) { // s'il n'y a aucun pion alors...
+                        this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
+                        n++;
+                    } else if (!pawn.getName().includes(_pawn.getName().split("-")[0])) { // il y a un pion donc si il est dans l'équipe adverse action de prise si possible
+                        x += i * 6;
+                        z += sideMoveUp * 6;
+
+                        _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                        if (!_pawn && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                            this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
+                            n++;
+                        }
+                    }
+                }
+            }
+
+            // actions de prises de pions en arrière
+            for (let i: number = -1; i <= 1; i += 2) {
+                let x: number = pos.x + i * 6;
+                let z: number = pos.z - sideMoveUp * 6; // derrière
+
+                let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                if (Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                    if (_pawn && !pawn.getName().includes(_pawn.getName().split("-")[0])) { // s'il y a un pion.
+
+                        x += i * 6;
+                        z -= sideMoveUp * 6;
+
+                        _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                        if (!_pawn && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                            this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
+                            n++;
+                        }
+
+                    }
+                }
             }
         }
     }
@@ -401,6 +505,7 @@ export default class CheckersClient extends SupportController {
 
         if (pawnKilled) {
             pawnKilled.kill();
+            console.log("ce pion est tué: ", name);
             this.objectRegistry.delete(name);
             if (this.selectedObject?.getName() == pawnKilled.getName()) {
                 this.unselectAll();
