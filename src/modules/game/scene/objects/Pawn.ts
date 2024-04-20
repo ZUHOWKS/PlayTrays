@@ -19,19 +19,23 @@ export default class Pawn extends PTObject implements AnimationQueueInterface {
         this.animationQueue = new AnimationQueue();
     }
 
-    moveTo(x: number, y: number, z: number) {
+    moveTo(x: number, y: number, z: number, finalCallback?: any) {
 
+        let duration: number = 250;
 
+        const basicPosition: Vector3 = new Vector3(this.position.x, this.position.y, this.position.z);
+        const movVec: Vector3 = new Vector3((x - basicPosition.x), (y - basicPosition.y), (z - basicPosition.z));
         const position: Vector3 = this.object3D.position;
-        let duration: number = 150;
-
-        const movVec: Vector3 = new Vector3((x - position.x), (y - position.y), (z - position.z))
-        const basicPosition: Vector3 = new Vector3(position.x, position.y, position.z);
 
         this.position.set(x, y, z);
 
         this.animationQueue.push({
             duration: duration,
+            startCallback: () => {
+                position.x = basicPosition.x;
+                position.y = basicPosition.y;
+                position.z = basicPosition.z;
+            },
             animationCallback: (relativeProgress: number) => {
                 position.x = basicPosition.x + movVec.x * relativeProgress;
                 position.y = basicPosition.y + movVec.y * relativeProgress;
@@ -42,6 +46,8 @@ export default class Pawn extends PTObject implements AnimationQueueInterface {
                 position.x = x;
                 position.y = y;
                 position.z = z;
+
+                if (finalCallback) finalCallback();
             }
         })
     }
@@ -56,6 +62,7 @@ export default class Pawn extends PTObject implements AnimationQueueInterface {
 
         this.animationQueue.push({
             duration: doIt,
+            startCallback: () => {},
             animationCallback: () => {
                 position.x = x;
                 position.y = y;
