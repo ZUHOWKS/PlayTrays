@@ -3,6 +3,7 @@
  */
 export interface Animation {
     duration:number;
+    startCallback: any;
     animationCallback: any;
     finalCallback?: any;
 }
@@ -13,7 +14,7 @@ export interface Animation {
  *
  */
 export class AnimationQueue {
-    queue: ((timestamp: number) => void)[]; // file, l'animation à l'index 0 est la prochaine.
+    queue: Animation[]; // file, l'animation à l'index 0 est la prochaine.
     currentAnimationFrame: number | undefined; // id de la requête d'animation courante
 
     constructor() {
@@ -28,8 +29,10 @@ export class AnimationQueue {
      * @param animation Animation
      */
     push(animation: Animation) {
-        this.queue.push(this.getAnimate(animation.duration, animation.animationCallback, animation.finalCallback))
+        this.queue.push(animation)
+        console.log("Nombre d'animation => ", this.queue.length);
         if (!this.currentAnimationFrame) {
+            console.log("Passe à la next", this.queue.length);
             this.next();
         }
     }
@@ -38,14 +41,16 @@ export class AnimationQueue {
      * Permet d'obtenir la fonction exécutant l'animation et celle qui suive dans la file.
      *
      * @param duration durée de l'animation
+     * @param startCallback fonction exécutée au commencement de l'animation
      * @param animationCallback fonction exécutée au cours de l'animation
      * @param finalCallback fonction exécutée en fin d'animation
      * @return une fonction prenant en paramètre l'horodatage en milliseconde, exécutant
      * l'animation et celle qui suive dans la file s'il y en a.
      * @private
      */
-    private getAnimate(duration:number, animationCallback: any, finalCallback?: any): ((timestamp: number) => void) {
+    private getAnimate(duration:number, startCallback: any, animationCallback: any, finalCallback?: any): ((timestamp: number) => void) {
         let start: number | undefined = undefined;
+        startCallback();
         const step = (timestamp: number) => {
 
             if(!start) {
@@ -54,13 +59,11 @@ export class AnimationQueue {
 
             const runtime = timestamp - start;
             const relativeProgress = runtime / duration;
-
             if (relativeProgress < 1) {
                 animationCallback(relativeProgress);
                 this.currentAnimationFrame = requestAnimationFrame(step);
-            } else if (finalCallback) {
-                finalCallback();
             } else {
+                if (finalCallback) finalCallback();
                 this.next();
             }
         }
@@ -75,7 +78,8 @@ export class AnimationQueue {
      */
     private next() {
         if (this.queue.length > 0) {
-            this.currentAnimationFrame = requestAnimationFrame(this.queue[0]);
+            const animation = this.queue[0];
+            this.currentAnimationFrame = requestAnimationFrame(this.getAnimate(animation.duration, animation.startCallback, animation.animationCallback, animation.finalCallback));
             this.queue.shift(); // retire le premier élément de la file
         } else {
             this.currentAnimationFrame = undefined;
