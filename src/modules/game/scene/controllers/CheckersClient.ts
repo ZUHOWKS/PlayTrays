@@ -20,6 +20,7 @@ import ActuatorObject from "@/modules/game/scene/objects/ActuatorObject";
 
 interface Action {
     pawn: string;
+    queen: boolean
     moveX: number;
     moveY: number;
     moveZ: number;
@@ -65,26 +66,30 @@ export default class CheckersClient extends SupportController {
                 this.ws.emit("pawn action",
                     ({
                         pawn: subject.getName(),
+                        queen: subject.queen,
                         moveX: actPos.x,
                         moveY: actPos.y,
                         moveZ: actPos.z,
                     } as Action), (error: any, response: any) => {
                         if (error) {
                             console.error(error);
-
-                            response.pawns.forEach((pawn: any) => {
-                                const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
-                                if (pawnObj) {
-                                    pawnObj.setPositionTo(pawn.x, pawn.y, pawn.z);
-                                }
-                            })
+                            if (response.rollback) {
+                                response.pawns.forEach((pawn: any) => {
+                                    const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
+                                    if (pawnObj) {
+                                        pawnObj.dead = pawn.dead;
+                                        pawnObj.queen = pawn.dead
+                                        pawnObj.setPositionTo(pawn.x, pawn.y, pawn.z);
+                                    }
+                                })
+                            }
                         } else if (response) {
                             const actions: Action[] = response.actions as Action[];
-
-                            this.team = response.team;
-                            this.canPlay = response.canPlay
-
                             const firstPawnToKill = response.actions[0].pawnKilled;
+
+                            if (actions[0].queen) {
+                                (this.getObject(actions[0].pawn) as Pawn).queen = actions[0].queen;
+                            }
 
                             // s'il un premier pion a été tué alors régle de la prise maxiamle obligatoire
                             if (firstPawnToKill) {
@@ -105,10 +110,17 @@ export default class CheckersClient extends SupportController {
                                             });
                                         }
 
+                                        if (action.queen) {
+                                            (this.getObject(action.pawn) as Pawn).queen = action.queen;
+                                        }
+
                                         if (actions.indexOf(action) == actions.length-1) {
                                             pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
                                                 toKill.forEach((kill) => kill());
                                             });
+
+                                        } else {
+                                            pawn.moveTo(action.moveX, action.moveY, action.moveZ);
                                         }
                                     }
                                 });
@@ -116,10 +128,12 @@ export default class CheckersClient extends SupportController {
                                 if (actions.length == 0) {
                                     toKill[0]();
                                 }
+
                             }
                         }
 
-                        console.log(response)
+                        this.team = response.team;
+                        this.canPlay = response.canPlay
                     }
                 );
             }
@@ -186,6 +200,10 @@ export default class CheckersClient extends SupportController {
                         });
                     }
 
+                    if (action.queen) {
+                        (this.getObject(action.pawn) as Pawn).queen = action.queen;
+                    }
+
                     if (actions.indexOf(action) == actions.length-1) {
                         pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
                             toKill.forEach((kill) => kill());
@@ -195,6 +213,8 @@ export default class CheckersClient extends SupportController {
                                 this.canPlay = gameInfo.canPlay;
                             }
                         });
+
+
                     } else {
                         pawn.moveTo(action.moveX, action.moveY, action.moveZ);
                     }
@@ -203,7 +223,6 @@ export default class CheckersClient extends SupportController {
 
             this.showSelectedObjectActuators();
         })
-
 
     }
 
@@ -369,11 +388,23 @@ export default class CheckersClient extends SupportController {
                         if (!_pawn) {
                             this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
                             n++;
+                            x+=pasX;
+                            z+=pasZ;
+                            _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                        } else {
+                            break
                         }
+                    }
 
+                    if (_pawn && !pawn.getName().includes(_pawn.getName().split("-")[0])) {
                         x+=pasX;
                         z+=pasZ;
-                        _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
+                        while (!(this.anyPawnAt(new Vector3(x, pos.y, z), pawns)) && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                            this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
+                            n++;
+                            x+=pasX;
+                            z+=pasZ;
+                        }
                     }
 
                 }

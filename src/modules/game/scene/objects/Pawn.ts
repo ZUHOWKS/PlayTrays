@@ -21,7 +21,7 @@ export default class Pawn extends PTObject implements AnimationQueueInterface {
 
     moveTo(x: number, y: number, z: number, finalCallback?: any) {
 
-        let duration: number = 250;
+        let duration: number = 300;
 
         const basicPosition: Vector3 = new Vector3(this.position.x, this.position.y, this.position.z);
         const movVec: Vector3 = new Vector3((x - basicPosition.x), (y - basicPosition.y), (z - basicPosition.z));
@@ -38,7 +38,7 @@ export default class Pawn extends PTObject implements AnimationQueueInterface {
             },
             animationCallback: (relativeProgress: number) => {
                 position.x = basicPosition.x + movVec.x * relativeProgress;
-                position.y = basicPosition.y + movVec.y * relativeProgress;
+                position.y = basicPosition.y + movVec.y * relativeProgress + 1.25 * ((4*(relativeProgress) - 4*(relativeProgress*relativeProgress)));
                 position.z = basicPosition.z + movVec.z * relativeProgress;
             },
             finalCallback: () => {
