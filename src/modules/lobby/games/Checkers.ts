@@ -2,9 +2,11 @@ import PTLobby from "../PTLobby";
 import {Socket} from "socket.io";
 import PTServer from "../../PTServer";
 import Pawn from "../../checkers/Pawn";
+import {Vec3, VecHelp} from "../../utils/Vectors";
 
 interface Action {
     pawn: string;
+    queen: boolean;
     moveX: number;
     moveY: number;
     moveZ: number;
@@ -78,9 +80,12 @@ export default class Checkers extends PTLobby {
             const result: Action[] = this.pawnMoveAction(action as Action, socket);
             const userTeam = this.getTeam(socket.data.user);
             if (result.length == 0) {
-                return callback("Error: can't perform this action !", {pawns: this.getPawnsJSON(), team: userTeam, canPlay: this.whoPlay == userTeam});
+                return callback("Error: can't perform this action !", {pawns: this.getPawnsJSON(), team: userTeam, canPlay: this.whoPlay == userTeam, rollback: true});
+            } else if (action.moveX != result[0].moveX || action.moveY != result[0].moveY || action.moveZ != result[0].moveZ) {
+                callback("Error: can't perform this action !", {team: userTeam, canPlay: this.whoPlay == userTeam, rollback: false});
+                return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam})
             } else {
-                return callback("", {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam});
+                return callback("", {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam, replay: action.pawn});
             }
 
         })
@@ -140,16 +145,74 @@ export default class Checkers extends PTLobby {
 
             // vérifie que le pion est de l'équipe du joueur et qu'il reste sur le plateau
             if (Math.abs(action.moveY - pawn.y) == 0 && pawn.name.includes(this.getTeam(socket.data.user))) {
-                const pos: { x: number, y: number, z: number } = {x: action.moveX, y: action.moveY, z: action.moveZ};
+                let pos: Vec3 = {x: action.moveX, y: action.moveY, z: action.moveZ};
 
                 const xDiff: number = action.moveX - pawn.x;
                 const zDiff: number = action.moveZ - pawn.z;
 
 
                 if (pawn.queen) {
+
                     if (!this.anyPawnAt(pos)) {
-                        for(let i: number = Math.floor(Math.max(Math.abs(xDiff), Math.abs(zDiff))/6); i > 1; i--) {
-                            //TODO: Checker les actions de la reine
+
+                        // check legit action
+                        let pawnToKill: Pawn | undefined;
+                        // on parcours le chemin de l'origine jusqu'à la position du mouvement
+                        for(let i: number = Math.floor(Math.max(Math.abs(xDiff), Math.abs(zDiff))/6) - 1; i > 0; i--) {
+                            pawnToKill = this.anyPawnAt({
+                                x: pos.x + (xDiff < 0 ? i : -i) * 6,
+                                y: pos.y,
+                                z: pos.z + (zDiff < 0 ? i : -i) * 6
+                            });
+
+                            if (pawnToKill && !pawnToKill.dead) {
+                                break // le chemin serra interrompu dans tous les cas (règle de la prise maximale obligatoire ou abort move)
+                            } else {
+                                pawnToKill = undefined;
+                            }
+                        }
+
+                        if (pawnToKill) {
+
+                            if (!pawnToKill.name.includes(pawn.name.split("-")[0]) && !pawnToKill.dead) {
+                                var killPos: Vec3 = {
+                                    x: pawnToKill.x + (xDiff > 0 ? 1 : -1) * 6,
+                                    y: pawnToKill.y,
+                                    z: pawnToKill.z + (zDiff > 0 ? 1 : -1) * 6
+                                }
+
+                                if (!this.anyPawnAt(killPos)) {
+                                    while (!(this.anyPawnAt(killPos) || VecHelp.equal(killPos, pos) || Math.abs(killPos.x) >= 21 && Math.abs(killPos.z) >= 21)) {
+                                        killPos = {
+                                            x: killPos.x + (xDiff > 0 ? 1 : -1) * 6,
+                                            y: killPos.y,
+                                            z: killPos.z + (zDiff > 0 ? 1 : -1) * 6
+                                        }
+                                    }
+
+                                    actions[0].moveX = killPos.x;
+                                    actions[0].moveY = killPos.y;
+                                    actions[0].moveZ = killPos.z;
+                                    actions[0].pawnKilled = pawnToKill.name;
+
+                                    pawn.setPosition(killPos);
+
+                                    actions.forEach((action) => {
+                                        // @ts-ignore
+                                        this.getPawn(action.pawnKilled)?.dead = true; // l'action comporte toujours un pion tué
+                                    })
+
+                                    this.emitWithout(socket, "pawn action", actions)
+                                    return actions;
+                                }
+
+                            }
+                        } else {
+                            this.whoPlay = this.getTeam(socket.data.user) == "black" ? "white" : "black"
+                            pawn.setPosition(pos);
+
+                            this.emitWithout(socket, "pawn action", actions)
+                            return actions;
                         }
                     }
                 } else {
@@ -158,6 +221,10 @@ export default class Checkers extends PTLobby {
                         if (!this.anyPawnAt(pos)) {
                             this.whoPlay = this.getTeam(socket.data.user) == "black" ? "white" : "black"
                             pawn.setPosition(pos);
+
+                            if (pawn.queen) {
+                                actions[0].queen = true
+                            }
 
                             this.emitWithout(socket, "pawn action", actions)
                             return actions;
@@ -176,7 +243,6 @@ export default class Checkers extends PTLobby {
                                 if (!this.anyPawnAt(pos)) {
                                     actions[0].pawnKilled = pawnToKill.name;
 
-                                    console.log("ACTION 0 §§§§ >>>> ", actions[0]);
                                     this.whoPlay = this.getTeam(socket.data.user) == "black" ? "white" : "black"
 
                                     actions = this.obligatoryKill(pawn, pos, actions);
@@ -189,7 +255,10 @@ export default class Checkers extends PTLobby {
                                         this.getPawn(action.pawnKilled)?.dead = true; // l'action comporte toujours un pion tué
                                     })
 
-                                    console.log("Actions envoyées => ", actions);
+                                    if (pawn.queen) {
+                                        actions[actions.length - 1].queen = true
+                                    }
+
                                     this.emitWithout(socket, "pawn action", actions)
                                     return actions;
                                 }
@@ -197,7 +266,6 @@ export default class Checkers extends PTLobby {
                         }
                     }
                 }
-
             }
         }
 
@@ -230,7 +298,7 @@ export default class Checkers extends PTLobby {
      * @return Le pion trouvé à la localisation donnée, sinon undefined.
      * @private
      */
-    private anyPawnAt(pos: {x: number; y: number; z: number}): Pawn | undefined {
+    private anyPawnAt(pos: Vec3): Pawn | undefined {
 
         for (let i:number = 0; i < this.pawns.length; i++) {
             const pawn: Pawn = this.pawns[i];
@@ -247,56 +315,52 @@ export default class Checkers extends PTLobby {
      * Selon la régle du jeu des dames de la prise obligatoire maximale, détermine la liste
      * des actions à effectuer.
      *
-     * @param pawn
-     * @param pos
+     * @param pawn pion responsable
+     * @param pos position checké
+     * @param lastActions les actions précèdement effectués
      * @private
      */
     private obligatoryKill(pawn: Pawn, pos: {x: number; y: number; z: number}, lastActions: Action[]): Action[] {
         let actions: Action[] = lastActions;
 
-        for (let i: number = -1; i <= 1; i+=2) {
-            const pasZ = i * 6;
-            for (let j: number = -1; j <= 1; j+=2) {
-                const pasX = j * 6;
 
-                let x: number = pos.x + pasX;
-                let z: number = pos.z + pasZ;
+            for (let i: number = -1; i <= 1; i+=2) {
+                const pasZ = i * 6;
+                for (let j: number = -1; j <= 1; j+=2) {
+                    const pasX = j * 6;
 
-                const pawnToKill: Pawn | undefined = this.anyPawnAt({x: x, y: pos.y, z: z});
+                    let x: number = pos.x + pasX;
+                    let z: number = pos.z + pasZ;
 
-                if (pawnToKill && !(pawnToKill.name.includes(pawn.name.split("-")[0])) && !pawnToKill.dead && !this.pawnWasKilledInActions(pawnToKill, lastActions)) {
+                    const pawnToKill: Pawn | undefined = this.anyPawnAt({x: x, y: pos.y, z: z});
 
-                    x+=pasX;
-                    z+=pasZ;
+                    if (pawnToKill && !(pawnToKill.name.includes(pawn.name.split("-")[0]) || pawnToKill.dead || this.pawnWasKilledInActions(pawnToKill, lastActions))) {
 
-                    if (Math.abs(x) <= 21 && Math.abs(x) <= 21 && !this.anyPawnAt({x: x, y: pos.y, z: z})) {
-                        let _actions: Action[] = lastActions;
-                        _actions.push({
-                            pawn: pawn.name,
-                            moveX: x,
-                            moveY: pos.y,
-                            moveZ: z,
-                            pawnKilled: pawnToKill.name
-                        } as Action);
+                        x+=pasX;
+                        z+=pasZ;
 
-                        console.log("DEBUG ObligatoryKill: Action temp possible => ", {
-                            pawn: pawn.name,
-                            moveX: x,
-                            moveY: pos.y,
-                            moveZ: z,
-                            pawnKilled: pawnToKill.name
-                        } as Action);
+                        if (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !this.anyPawnAt({x: x, y: pos.y, z: z})) {
+                            let _actions: Action[] = lastActions;
+                            _actions.push({
+                                pawn: pawn.name,
+                                queen: false,
+                                moveX: x,
+                                moveY: pos.y,
+                                moveZ: z,
+                                pawnKilled: pawnToKill.name
+                            } as Action);
 
-                        _actions.concat(this.obligatoryKill(pawn, {x: x, y: pos.y, z: z}, _actions));
+                            _actions = this.obligatoryKill(pawn, {x: x, y: pos.y, z: z}, _actions);
 
-                        if (_actions.length > actions.length) {
-                            actions = _actions;
+                            if (_actions.length > actions.length) {
+                                actions = _actions;
+                            }
                         }
-                    }
 
+                    }
                 }
             }
-        }
+
 
         return actions;
     }
@@ -304,7 +368,7 @@ export default class Checkers extends PTLobby {
     private pawnWasKilledInActions(pawn: Pawn, actions: Action[]): boolean {
 
         for(let i: number = 0; i < actions.length; i++) {
-            if (actions[i].pawnKilled?.includes(pawn.name)) {
+            if (actions[i].pawnKilled === pawn.name) {
                 return true;
             }
         }
@@ -333,10 +397,10 @@ export default class Checkers extends PTLobby {
     }
 
 
-    emitWithout(socketNotEmit: Socket, event: string, ...args: any[]) {
+    emitWithout(socketNotEmit: Socket | null, event: string, ...args: any[]) {
         const socketArray: Socket[] = Array.from(this.sockets.values());
         socketArray.forEach((socket) => {
-            if (socket.data.user != socketNotEmit.data.user) {
+            if (!socketNotEmit || socket.data.user != socketNotEmit.data.user) {
                 const userTeam = this.getTeam(socket.data.user)
                 socket.emit(event, ...args, {team: userTeam, canPlay: this.whoPlay == userTeam});
             }

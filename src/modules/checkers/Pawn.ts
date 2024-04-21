@@ -1,3 +1,4 @@
+import {Vec3} from "../utils/Vectors";
 
 
 export default class Pawn {
@@ -21,9 +22,14 @@ export default class Pawn {
      *
      * @param pos vecteur à 3 coordonnées
      */
-    setPosition(pos: {x: number, y: number, z: number}) {
+    setPosition(pos: Vec3) {
         this.x = pos.x;
         this.y = pos.y;
         this.z = pos.z;
+
+        // deviens reine quand il atteint le quand ennemi
+        if (!this.queen && this.z == 21 * (this.name.includes("white") ? 1 : -1)) {
+            this.queen = true;
+        }
     }
 }
