@@ -87,9 +87,9 @@ function init(): void {
     controls.value.saveState();
     controls.value.update();
 
-    // Connection à la partie + setup du jeu
-    const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
-    establishConnectionWithGameServer("checkers", user);
+    // Connection à la partie + setup du jeu (test checkers)
+    //const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
+    //establishConnectionWithGameServer("checkers", user);
 
     // Actualisation des paramètres du renderer et de la caméra
     updateCamera();
