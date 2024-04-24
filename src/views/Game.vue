@@ -10,9 +10,23 @@ import {io, type Socket} from "socket.io-client";
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
 import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
 import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
+import type User from "@/modules/utils/User";
+import {useRouter} from "vue-router";
+import axios from "axios";
 
+const router = useRouter();
+if (!localStorage.getItem("PTToken")) router.push('/login');
+
+axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("PTToken")}`;
 
 let gameTray: TrayGame; // Game Manager
+const user: Ref<User> = ref({
+  id: -1,
+  username: '',
+  points: -1,
+  updatedAt: '',
+  createdAt: ''
+})
 
 const experience: Ref<HTMLCanvasElement | null> = ref<HTMLCanvasElement | null>(null); // VueJS variable, canvas de la scène 3d
 let renderer: Ref<THREE.WebGLRenderer>; // Renderer de la caméra
@@ -86,10 +100,6 @@ function init(): void {
     controls.value.keyPanSpeed = 60;
     controls.value.saveState();
     controls.value.update();
-
-    // Connection à la partie + setup du jeu (test checkers)
-    //const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
-    //establishConnectionWithGameServer("checkers", user);
 
     // Actualisation des paramètres du renderer et de la caméra
     updateCamera();
@@ -178,10 +188,10 @@ function setupModels(): void {
  *
  * @param game
  */
-function establishConnectionWithGameServer(game: string, user: number): void {
+function establishConnectionWithGameServer(game: string): void {
   ws = io("http://localhost:25525", {
     auth: {
-      user: user,
+      user: user.value.id,
       token: "",
       lobbyUUID: "testCheckers"
     }
@@ -275,7 +285,20 @@ function animate() {
   requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
 
+axios.get('http://localhost:3333/api/v1/user/info').then((response) => {
+  user.value.id = response.data.id;
+  user.value.username = response.data.username;
+  user.value.points = response.data.points;
+  user.value.updatedAt = response.data.updatedAt;
+  user.value.createdAt = response.data.createdAt;
+
+  // Connection à la partie + setup du jeu (test checkers)
+  //const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
+  //establishConnectionWithGameServer("checkers", user);
+})
+
 init(); //lancer l'initialisation de la scène Three
+
 
 </script>
 
