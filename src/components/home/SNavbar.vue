@@ -1,4 +1,23 @@
 <script setup lang="ts">
+import {useRouter} from "vue-router";
+
+  const router = useRouter();
+
+  const register = () => {
+    if (localStorage.getItem("PTToken")) {
+      router.push('/app');
+    } else {
+      router.push('/register');
+    }
+
+  }
+  const login = () => {
+    if (localStorage.getItem("PTToken")) {
+      router.push('/app');
+    } else {
+      router.push('/login');
+    }
+  }
 </script>
 
 <template>
@@ -27,12 +46,12 @@
     <div class="row">
 
       <!-- bouton pour aller au menu -->
-      <button class="play-button">
+      <button class="play-button" @click="login">
         Play on a Tray!
       </button>
 
       <!-- bouton pour se connecter ou s'enregistrer -->
-      <button class="sign-up-button">
+      <button class="sign-up-button" @click="register">
         Sign up
       </button>
     </div>
