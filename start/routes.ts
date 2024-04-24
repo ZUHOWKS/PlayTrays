@@ -9,22 +9,36 @@
 
 import router from '@adonisjs/core/services/router'
 import AuthController from '#controllers/auth_controller'
-import User from '#models/user'
 import { middleware } from '#start/kernel'
-/*
-router.get('/', async () => {
-    return {hello:'world'}
-})
-*/
-
-router.post('api/test', async ({ auth }) => {
-  console.log(auth)
-  console.log(auth.user) // User
-  console.log(auth.authenticatedViaGuard) // 'api'
-  console.log(auth.user!.currentAccessToken) // AccessToken
-})
+import UserController from "#controllers/user_controller";
 
 
-router.post('api/register', [AuthController, 'register'])
+router.group(() => {
+  router.group(() => {
 
-router.post('api/login', [AuthController, 'login'])
+    /*
+        Register & Login Routes
+     */
+    router.post('register', [AuthController, 'register'])
+    router.post('login', [AuthController, 'login'])
+
+    /*
+        Logged routes
+     */
+    router.group(() => {
+
+      router.group(() => {
+        router.get('info', [UserController, 'info'])
+      }).prefix('user')
+
+
+    }).use(middleware.auth({
+      guards: ['api']
+    }))
+
+  }).prefix('v1')
+}).prefix('api')
+
+
+
+
