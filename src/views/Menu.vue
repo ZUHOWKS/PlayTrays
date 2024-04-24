@@ -2,13 +2,13 @@
 
   import {useRouter} from "vue-router";
   import {type Ref, ref} from "vue";
-  import axios from "axios";
   import type User from "@/modules/utils/User";
+  import {Axios} from "@/services";
 
   const router = useRouter();
   if (!localStorage.getItem("PTToken")) router.push('/login');
 
-  axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("PTToken")}`;
+  Axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("PTToken")}`;
 
   const user: Ref<User> = ref({
     id: -1,
@@ -19,7 +19,7 @@
   })
 
   function init() {
-    axios.get('http://localhost:3333/api/v1/user/info').then((response) => {
+    Axios.get('/api/v1/user/info').then((response) => {
       user.value.id = response.data.id;
       user.value.username = response.data.username;
       user.value.points = response.data.points;

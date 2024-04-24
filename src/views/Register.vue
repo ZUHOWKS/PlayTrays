@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from "axios";
 import {useRouter} from "vue-router";
+import {Axios} from "@/services";
 
 const router = useRouter();
 
@@ -20,7 +20,7 @@ function registerForm() {
   formData.append('password', password.value);
   formData.append('passwordConfirmed', confirmPassword.value);
 
-  axios.post('http://localhost:3333/api/v1/register', formData, {
+  Axios.post('/api/v1/register', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }

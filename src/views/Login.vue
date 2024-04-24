@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import {ref} from "vue";
-  import axios from "axios";
   import {useRouter} from "vue-router";
+  import {Axios} from "@/services";
 
   const router = useRouter();
 
@@ -16,14 +16,14 @@
     formData.append('email', email.value);
     formData.append('password', password.value);
 
-    axios.post('http://localhost:3333/api/v1/login', formData, {
+    Axios.post('/api/v1/login', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     }).then((response) => {
 
       localStorage.setItem("PTToken", response.data.token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+      Axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
 
       router.push('/app');
 
