@@ -1,12 +1,9 @@
-import type { HttpContext } from '@adonisjs/core/http'
-import {Database} from "@adonisjs/lucid/database";
+import type {HttpContext} from '@adonisjs/core/http'
 import User from "#models/user";
 import hash from '@adonisjs/core/services/hash'
 
 export default class AuthController {
-  public async index(){
-    return User.all()
-  }
+
   async register({ request, response}: HttpContext) {
     const { email, username, password, passwordConfirmed } = request.only(['email', 'username', 'password', 'passwordConfirmed']);
     /**
@@ -32,9 +29,10 @@ export default class AuthController {
         username: username,
         password: password,
         points: 0})
-      return User.all()
+      return response.ok('Account created successfully');
     }
   }
+
   async login({ request, response }: HttpContext) {
     const { email, password } = request.only(['email', 'password'])
 
@@ -50,14 +48,14 @@ export default class AuthController {
     /**
      * Verify the password using the hash service
      */
-    await hash.verify(user.password, password)
 
-    const token = await User.accessTokens.create(user)
-
-    return {
-      type: 'bearer',
-      value: token.value!.release(),
+    if (await hash.verify(user.password, password)) {
+      return await User.accessTokens.create(user)
+    } else {
+      return response.abort("Invalid credentials")
     }
+
+
   }
 }
 
