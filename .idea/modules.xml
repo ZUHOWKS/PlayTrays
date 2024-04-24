@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../PlayTrays/.idea/PlayTrays.iml" filepath="$PROJECT_DIR$/../PlayTrays/.idea/PlayTrays.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/PlayTrays-back.iml" filepath="$PROJECT_DIR$/.idea/PlayTrays-back.iml" />
     </modules>
   </component>
