@@ -1,46 +1,62 @@
 <script setup lang="ts">
 
-  import {useRouter} from "vue-router";
-  import {type Ref, ref} from "vue";
-  import type User from "@/modules/utils/User";
-  import {Axios} from "@/services";
+import {type Router, useRouter} from "vue-router";
+import {type Ref, ref} from "vue";
+import type User from "@/modules/utils/User";
+import AccountServices from "@/services/account_services";
 
-  const router = useRouter();
-  if (!localStorage.getItem("PTToken")) router.push('/login');
+const router: Router = useRouter();
+if (!AccountServices.isLogged()) AccountServices.logout(router);
 
-  Axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("PTToken")}`;
+const user: Ref<User> = ref({
+  id: -1,
+  username: '',
+  points: -1,
+  updatedAt: '',
+  createdAt: ''
+})
 
-  const user: Ref<User> = ref({
-    id: -1,
-    username: '',
-    points: -1,
-    updatedAt: '',
-    createdAt: ''
+function init() {
+  AccountServices.getUserInfos().then((response) => {
+    user.value.id = response.data.id;
+    user.value.username = response.data.username;
+    user.value.points = response.data.points;
+    user.value.updatedAt = response.data.updatedAt;
+    user.value.createdAt = response.data.createdAt;
+  }).catch(error => {
+    AccountServices.logout(router);
   })
+}
 
-  function init() {
-    Axios.get('/api/v1/user/info').then((response) => {
-      user.value.id = response.data.id;
-      user.value.username = response.data.username;
-      user.value.points = response.data.points;
-      user.value.updatedAt = response.data.updatedAt;
-      user.value.createdAt = response.data.createdAt;
-    })
-  }
+init();
 
-  init();
-
-  function logout() {
-    localStorage.removeItem("PTToken");
-    router.push('/');
-  }
 </script>
 
 <template>
-  <p>{{user.username}}</p>
-  <p>{{user.points}} points</p>
+  <!-- Bar de navigation -->
+  <nav class="side-nav">
 
-  <button class="logout" @click="logout">
+  </nav>
+
+  <!-- Contenue de la page ainsi que la top bar -->
+  <main>
+    <section class="top-section">
+
+    </section>
+
+    <!-- Contenue de la page -->
+    <section class="container-section">
+      <!--
+        Le contenue de la catégorie sélectionné via la barre de navigation
+        sera placé dans cette section
+
+        Ainsi ce qui reste affiché de manière permanente dans le menu sera
+        la Side Nav & la Barre Top
+      -->
+    </section>
+  </main>
+
+  <button class="logout" @click="AccountServices.logout(router)">
     Logout
   </button>
 </template>

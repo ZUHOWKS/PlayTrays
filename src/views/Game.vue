@@ -12,12 +12,10 @@ import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
 import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
 import type User from "@/modules/utils/User";
 import {useRouter} from "vue-router";
-import {Axios} from "@/services";
+import AccountServices from "@/services/account_services";
 
 const router = useRouter();
-if (!localStorage.getItem("PTToken")) router.push('/login');
-
-Axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("PTToken")}`;
+if (!AccountServices.isLogged()) AccountServices.logout(router);
 
 let gameTray: TrayGame; // Game Manager
 const user: Ref<User> = ref({
@@ -113,6 +111,18 @@ function init(): void {
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
     addEventListener('dblclick', selectOnClick);
+  });
+
+  AccountServices.getUserInfos().then((response) => {
+    user.value.id = response.data.id;
+    user.value.username = response.data.username;
+    user.value.points = response.data.points;
+    user.value.updatedAt = response.data.updatedAt;
+    user.value.createdAt = response.data.createdAt;
+
+    // Connection à la partie + setup du jeu (test checkers)
+    //const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
+    //establishConnectionWithGameServer("checkers", user);
   })
 }
 
@@ -284,18 +294,6 @@ function animate() {
   updateRender(); // mise à jour du rendu
   requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
-
-Axios.get('/api/v1/user/info').then((response) => {
-  user.value.id = response.data.id;
-  user.value.username = response.data.username;
-  user.value.points = response.data.points;
-  user.value.updatedAt = response.data.updatedAt;
-  user.value.createdAt = response.data.createdAt;
-
-  // Connection à la partie + setup du jeu (test checkers)
-  //const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
-  //establishConnectionWithGameServer("checkers", user);
-})
 
 init(); //lancer l'initialisation de la scène Three
 
