@@ -1,30 +1,23 @@
 <script setup lang="ts">
   import {ref} from "vue";
   import {useRouter} from "vue-router";
-  import {Axios} from "@/services";
+  import AccountServices from "@/services/account_services";
 
   const router = useRouter();
 
-  if (localStorage.getItem("PTToken")) router.push('/app');
+  if (AccountServices.isLogged()) router.push('/app');
 
   const email = ref('');
   const password = ref('');
 
   function loginForm() {
 
-    const formData = new FormData();
+    const formData: FormData = new FormData();
     formData.append('email', email.value);
     formData.append('password', password.value);
 
-    Axios.post('/api/v1/login', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }).then((response) => {
-
-      localStorage.setItem("PTToken", response.data.token);
-      Axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
-
+    AccountServices.login(formData).then((response) => {
+      AccountServices.registerToken(response.data.token);
       router.push('/app');
 
     }).catch(error => {

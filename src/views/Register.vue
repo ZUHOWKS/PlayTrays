@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import {useRouter} from "vue-router";
-import {Axios} from "@/services";
+import AccountServices from "@/services/account_services";
 
 const router = useRouter();
 
-if (localStorage.getItem("PTToken")) router.push('/app');
+if (AccountServices.isLogged()) router.push('/app');
 
 const email = ref('');
 const username = ref('');
@@ -20,13 +20,16 @@ function registerForm() {
   formData.append('password', password.value);
   formData.append('passwordConfirmed', confirmPassword.value);
 
-  Axios.post('/api/v1/register', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  }).then((response) => {
-    router.push('/login');
+  AccountServices.register(formData).then((response) => {
+    formData.delete('username');
+    formData.delete('passwordConfirmed');
 
+    AccountServices.login(formData).then((response) => {
+      AccountServices.registerToken(response.data.token);
+      router.push('/app');
+    }).catch(error => {
+      router.push('/login');
+    })
   }).catch(error => {
     //TODO: Gestion d'erreur
   });
