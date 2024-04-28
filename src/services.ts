@@ -7,6 +7,10 @@ const Axios = axios.create({
     baseURL: "http://localhost:3333"
 });
 
+/**
+ * Intércepteur de requêtes pour intégrer automatiquement le token
+ * dans le header au niveau du champ 'Authorization'.
+ */
 Axios.interceptors.request.use(request => {
     let token = AccountServices.getToken();
 
@@ -17,6 +21,10 @@ Axios.interceptors.request.use(request => {
     return request;
 })
 
+/**
+ * Intércepteur de réponses pour vérifier la valabilité du token.
+ * Si le token n'est plus valide alors l'utilisateur est déconnecté.
+ */
 Axios.interceptors.response.use(response => {
     return response;
 }, error => {
