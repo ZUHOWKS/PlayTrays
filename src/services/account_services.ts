@@ -8,7 +8,7 @@ export default class AccountServices {
      * @param formData formulaire de la requête
      */
     static login(formData: FormData) {
-        return Axios.post('/api/v1/login', formData, {
+        return Axios.post('/login', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -21,7 +21,7 @@ export default class AccountServices {
      * @param formData formulaire de la requête
      */
     static register(formData: FormData) {
-        return Axios.post('/api/v1/register', formData, {
+        return Axios.post('/register', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -70,6 +70,6 @@ export default class AccountServices {
      * Obtenir les informations du compte utilisateur.
      */
     static getUserInfos() {
-        return Axios.get('/api/v1/user/info');
+        return Axios.get('/user/info');
     }
 }
