@@ -1,12 +1,19 @@
 <script setup lang="ts">
 
 import {type Router, useRouter} from "vue-router";
-import {type Ref, ref} from "vue";
+import {reactive, type Ref, ref} from "vue";
 import type User from "@/modules/utils/User";
 import AccountServices from "@/services/account_services";
+import MainMenu from "@/components/menu/MainMenu.vue";
+import TopBarMenu from "@/components/menu/TopBarMenu.vue";
 
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
+
+// permet de stocker de manière dynamique des variables utiles pour les composants
+const menuInfo = reactive({
+  page: "main"
+});
 
 const user: Ref<User> = ref({
   id: -1,
@@ -41,7 +48,7 @@ init();
   <!-- Contenue de la page ainsi que la top bar -->
   <main>
     <section class="top-section">
-
+      <TopBarMenu></TopBarMenu>
     </section>
 
     <!-- Contenue de la page -->
@@ -53,12 +60,12 @@ init();
         Ainsi ce qui reste affiché de manière permanente dans le menu sera
         la Side Nav & la Barre Top
       -->
+
+      <!-- Affiche de manière conditionnel un des composants -->
+      <MainMenu v-if="menuInfo.page == 'main'"></MainMenu>
+
     </section>
   </main>
-
-  <button class="logout" @click="AccountServices.logout(router)">
-    Logout
-  </button>
 </template>
 
 <style scoped>
