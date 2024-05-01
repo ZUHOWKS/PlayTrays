@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const props = defineProps(['menuInfo']);
+
 
 </script>
 
@@ -8,6 +10,7 @@
       Fonctionnalité principale => Sélection du Mode de jeu et
       lancement du matchmaking
    -->
+
 </template>
 
 <style scoped>
