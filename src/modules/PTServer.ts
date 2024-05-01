@@ -7,7 +7,7 @@ import Checkers from "./lobby/games/Checkers";
  */
 interface AuthServerData {
     identifier: string;
-    key: string;
+    token: string;
 }
 
 /**
@@ -123,7 +123,7 @@ export default class PTServer {
     private isServerAuthentificationValid(auth: any): boolean {
         try {
             const authServerData: AuthServerData = auth as AuthServerData;
-            if (authServerData.identifier == process.env.SERVER_IDENTIFIER && authServerData.key == process.env.SERVER_KEY) {
+            if (authServerData.identifier == process.env.SERVER_IDENTIFIER && authServerData.token == process.env.SERVER_TOKEN) {
                 return true;
             }
         } catch (e) {
