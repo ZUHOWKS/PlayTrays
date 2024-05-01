@@ -5,6 +5,12 @@ import db from "@adonisjs/lucid/services/db";
 
 export default class AuthController {
 
+  /**
+   * Enregistrer un nouvel utilisateur
+   *
+   * @param request
+   * @param response
+   */
   async register({ request, response}: HttpContext) {
     const { email, username, password, passwordConfirmed } = request.only(['email', 'username', 'password', 'passwordConfirmed']);
     /**
@@ -34,6 +40,13 @@ export default class AuthController {
     }
   }
 
+
+  /**
+   * Connecter un utilisateur existant en lui renvoyant son TOKEN utilisateur.
+   *
+   * @param request
+   * @param response
+   */
   async login({ request, response }: HttpContext) {
     const { email, password } = request.only(['email', 'password'])
 
@@ -56,8 +69,6 @@ export default class AuthController {
     } else {
       return response.abort("Invalid credentials")
     }
-
-
   }
 }
 
