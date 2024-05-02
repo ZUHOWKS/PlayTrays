@@ -1,6 +1,7 @@
 import {Server, Socket} from "socket.io";
 import PTLobby from "./lobby/PTLobby";
 import Checkers from "./lobby/games/Checkers";
+import {Axios} from "../services";
 
 /**
  * Permet de modéliser les données d'authentification serveur
@@ -80,6 +81,9 @@ export default class PTServer {
             }
         })
         this.io.listen(25525);
+
+        // Manifester la présence du serveur jeu auprès de l'app
+        Axios.post('/server/manifest').then();
     }
 
     /**
