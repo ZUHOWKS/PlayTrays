@@ -3,6 +3,7 @@ import type {Object3D} from "three";
 export default abstract class PTObject {
     name: string;
     object3D: Object3D;
+    selectable: boolean;
 
     /**
      * Représente les objets de la scène et associe un objet 3D de la scène
@@ -16,6 +17,7 @@ export default abstract class PTObject {
         this.name = name;
         this.object3D = object3D;
         this.object3D.name = name;
+        this.selectable = true;
     }
 
     /**

@@ -256,7 +256,14 @@ function renderOutlineSelection() {
       obj = obj.parent
     }
     outlinePass.selectedObjects = [];
-    outlinePass.selectedObjects.push(obj);
+    if (gameTray) {
+      const _object: PTObject | undefined = gameTray.controller?.getObject(obj.name);
+      if (_object && _object.selectable) {
+        outlinePass.selectedObjects.push(obj);
+      }
+    }
+
+
   }
 
 
