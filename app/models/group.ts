@@ -9,6 +9,9 @@ export default class Group extends BaseModel {
   @column()
   declare leader_id: number
 
+  /**
+   * Obtenir le lobby où au moins un des joueurs du groupe est présent
+   */
   public async getLobby(): Promise<Lobby | null> {
     return await Lobby.query()
       .select('lobbies.uuid')
