@@ -82,7 +82,7 @@ export default class PTServer extends BaseModel {
    */
   public setupLobby(uuid: string, game: string, visibility: string, users: User[]) {
     const ws = PTServerSockets.getInstance().sockets.get(this.id)
-    ws?.emit('create lobby', uuid, game, visibility, (response: any, error: any) => {
+    ws?.emit('create lobby', uuid, game, visibility, (error: any, response: any) => {
       if (error) {
         AdonisWS.io?.to('l' + uuid).emit('matchmaking_error', error)
       } else if (response.status == 200) {
