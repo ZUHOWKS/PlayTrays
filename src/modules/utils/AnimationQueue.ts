@@ -59,7 +59,7 @@ export class AnimationQueue {
 
             const runtime = timestamp - start;
             const relativeProgress = runtime / duration;
-            if (relativeProgress < 1) {
+            if (relativeProgress <= 1) {
                 animationCallback(relativeProgress);
                 this.currentAnimationFrame = requestAnimationFrame(step);
             } else {
