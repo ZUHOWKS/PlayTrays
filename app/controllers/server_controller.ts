@@ -1,6 +1,8 @@
 import type {HttpContext} from '@adonisjs/core/http'
 import PTServer from "#models/pt_server";
 import env from "#start/env";
+import User from "#models/user";
+import {AccessToken} from "@adonisjs/auth/access_tokens";
 
 export default class ServerController {
   ws: [] = []
@@ -25,5 +27,20 @@ export default class ServerController {
     }
 
     return response.abort("Error!");
+  }
+
+  async legitUser({request, response}: HttpContext) {
+    const {userID, userToken, lobbyUUID} = request.only(['userID', 'userToken', 'lobbyUUID']);
+    if (userID && userToken && lobbyUUID) {
+      const user: User | null = await User.find(Number(userID))
+      if (user) {
+        const decodedToken = AccessToken.decode(userToken.substring(0, 4), userToken)
+        if (decodedToken && (await (User.accessTokens.all(user)))[0].verify(decodedToken.secret)) {
+          return response.ok('Authorized')
+        }
+      }
+    }
+
+    return response.abort('Error!')
   }
 }
