@@ -1,16 +1,12 @@
-import { BaseSchema } from '@adonisjs/lucid/schema'
+  import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
-  protected tableName = 'user_lobbys'
+  protected tableName = 'groups'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.string('lobby_uuid')
-        .notNullable()
-        .references('uuid')
-        .inTable('lobbys')
-        .onDelete('CASCADE')
-      table.integer('user_id')
+      table.increments('id').primary()
+      table.integer('leader_id')
         .notNullable()
         .unsigned()
         .references('id')
