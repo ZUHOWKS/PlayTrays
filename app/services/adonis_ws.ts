@@ -172,11 +172,11 @@ class AdonisWS {
 
     for (const _server of servers) {
       const total_lobby: number = (await db.from('pt_servers')
-        .join('lobbys', (query) => {
+        .join('lobbies', (query) => {
           query
-            .on('pt_servers.id', '=', 'lobbys.server_id ')
+            .on('pt_servers.id', '=', 'lobbies.server_id ')
         })
-        .count('lobbys.uuid', 'total'))[0].total
+        .count('lobbies.uuid', 'total'))[0].total
       const _charge = (total_lobby / _server.capacity)
       if (_charge < charge) {
         charge = _charge
