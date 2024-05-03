@@ -1,6 +1,7 @@
 
 import {BaseModel, column} from "@adonisjs/lucid/orm";
 import Lobby from "#models/lobby";
+import User from "#models/user";
 
 export default class Group extends BaseModel {
   @column({ isPrimary: true })
@@ -21,6 +22,22 @@ export default class Group extends BaseModel {
       .where('user_groups.group_id', 1)
       .orWhere('groups.id', 1)
       .groupBy('lobbies.uuid').first()
+  }
+
+  /**
+   * Obtenir la liste des joueurs groupés
+   * @param groupID
+   */
+  public async getUsers(): Promise<User[]> {
+    return User
+      .query()
+      .join('user_groups', (query) => {
+        query
+          .on('users.id', '=', 'user_groups.user_id')
+      }).join('groups', 'groups.leader_id', 'users.id')
+      .groupBy('groups.id')
+      .where('user_groups.group_id', this.id)
+      .where('groups.id', this.id)
   }
 
 }
