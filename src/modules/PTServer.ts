@@ -175,9 +175,10 @@ export default class PTServer {
         socket.join("adonis");
 
         socket.on("create lobby", (uuid: string, game: string, visibility: string,  callback) => {
+            console.log("Setup lobby request...")
             if ((visibility === "public" || visibility === "private") && this.games.get(game) && uuid && this.lobbies.size < this.capacity) {
                 this.createLobby(uuid, game, visibility);
-
+                console.log("Lobby ", uuid, " setup !")
                 const response = {
                     status: 200,
                     lobbies: this.getLobbiesList()
