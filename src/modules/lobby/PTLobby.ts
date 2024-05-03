@@ -74,7 +74,7 @@ export default abstract class PTLobby {
      *
      * @return {attribute: Object}
      */
-    public getJSON(): {uuid: string, game: string, status: string, visibility: string} {
+    public getJSON(): {uuid: string, game: string, status: 'waiting' | 'running' | 'finished', visibility: 'public' | 'private'} {
         return {
             uuid: this.uuid,
             game: this.game,
