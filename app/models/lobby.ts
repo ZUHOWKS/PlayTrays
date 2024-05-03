@@ -6,6 +6,7 @@ import Group from "#models/group";
 
 
 export default class Lobby extends BaseModel {
+  static table = 'lobbies'
 
   @column({ isPrimary: true })
   declare uuid: string
