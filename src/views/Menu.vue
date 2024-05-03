@@ -6,6 +6,7 @@ import type User from "@/modules/utils/User";
 import AccountServices from "@/services/account_services";
 import MainMenu from "@/components/menu/MainMenu.vue";
 import TopBarMenu from "@/components/menu/TopBarMenu.vue";
+import {io} from "socket.io-client";
 
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -30,9 +31,21 @@ function init() {
     user.value.points = response.data.points;
     user.value.updatedAt = response.data.updatedAt;
     user.value.createdAt = response.data.createdAt;
+
+    const ws = io("http://localhost:3333", {
+      auth: {
+        user: user.value.id,
+        token: AccountServices.getToken(),
+      }
+    });
+
+    ws.connect()
+    ws.on('connect', () => console.log('Connecté'))
   }).catch(error => {
     AccountServices.logout(router);
   })
+
+
 }
 
 init();
