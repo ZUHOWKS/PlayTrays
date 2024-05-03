@@ -63,7 +63,15 @@ export default class Checkers extends PTLobby {
 
         // émettre une update de la partie
         const userTeam = this.setTeam(socket.data.user);
-        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam});
+        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam}, (response: any, error: any) => {
+            if (!error && response.loaded && this.status === 'waiting') {
+                if (this.whitePlayer && this.blackPlayer) {
+                    this.status = 'running';
+                    this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status)
+                    this.server.io.to(this.uuid).emit('start');
+                }
+            }
+        });
 
         // évènement de déconnection du socket
         socket.on("disconnect", () => {
@@ -77,18 +85,23 @@ export default class Checkers extends PTLobby {
             moveY: number,
             moveZ: number,
         }, callback) => {
-            const result: Action[] = this.pawnMoveAction(action as Action, socket);
             const userTeam = this.getTeam(socket.data.user);
-            if (result.length == 0) {
-                return callback("Error: can't perform this action !", {pawns: this.getPawnsJSON(), team: userTeam, canPlay: this.whoPlay == userTeam, rollback: true});
-            } else if (action.moveX != result[0].moveX || action.moveY != result[0].moveY || action.moveZ != result[0].moveZ) {
-                callback("Error: can't perform this action !", {team: userTeam, canPlay: this.whoPlay == userTeam, rollback: false});
-                return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam})
-            } else {
-                return callback("", {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam, replay: action.pawn});
+            if (this.status === 'running') {
+                const result: Action[] = this.pawnMoveAction(action as Action, socket);
+                if (result.length > 0) {
+                    if (action.moveX != result[0].moveX || action.moveY != result[0].moveY || action.moveZ != result[0].moveZ) {
+                        callback("Error: can't perform this action !", {team: userTeam, canPlay: this.whoPlay == userTeam, rollback: false});
+                        return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam})
+                    } else {
+                        return callback("", {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam, replay: action.pawn});
+                    }
+                }
             }
 
+            return callback("Error: can't perform this action !", {pawns: this.getPawnsJSON(), team: userTeam, canPlay: this.whoPlay == userTeam, rollback: true});
         })
+
+        //TODO:Timeout de setup de party -> si la party ne se lance pas au bout de 30 secondes, déconnecter tout le monde + fermer le lobby
 
         console.log("The user " + socket.data.user + " join the lobby " + this.uuid + ".")
     }
