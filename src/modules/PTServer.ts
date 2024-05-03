@@ -63,7 +63,7 @@ export default class PTServer {
      * @private
      */
     private initWebSocketServer(): void {
-        this.io.use((socket, next) => this.middleware(socket, next));
+        this.io.use(async (socket, next) => await this.middleware(socket, next));
         this.io.on("connection", (socket) => {
             if (socket.data.authType == "server") {
                 this.setupServerEvents(socket);
@@ -94,14 +94,14 @@ export default class PTServer {
      * en, sinon la communication est interrompue.
      * @private
      */
-    private middleware(socket: any, next: any): void {
+    private async middleware(socket: any, next: any): Promise<void> {
         const auth = socket.handshake.auth;
         if (auth) {
-            if (this.isServerAuthentificationValid(auth)) {
+            if (await this.isServerAuthentificationValid(auth)) {
                 socket.data = {};
                 socket.data.authType = "server";
                 return next();
-            } else if(this.isUserAuthentificationValid(auth)) {
+            } else if(await this.isUserAuthentificationValid(auth)) {
                 socket.data = {};
                 socket.data.authType = "user";
                 socket.data.user = auth.user;
@@ -113,7 +113,7 @@ export default class PTServer {
             }
         }
 
-        next(new Error("not authenticated"));
+        return next(new Error("unauthorized"));
 
     }
 
@@ -124,7 +124,7 @@ export default class PTServer {
      * @return boolean
      * @private
      */
-    private isServerAuthentificationValid(auth: any): boolean {
+    private async isServerAuthentificationValid(auth: any): Promise<boolean> {
         try {
             const authServerData: AuthServerData = auth as AuthServerData;
             if (authServerData.identifier == process.env.SERVER_IDENTIFIER && authServerData.token == process.env.SERVER_TOKEN) {
@@ -144,11 +144,19 @@ export default class PTServer {
      * @return boolean
      * @private
      */
-    private isUserAuthentificationValid(auth: any): boolean {
+    private async isUserAuthentificationValid(auth: any): Promise<boolean> {
         try {
             const authUserData: AuthUserData = auth as AuthUserData;
-            if (authUserData.user && authUserData.lobbyUUID) {
-                return true;
+            if (authUserData.user && authUserData.token && authUserData.lobbyUUID) {
+                const formData = new FormData();
+                formData.append('lobbyUUID', authUserData.lobbyUUID);
+                const response = await Axios.post('/server/legit-user', formData,{
+                    headers: {
+                        Authorization: `Bearer ${authUserData.token}`,
+                    },
+                });
+
+                return response.status == 200;
             }
         } catch (e) {
             console.error(e);
@@ -171,7 +179,7 @@ export default class PTServer {
                 this.createLobby(uuid, game, visibility);
 
                 const response = {
-                    status: "Ok",
+                    status: 200,
                     lobbies: this.getLobbiesList()
                 };
 
@@ -181,7 +189,7 @@ export default class PTServer {
             }
         });
 
-        socket.emit("update lobbies", this.getLobbiesList());
+        socket.emit("update", this.capacity, this.getLobbiesList());
 
     }
 
@@ -203,8 +211,8 @@ export default class PTServer {
      * @private
      * @return Array
      */
-    private getLobbiesList(): {uuid: string, game: string, status: string, visibility: string}[] {
-        const lobbies: { uuid: string, game: string, status: string, visibility: string }[] = [];
+    private getLobbiesList(): {uuid: string, game: string, status: 'waiting' | 'running' | 'finished', visibility: 'public' | 'private'}[] {
+        const lobbies: { uuid: string, game: string, status: 'waiting' | 'running' | 'finished', visibility: 'public' | 'private' }[] = [];
         Array.from(this.lobbies.values()).forEach((lobby: PTLobby) => lobbies.push(lobby.getJSON()));
         return lobbies;
     }
