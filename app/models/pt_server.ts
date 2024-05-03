@@ -71,4 +71,47 @@ export default class PTServer extends BaseModel {
 
     PTServerSockets.getInstance().registerSocket(this.id, ws)
   }
+
+  /**
+   * Permet de créer un lobby
+   *
+   * @param uuid
+   * @param game
+   * @param visibility
+   * @param users utilisateurs à qui une réponse va être renvoyés.
+   */
+  public setupLobby(uuid: string, game: string, visibility: string, users: User[]) {
+    const ws = PTServerSockets.getInstance().sockets.get(this.id)
+    ws?.emit('create lobby', uuid, game, visibility, (response: any, error: any) => {
+      if (error) {
+        AdonisWS.io?.to('l' + uuid).emit('matchmaking_error', error)
+      } else if (response.status == 200) {
+
+        const lobby: Lobby = new Lobby()
+        lobby.uuid = uuid
+        lobby.server_id = this.id
+        lobby.game = game
+        lobby.statut = "waiting"
+        lobby.visibility = "public"
+
+        lobby.save().then(() => users
+          .forEach((user) => lobby.join(user))
+        )
+      } else {
+        AdonisWS.io?.to('l' + uuid).emit('matchmaking_error', {
+          message: "Error response status."
+        })
+      }
+    })
+  }
+
+  public async setOnline() {
+    this.statut = 'online'
+    return this.save()
+  }
+
+  public async setOffline() {
+    this.statut = 'offline'
+    return this.save()
+  }
 }
