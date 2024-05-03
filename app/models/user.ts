@@ -65,8 +65,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
    * Null si l'utilisateur n'est pas groupé.
    */
   public async getGroup(): Promise<Group | null> {
-      return Group.find((await db.from('groups')
-          .select('groups.id as group')
+      return Group.query()
           .join('user_groups', (query) => {
             query
               .on('groups.id', '=', 'user_groups.group_id')
@@ -74,7 +73,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
           .where('groups.leader_id', this.id)
           .orWhere('user_groups.user_id', this.id)
           .first()
-      ).group)
+
   }
 
   /**
