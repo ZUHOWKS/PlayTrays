@@ -26,18 +26,21 @@ export default class Group extends BaseModel {
 
   /**
    * Obtenir la liste des joueurs groupés
-   * @param groupID
    */
   public async getUsers(): Promise<User[]> {
     return User
       .query()
-      .join('user_groups', (query) => {
-        query
-          .on('users.id', '=', 'user_groups.user_id')
-      }).join('groups', 'groups.leader_id', 'users.id')
-      .groupBy('groups.id')
-      .where('user_groups.group_id', this.id)
-      .where('groups.id', this.id)
+      .leftJoin('groups', join => {
+        join.on('users.id', 'groups.leader_id').andOnVal('groups.id', this.id)
+      })
+      .leftJoin('user_groups', join => {
+        join.on('users.id', 'user_groups.user_id')
+          .andOnVal('user_groups.group_id', this.id)
+          .andOnVal('user_groups.invite_accepted', this.id)
+      })
+      .whereNotNull('groups.leader_id')
+      .orWhereNotNull('user_groups.user_id')
+      .distinct()
   }
 
 }
