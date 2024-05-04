@@ -17,6 +17,9 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
+      table.boolean('invite_accepted')
+        .notNullable()
+        .defaultTo(false)
     })
   }
 
