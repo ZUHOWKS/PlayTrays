@@ -187,12 +187,25 @@ class AdonisWS {
     }
 
     if (server) {
-      const uuid: string = randomUUID();
-      server.setupLobby(uuid, game, visibility, users)
-      return uuid;
-    } else {
-      return null;
+      let uuid: string = randomUUID()
+      let _lobby: Lobby | null = await Lobby.find(uuid)
+      let tryIt: number = 1;
+
+      // génére un UUID v4 au maximum X fois tant qu'il n'existe pas dans la table
+      while (_lobby && tryIt < 20) { // valeur arbitraire
+        uuid = randomUUID();
+        _lobby = await Lobby.find(uuid)
+        tryIt++
+      }
+
+      if (!_lobby) {
+        server.setupLobby(uuid, game, visibility, users)
+        return uuid;
+      }
     }
+
+    return null;
+
 
 
   }
