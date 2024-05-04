@@ -8,7 +8,7 @@ import Lobby from "#models/lobby";
 
 
 export default class PTServer extends BaseModel {
-
+  static table = 'pt_servers'
   @column({ isPrimary: true })
   declare id: number
 
