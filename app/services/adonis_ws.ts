@@ -53,18 +53,20 @@ class AdonisWS {
         // get l'id du group de l'utilisateur
         let group: Group | null = await socket.data.user.getGroup()
         // si le joueur n'est pas leader du groupe >> cancel le matchmaking
-        if (group?.id && group.leader_id == socket.data.user.id) return callback('You are not the leader of the group', undefined)
+
+        console.log(group?.leader_id, socket.data.user.id)
+        if (group && group.leader_id != socket.data.user.id) return callback('You are not the leader of the group', undefined)
 
         // on obtient la liste des utilisateurs à matcher
         const users: User[] = []
-        if (group?.id) users.concat(await group.getUsers())
+        if (group?.id) (await group.getUsers()).forEach((user) => users.push(user))
         else users.push((socket.data.user as User))
 
         // on vérifie si le jeu à lancer existe et si le groupe ne dépasse pas le nombre de joueurs requis pour ce même jeu
         const resGame = await db.from('games').select('game', 'max_player as max').where('game', game).first()
-        if (resGame.game && resGame.max >= users.length) {
+        if (resGame?.game && resGame.max >= users.length) {
           callback(undefined, {message: 'Searching a party...'})
-          if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_init', {leader_id: group.leader_id})
+          if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_init', {message: "Searching a party...", leader_id: group.leader_id})
 
           // si le groupe rempli au max un lobby vide >> création d'un lobby privé
           if (resGame.max == users.length) {
@@ -116,7 +118,7 @@ class AdonisWS {
             }
           }
 
-        } else if (resGame.game) { // lorsque le groupe est trop nombreux
+        } else if (resGame?.game) { // lorsque le groupe est trop nombreux
           callback('You are too much', undefined)
         } else {
           callback('Unavailable game! Try an another mod', undefined)
