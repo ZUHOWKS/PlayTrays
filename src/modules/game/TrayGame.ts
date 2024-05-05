@@ -27,7 +27,7 @@ export default class TrayGame {
      * @param orbitControlsRef Contrôles orbitaux de la caméra (autour d'un point,
      * par défaut le point de coordonnée x=0;y=0;z=0)
      */
-    constructor(id: string, statement: "waiting" | "running" | "finished", player: any, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>,) {
+    constructor(id: string, statement: "waiting" | "running" | "finished", player: any, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>,) {
         this.id = id;
         this.statement = statement;
         this.player = player; //TODO: remplacer any par la UserInterface class
