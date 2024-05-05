@@ -10,15 +10,16 @@ import {io, type Socket} from "socket.io-client";
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
 import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
 import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
-import type User from "@/modules/utils/User";
+import type UserInterface from "@/modules/utils/UserInterface";
 import {useRouter} from "vue-router";
 import AccountServices from "@/services/account_services";
+import type PTObject from "@/modules/game/scene/objects/PTObject";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
 
 let gameTray: TrayGame; // Game Manager
-const user: Ref<User> = ref({
+const user: Ref<UserInterface> = ref({
   id: -1,
   username: '',
   points: -1,
