@@ -30,7 +30,7 @@ export default class TrayGame {
     constructor(id: string, statement: "waiting" | "running" | "finished", player: any, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls | null>,) {
         this.id = id;
         this.statement = statement;
-        this.player = player; //TODO: remplacer any par la User class
+        this.player = player; //TODO: remplacer any par la UserInterface class
         this.ws = ws;
 
         if (game == "checkers") {
