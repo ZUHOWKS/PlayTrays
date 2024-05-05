@@ -37,7 +37,7 @@ import {useRouter} from "vue-router";
 
       <!-- hypertextes -->
       <a>About</a>
-      <a>Games</a>
+      <a id="a-games">Games</a>
       <a>Contact</a>
 
     </div>
@@ -99,6 +99,10 @@ import {useRouter} from "vue-router";
     transition: transform .2s ease-in;
   }
 
+  .s-navbar>div:nth-child(1)>#a-games::after {
+    background: rgb(var(--secondary-color));
+  }
+
   .s-navbar>div:nth-child(1)>a:hover::after {
     transform: scaleX(1.05);
   }
@@ -136,7 +140,7 @@ import {useRouter} from "vue-router";
   .sign-up-button {
     width: 200px;
     height: 60px;
-    border-color: rgb(var(--text-color));
+    border-color: rgb(var(--secondary-color));
     background-color: transparent;
   }
 
