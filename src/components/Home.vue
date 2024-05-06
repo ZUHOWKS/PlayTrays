@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SNavbar from "@/components/home/SNavbar.vue";
 import Welcome from "@/components/home/Welcome.vue";
+import Footer from "@/components/home/Footer.vue";
 </script>
 
 <template>
@@ -8,6 +9,7 @@ import Welcome from "@/components/home/Welcome.vue";
   <main>
     <Welcome></Welcome>
   </main>
+  <Footer></Footer>
 </template>
 
 <style scoped>
