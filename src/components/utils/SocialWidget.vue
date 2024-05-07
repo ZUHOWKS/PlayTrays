@@ -170,12 +170,12 @@ function getAllFriendInvitations() {
     justify-items: center;
     justify-content: space-evenly;
     border-bottom: solid 5px rgba(var(--background-color), 0.35);
-    transition: border-color .1s linear;
+    transition: border-color .075s linear;
     margin: 2.5% 0;
   }
 
   .social-nav-bar:hover {
-    border-color: rgba(var(--background-color), 0.75);
+    border-color: rgba(var(--background-color), 0.9);
   }
 
   .social-nav-bar>.nav-icon {
