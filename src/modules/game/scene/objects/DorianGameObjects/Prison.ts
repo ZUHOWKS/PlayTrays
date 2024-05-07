@@ -32,6 +32,9 @@ export class prison extends PTObject implements AnimationQueueInterface{
                 position.z = vectDepart.z + movVec.z*progress;
             },
             finalCallback: (): void => {
+                position.x = vectArrivee.x;
+                position.y = vectArrivee.y;
+                position.z = vectArrivee.z;
                 if (finalCallback) finalCallback();
             }
             })
@@ -45,29 +48,20 @@ export class prison extends PTObject implements AnimationQueueInterface{
     }
 
     select(): void{
-
-        /*
-        this.moveTo(0,0, 0, 100)
-        this.selectable = false;
-        this.moveTo(0,100, 0, 1000, () => {
-            this.object3D.visible = false;
-            this.object3D.position.set(0, 10, 0);
-        })
-
-        this.selectable = true;
-        */
         if (this.isUp){this.down();}
         else {this.up();}
-
     }
 
     unselect(): void {
     }
+    //Descend la prison
     down() : void{
         this.moveTo(0,0, 0, 100)
         this.isUp = false;
 
     }
+
+    //Remonte la prison
     up() : void {
         this.moveTo(0,100, 0, 1000, () => {
             this.object3D.visible = false;
