@@ -128,7 +128,6 @@ export default class CheckersClient extends SupportController {
                                 if (actions.length == 0) {
                                     toKill[0]();
                                 }
-
                             }
                         }
 
@@ -172,9 +171,9 @@ export default class CheckersClient extends SupportController {
         const modelWhitePawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_white.glb")
         const modelBlackPawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_black.glb");
 
-        this.ws.on("setup game", (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}, callbakc): void => {
-            this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
-            return callbakc("", {loaded: true});
+        this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}, callbakc): void => {
+            await this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
+            return callbakc(undefined, {loaded: true});
         })
 
         this.ws.on("rollback game", (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], team: string): void => {
@@ -236,7 +235,7 @@ export default class CheckersClient extends SupportController {
      * @param team équipe du joueur
      * @private
      */
-    private setupGame(pawns: {
+    private async setupGame(pawns: {
         name: string;
         x: number;
         y: number;
@@ -245,7 +244,8 @@ export default class CheckersClient extends SupportController {
         queen: boolean
     }[], modelWhitePawn: Promise<Object3D>, modelBlackPawn: Promise<Object3D>, gameInfo: {team: string, canPlay: boolean}) {
 
-        pawns.forEach(async (pawn) => {
+
+        for (pawn in pawns) {
             // filtre pour les pions mort
             if (!pawn.dead) {
                 if (pawn.name.includes("white")) {
@@ -254,8 +254,7 @@ export default class CheckersClient extends SupportController {
                     await this.registerPawn(modelBlackPawn, pawn);
                 }
             }
-
-        })
+        }
 
         this.team = gameInfo.team;
         this.canPlay = gameInfo.canPlay;
