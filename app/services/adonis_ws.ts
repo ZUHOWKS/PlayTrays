@@ -10,6 +10,7 @@ import PTServer from "#models/pt_server";
 import Lobby from "#models/lobby";
 import Group from "#models/group";
 import {MatchmakingError, MatchmakingResponse} from "../modules/utils/MatchmakingResponse.js";
+import {FriendInterface} from "../modules/utils/UserInterface.js";
 
 interface AuthUserData {
   user: number;
@@ -74,8 +75,9 @@ class AdonisWS {
    */
   public initSocketEvents() {
     this.io?.use(async (socket, next) => await this.authMiddleware(socket, next))
-    this.io?.on('connect', (socket) => {
-
+    this.io?.on('connect', async (socket) => {
+      socket.rooms.clear();
+      socket.join('u'+socket.data.user.id)
       /*
       * Évènement émis par l'utilisateur pour lancer un matchmaking
       *
@@ -88,7 +90,6 @@ class AdonisWS {
         } catch (e) {
           console.error(e)
         }
-
       })
 
       // Join the lobby room pour les utilisateurs membre d'un groupe
@@ -96,7 +97,148 @@ class AdonisWS {
       socket.on('lobby_join_room', () => {
         this.joinLobbyRoom(socket)
       })
+
+      socket.on('user_ping', async (userId: number, callback) => {
+        return await this.pingFriend(userId, (socket.data.user as User), callback);
+      })
+
+      socket.on('group_invite', async (userId: number, callback) => {
+        return await this.groupInvitation(socket, userId, callback);
+      })
+
+      socket.on('group_accept', async (userId: number, callback) => {
+        return await this.acceptGroupInvitation(userId, socket, callback);
+      })
+
+      // join la room du groupe
+      const _g: Group | null = await (socket.data.user as User).getGroup();
+      if (_g) {
+        socket.join('g'+_g.id);
+      }
+
     })
+  }
+
+  /**
+   * Accepter l'invitation d'un groupe.
+   *
+   * @param userId ID de l'utilisateur responsable de l'invitation
+   * @param socket utilisateur qui accept l'invitation
+   * @param callback callback
+   * @private
+   */
+  private async acceptGroupInvitation(userId: number, socket: Socket, callback: any) {
+    const friend: User | null = await User.find(userId); // l'ami qui a invité l'utilisateur
+    const user: User = (socket.data.user as User) // l'utilisateur qui accepte l'invitation
+
+    if (friend && await user.isFriend(friend)) {
+      const _g: Group | null = await friend.getGroup()
+
+      if (_g && await _g.isInvited(user.id)) _g.confirmInvitationOf(user).then(async () => {
+        socket.join('g' + _g.id)
+
+        callback(undefined, {message: 'Vous avez rejoins !', group: await _g.getUsers()})
+      })
+      else return callback("Unauthorized!", undefined)
+
+    } else {
+      return callback("Unauthorized!", undefined)
+    }
+  }
+
+  /**
+   * Inviter un utilisateur en ami dans un groupe.
+   *
+   * @param socket utilisateur responsable de l'invitation.
+   * @param userId ID de l'utilisateur invité
+   * @param callback callback
+   * @private
+   */
+  private async groupInvitation(socket: Socket, userId: number, callback: any) {
+    const user: User = (socket.data.user as User); // utilisateur qui réalise l'invitation
+    const friend: User | null = await User.find(userId); // l'ami qui est invité
+
+    if (friend && await user.isFriend(friend)) {
+      let g: Group | null = await user.getGroup()
+
+      if (!g) {
+        g = await Group.create({
+          leader_id: user.id
+        })
+        socket.join('g'+g.id)
+      }
+
+      if ((await friend.getGroup())?.id != g.id) {
+        g.invite(userId).then(
+          () => {
+            callback(undefined, {message: "Invitation envoyée !"})
+            this.io?.to('u'+friend.id).emit('group_invite', user.id, {
+              message: user.username.charAt(0).toUpperCase() + user.username.slice(1) + " invited you !"
+            })
+          }
+        )
+      } else {
+        callback('Unauthorized!', undefined)
+      }
+
+    } else {
+      callback('Unauthorized!', undefined)
+    }
+  }
+
+  /**
+   * Ping un utilisateur ami pour obtenir l'état d'activité de celui-ci.
+   *
+   * @param friendId id de l'ami
+   * @param user utilisateur responsable
+   * @param callback réponse cliente
+   * @private
+   */
+  private async pingFriend(friendId: number, user: User, callback: any) {
+    const friend: User | null = await User.find(friendId)
+    if (friend) {
+      if (await user.isFriend(friend)) {
+
+        this.io?.to("u" + friend.id).timeout(5000).emit('ping', async (error: any, response: any) => {
+          if (!error && response.length > 0) {
+            const _l: Lobby | null = await friend.getLobby();
+            if (_l) return callback(undefined, {
+              id: friend.id,
+              username: friend.username,
+              online: true,
+              status: "In " + _l.game.charAt(0).toUpperCase() + _l.game.slice(1) + " Party"
+            } as FriendInterface);
+
+            const _g: Group | null = await friend.getGroup();
+            if (_g) return callback(undefined, {
+              id: friend.id,
+              username: friend.username,
+              online: true,
+              status: "Grouped in " + await _g.getMemberNumber() + " stacks"
+            } as FriendInterface);
+
+            return callback(undefined, {
+              id: friend.id,
+              username: friend.username,
+              online: true,
+              status: "Online : In the menu"
+            } as FriendInterface);
+
+          } else {
+            return callback(undefined, {
+              id: friend.id,
+              username: friend.username,
+              online: false,
+              status: 'Offline'
+            } as FriendInterface);
+          }
+        })
+      } else {
+        return callback("Unauthorized!", undefined)
+      }
+    } else {
+      return callback("Unauthorized!", undefined)
+    }
   }
 
   /**
@@ -191,9 +333,15 @@ class AdonisWS {
       }
 
     } else if (resGame?.game) { // lorsque le groupe est trop nombreux
-      callback('You are too much', undefined)
+      callback({
+        message: 'You are too much',
+        error_type: 'max_capacity_exceed'
+      } as MatchmakingError, undefined)
     } else {
-      callback('Unavailable game! Try an another mod', undefined)
+      callback({
+        message: 'Unavailable game! Try an another mod.',
+        error_type: 'unavailable_game'
+      } as MatchmakingError, undefined)
     }
   }
 
@@ -209,10 +357,12 @@ class AdonisWS {
     if (!lobbyUuid) { // Erreur >> Servers Full!
       socket.emit('matchmaking_error', {
         message: 'Error! Servers full!\nPlease retry later.',
-      })
+        error_type: 'servers_full'
+      } as MatchmakingError)
       if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_error', {
         message: 'Error! Servers full!\nPlease retry later.',
-      })
+        error_type: 'servers_full'
+      } as MatchmakingError)
     }
   }
 

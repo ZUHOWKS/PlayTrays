@@ -31,13 +31,14 @@ export default class Group extends BaseModel {
   public async getUsers(): Promise<User[]> {
     return User
       .query()
+      .select('users.id')
       .leftJoin('groups', join => {
         join.on('users.id', 'groups.leader_id').andOnVal('groups.id', this.id)
       })
       .leftJoin('user_groups', join => {
         join.on('users.id', 'user_groups.user_id')
           .andOnVal('user_groups.group_id', this.id)
-          .andOnVal('user_groups.invite_accepted', this.id)
+          .andOnVal('user_groups.invite_accepted', true)
       })
       .whereNotNull('groups.leader_id')
       .orWhereNotNull('user_groups.user_id')
@@ -69,7 +70,11 @@ export default class Group extends BaseModel {
   }
 
   public async invite(userId: number) {
-    await db.table('user_groups').insert({
+    const res = await db.from('user_groups')
+      .where('group_id', this.id)
+      .andWhere('user_id', userId)
+      .first()
+    if (!res) await db.table('user_groups').insert({
       group_id: this.id,
       user_id: userId,
       invite_accepted: false
@@ -94,11 +99,11 @@ export default class Group extends BaseModel {
   /**
    * Permet de confirmer l'invitation d'un utilisateur.
    *
-   * @param user utilisateur
+   * @param user utilisateur invité
    */
   public async confirmInvitationOf(user: User) {
 
-    await user.leave()
+    await user.leaveGroup()
 
     await this.deleteUserInvitation(user.id)
 
@@ -106,17 +111,31 @@ export default class Group extends BaseModel {
       invite_accepted: true
     }).where('user_id', user.id)
       .andWhere('group_id', this.id)
+
   }
 
   /**
-   * Supprimer toutes les invitations utilisateurs ainsi
+   * Supprimer toutes les invitations utilisateurs hors mis celle du groupe
+   * actuel.
    *
    * @param userId
    */
   public async deleteUserInvitation(userId: number) {
-    db.from('user_groups').delete()
+
+    await db.from('user_groups').delete()
       .where('user_id', userId)
-      .andWhere('invite_accepted', false)
+      .andWhere('group_id', '!=', this.id)
+
+  }
+
+  public async getMemberNumber(): Promise<number> {
+    const res = await db.from('user_groups')
+      .where('group_id', this.id)
+      .andWhere('invite_accepted', true)
+      .count('user_id as total')
+      .first()
+
+    return 1 + res.total
   }
 
 }
