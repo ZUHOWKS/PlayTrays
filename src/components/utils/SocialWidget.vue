@@ -142,13 +142,13 @@ function getAllFriendInvitations() {
     font-size: 28px;
   }
 
-  .friend-card>div:nth-child(1)>.online-indicator { //!utilisé
+  .friend-card>div:nth-child(1)>.online-indicator {
     height: 20px;
     margin: 1% 0;
     fill: rgba(0, 255, 0, 0.75);
   }
 
-  .friend-card>div:nth-child(1)>.offline-indicator { //!utilisé
+  .friend-card>div:nth-child(1)>.offline-indicator {
     height: 20px;
     margin: 1% 0;
     fill: rgba(var(--link-color), 0.75);
