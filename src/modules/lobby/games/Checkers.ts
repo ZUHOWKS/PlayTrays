@@ -63,7 +63,7 @@ export default class Checkers extends PTLobby {
 
         // émettre une update de la partie
         const userTeam = this.setTeam(socket.data.user);
-        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam}, (response: any, error: any) => {
+        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam}, (error: any, response: any) => {
             if (!error && response.loaded && this.status === 'waiting') {
                 if (this.whitePlayer && this.blackPlayer) {
                     this.status = 'running';
@@ -100,7 +100,6 @@ export default class Checkers extends PTLobby {
 
             return callback("Error: can't perform this action !", {pawns: this.getPawnsJSON(), team: userTeam, canPlay: this.whoPlay == userTeam, rollback: true});
         })
-
         //TODO:Timeout de setup de party -> si la party ne se lance pas au bout de 30 secondes, déconnecter tout le monde + fermer le lobby
 
         console.log("The user " + socket.data.user + " join the lobby " + this.uuid + ".")
@@ -354,6 +353,7 @@ export default class Checkers extends PTLobby {
 
                         if (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !this.anyPawnAt({x: x, y: pos.y, z: z})) {
                             let _actions: Action[] = lastActions;
+
                             _actions.push({
                                 pawn: pawn.name,
                                 queen: false,
@@ -366,6 +366,7 @@ export default class Checkers extends PTLobby {
                             _actions = this.obligatoryKill(pawn, {x: x, y: pos.y, z: z}, _actions);
 
                             if (_actions.length > actions.length) {
+
                                 actions = _actions;
                             }
                         }
