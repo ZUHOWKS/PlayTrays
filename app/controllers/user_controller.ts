@@ -1,6 +1,9 @@
 import type {HttpContext} from '@adonisjs/core/http'
 import User from "#models/user";
 import {FriendInterface, UserInterface} from "../modules/utils/UserInterface.js";
+import Lobby from "#models/lobby";
+import PTServer from "#models/pt_server";
+import {LobbyInterface} from "../modules/utils/LobbyInterface.js";
 
 
 export default class UserController {
@@ -143,5 +146,20 @@ export default class UserController {
 
       return friendList
     }
+  }
+
+  async getLobby({ auth, response }: HttpContext) {
+    if (auth.isAuthenticated) {
+      const _l: Lobby | null = await auth.getUserOrFail().getLobby()
+      if (_l) {
+        return ({
+          lobby: _l.uuid,
+          game: _l.game,
+          serverURL: (await PTServer.find(_l.server_id))?.url
+        } as LobbyInterface)
+      }
+    }
+
+    response.abort('Unauthorized!')
   }
 }
