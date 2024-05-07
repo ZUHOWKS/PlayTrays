@@ -37,6 +37,7 @@ router.group(() => {
       router.group(() => {
         router.get('info', [UserController, 'info'])
         router.get('friends', [UserController, 'friends'])
+        router.get('lobby', [UserController, 'getLobby'])
       }).prefix('user')
 
       router.group(() => {
@@ -56,9 +57,8 @@ router.group(() => {
      */
     router.group(() => {
       router.post('manifest', [ServerController, 'manifest'])
-    }).prefix('server')
-      .use(middleware.authServer())
-
+      router.post('legit-user', [ServerController, 'legitUser'])
+    }).prefix('server').use(middleware.authServer())
   }).prefix('v1')
 }).prefix('api')
 
