@@ -10,10 +10,11 @@ import {io, type Socket} from "socket.io-client";
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
 import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
 import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
-import type UserInterface from "@/modules/utils/UserInterface";
+import type {UserInterface} from "@/modules/utils/UserInterface";
 import {useRouter} from "vue-router";
 import AccountServices from "@/services/account_services";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
+import type {LobbyInterface} from "@/modules/utils/LobbyInterface";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -47,7 +48,6 @@ const pointer = new THREE.Vector2();
  * Permet de setup la scène 3D avec ThreeJS
  */
 function init(): void {
-
   scene = new THREE.Scene();  // Créer la scène
 
   camera = ref(new THREE.PerspectiveCamera(75, aspectRatio.value, 0.1, 1000)); // Définie la perspective de la caméra
@@ -114,17 +114,21 @@ function init(): void {
     addEventListener('dblclick', selectOnClick);
   });
 
-  AccountServices.getUserInfos().then((response) => {
-    user.value.id = response.data.id;
-    user.value.username = response.data.username;
-    user.value.points = response.data.points;
-    user.value.updatedAt = response.data.updatedAt;
-    user.value.createdAt = response.data.createdAt;
+  AccountServices.getLobby().then((responseLobby) => {
+    const lData: LobbyInterface = responseLobby.data as LobbyInterface;
+    console.log(lData);
+    AccountServices.getUserInfos().then((responseUser) => {
+      const uData: UserInterface = responseUser.data as UserInterface;
+      user.value.id = uData.id;
+      user.value.username = uData.username;
+      user.value.points = uData.points;
+      user.value.updatedAt = uData.updatedAt;
+      user.value.createdAt = uData.createdAt;
 
-    // Connection à la partie + setup du jeu (test checkers)
-    //const user: number = (window.location.port == "5173" ? 1 : 2); //test multiplayer
-    //establishConnectionWithGameServer("checkers", user);
-  })
+      establishConnectionWithGameServer(lData.lobby, lData.game, lData.serverURL)
+    })
+  }).catch(() => router.push('/app'))
+
 }
 
 /**
@@ -175,11 +179,6 @@ function setupLight(): void {
     scene.add(_directionalLight);
   }
 
-
-
-
-
-
 }
 
 /**
@@ -197,18 +196,21 @@ function setupModels(): void {
 /**
  * Établir la connection avec le serveur jeu + la partie
  *
+ * @param uuid
  * @param game
+ * @param url
  */
-function establishConnectionWithGameServer(game: string): void {
-  ws = io("http://localhost:25525", {
+function establishConnectionWithGameServer(uuid: string, game: string,  url: string): void {
+  console.log(uuid, game, url)
+  ws = io(url, {
     auth: {
       user: user.value.id,
-      token: "",
-      lobbyUUID: "testCheckers"
+      token: AccountServices.getToken(),
+      lobbyUUID: uuid
     }
   });
 
-  gameTray = new TrayGame("checkers-test", "waiting", "ZUHOWKS", ws, game, scene, camera, controls);
+  gameTray = new TrayGame(game, "waiting", user, ws, game, scene, camera, controls);
   gameTray.setup();
 }
 
@@ -263,11 +265,7 @@ function renderOutlineSelection() {
         outlinePass.selectedObjects.push(obj);
       }
     }
-
-
   }
-
-
 }
 
 function selectOnClick() {
@@ -303,8 +301,9 @@ function animate() {
   requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
 
-init(); //lancer l'initialisation de la scène Three
 
+
+init(); //lancer l'initialisation de la scène Three
 
 </script>
 
