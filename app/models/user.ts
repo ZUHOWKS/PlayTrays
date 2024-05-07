@@ -267,4 +267,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
       .where('user_lobbies.user_id', this.id)
       .first()
   }
+
+  public async leaveLobby() {
+    return db.from('user_lobbies')
+      .delete()
+      .where('user_id', this.id)
+  }
 }
