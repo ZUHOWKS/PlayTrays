@@ -145,14 +145,13 @@ export default class PTServer {
     private async isUserAuthentificationValid(auth: any): Promise<boolean> {
         try {
             const authUserData: AuthUserData = auth as AuthUserData;
+
             if (authUserData.user && authUserData.token && authUserData.lobbyUUID) {
                 const formData = new FormData();
+                formData.append('userID', authUserData.user+"");
+                formData.append('userToken', authUserData.token);
                 formData.append('lobbyUUID', authUserData.lobbyUUID);
-                const response = await Axios.post('/server/legit-user', formData,{
-                    headers: {
-                        Authorization: `Bearer ${authUserData.token}`,
-                    },
-                });
+                const response = (await Axios.post('/server/legit-user', formData));
 
                 return response.status == 200;
             }
