@@ -36,7 +36,15 @@ router.group(() => {
 
       router.group(() => {
         router.get('info', [UserController, 'info'])
+        router.get('friends', [UserController, 'friends'])
       }).prefix('user')
+
+      router.group(() => {
+        router.post('invite', [UserController, 'inviteFriend'])
+        router.post('accept', [UserController, 'acceptFriend'])
+        router.get('own-invitations', [UserController, 'ownFriendInvite'])
+        router.get('invitations', [UserController, 'friendInvite'])
+      }).prefix('friend')
 
     }).use(middleware.auth({
       guards: ['api']

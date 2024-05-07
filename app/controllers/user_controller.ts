@@ -20,6 +20,13 @@ export default class UserController {
     return;
   }
 
+  /**
+   * Demande d'ami en utilisant l'email.
+   *
+   * @param auth
+   * @param request
+   * @param response
+   */
   async inviteFriend({ auth, request, response }: HttpContext) {
     if (auth.isAuthenticated) {
       const { email } = request.only(['email'])
@@ -41,6 +48,13 @@ export default class UserController {
     return response.abort('Unauthorized!')
   }
 
+  /**
+   * Accepter une demande d'ami via l'id de l'utilisateur
+   *
+   * @param auth
+   * @param request
+   * @param response
+   */
   async acceptFriend({ auth, request, response }: HttpContext) {
     const { id } = request.only(['id'])
 
@@ -56,6 +70,13 @@ export default class UserController {
     return response.abort('Unauthorized!')
   }
 
+  /**
+   * Get la liste des amis
+   *
+   * @param auth
+   * @param request
+   * @param response
+   */
   async friends({ auth }: HttpContext){
     if (auth.isAuthenticated) {
       const user: User = auth.getUserOrFail()
@@ -74,6 +95,13 @@ export default class UserController {
     }
   }
 
+  /**
+   * Get les demandes d'amis.
+   *
+   * @param auth
+   * @param request
+   * @param response
+   */
   async friendInvite({ auth }: HttpContext){
     if (auth.isAuthenticated) {
       const user: User = auth.getUserOrFail()
@@ -93,6 +121,11 @@ export default class UserController {
     }
   }
 
+  /**
+   * Get ses propres demande en ami.
+   *
+   * @param auth
+   */
   async ownFriendInvite({ auth }: HttpContext){
     if (auth.isAuthenticated) {
       const user: User = auth.getUserOrFail()
