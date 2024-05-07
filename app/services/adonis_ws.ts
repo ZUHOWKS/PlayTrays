@@ -148,9 +148,9 @@ class AdonisWS {
         }
       })
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', async () => {
         try {
-          (socket.data.user as User).leaveLobby()
+          if (!(await (await (socket.data.user as User).getLobby())?.isReady())) (socket.data.user as User).leaveLobby()
         } catch (e) {
           console.error(e)
         }
@@ -161,6 +161,20 @@ class AdonisWS {
       if (_g) {
         socket.join('g'+_g.id);
       }
+      const _l: Lobby | null = await  (socket.data.user as User).getLobby()
+      if (_l) {
+        socket.emit('matchmaking_init')
+        if (await _l.isReady()) {
+          socket.emit('matchmaking_confirm', {
+            message: 'Connection to the party...'
+          })
+        } else {
+          socket.emit('matchmaking_info', {
+            message: "Lobby found ! Searching players..."
+          } as MatchmakingResponse)
+        }
+      }
+
 
     })
   }
