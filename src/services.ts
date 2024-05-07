@@ -14,10 +14,8 @@ Axios.interceptors.request.use(request => {
     const token = process.env.SERVER_TOKEN;
 
     if (identifier && token) {
-        const formData = new FormData();
-        formData.set('identifier', identifier);
-        formData.set('token', token);
-        request.data = formData;
+        request.data.append('identifier', identifier);
+        request.data.append('token', token);
     }
 
     return request;
