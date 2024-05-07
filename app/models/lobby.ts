@@ -29,11 +29,11 @@ export default class Lobby extends BaseModel {
    * @param user utilisateur
    */
   public async join(user: User) {
-    await db.table('user_lobbies').insert({
+
+    return db.table('user_lobbies').insert({
       lobby_uuid: this.uuid,
       user_id: user.id
-    })
-    return
+    }).then(() => Adonis_ws.io?.to('u'+user.id).emit('lobby_join_room'))
   }
 
   /**
