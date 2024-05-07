@@ -38,8 +38,6 @@ export default class PTServer {
         });
         this.lobbies = new Map<string, PTLobby>();
         this.capacity = lobbyMax;
-
-
     }
 
     /**
@@ -181,7 +179,6 @@ export default class PTServer {
                 console.log("Lobby ", uuid, " setup !")
                 const response = {
                     status: 200,
-                    lobbies: this.getLobbiesList()
                 };
 
                 return callback(undefined, response);
@@ -189,6 +186,10 @@ export default class PTServer {
                 return callback("Failed authentification", {status: "Failed"});
             }
         });
+
+        socket.on('delete lobby', (uuid: string) => {
+            this.lobbies.delete(uuid);
+        })
 
         socket.emit("update", this.capacity, this.getLobbiesList());
 
