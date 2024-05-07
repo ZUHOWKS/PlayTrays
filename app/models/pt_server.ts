@@ -37,14 +37,17 @@ export default class PTServer extends BaseModel {
       }
     });
 
+    // Lorsque que le socket est connecté
     ws.on('connect', async () => {
       this.setOnline().then(() => console.log('Server ' + this.name + ' online !'))
     })
 
+    // Lorsqu'il est déconnecté
     ws.on('disconnect', async () => {
       this.setOffline().then(() => console.log('Server ' + this.name + ' offline !'))
     })
 
+    // Mettre à jour les lobbies
     ws.on('update', async (capacity: number, lobbies:  {uuid: string, game: string, status: 'waiting' | 'running' | 'finished', visibility: 'public' | 'private'}[]) => {
       this.capacity = capacity
       await this.save()
@@ -67,6 +70,11 @@ export default class PTServer extends BaseModel {
     // Mettre à jour le statut du lobby
     ws.on('lobby_status', (uuid: string, statut: 'waiting' | 'running' | 'finished') => {
       Lobby.find(uuid).then((lobby) => lobby?.merge({statut: statut}).save())
+    })
+
+    // Suppression d'un lobby
+    ws.on('delete lobby', (uuid: string) => {
+      Lobby.query().where('uuid', uuid).delete() // cascade supprime la liste des joueurs dans la table user_lobbies
     })
 
     PTServerSockets.getInstance().registerSocket(this.id, ws)
@@ -94,8 +102,7 @@ export default class PTServer extends BaseModel {
         lobby.statut = "waiting"
         lobby.visibility = "public"
 
-        lobby.save().then(() => users
-          .forEach((user) => lobby.join(user))
+        lobby.save().then(() => lobby.joinAllGrouped(users)
         )
       } else {
         AdonisWS.io?.to('l' + uuid).emit('matchmaking_error', {
