@@ -58,7 +58,7 @@ function getFriendList() {
     const friends: FriendInterface[] = []
 
     _friends.forEach((friend: FriendInterface) => {
-      console.log(friend.id != _friends[_friends.length - 1]?.id)
+
       if (friend.id != _friends[_friends.length - 1].id) {
         ws.emit('user_ping', friend.id, (error, response) => {
           if (!error) friends.push(response);
@@ -107,8 +107,7 @@ function init() {
     // Initialisation du matchmaking
     ws.on('matchmaking_init', (response: MatchmakingResponse, leader_id) => {
       menuInfo.matchmaking.response = {message: "Searching a party..."}
-      menuInfo.matchmaking.isInQueue = true;
-      showOrHiddenMatchmakingBanner();
+      showMatchmakingBanner();
     })
 
     // Information du matchmaking
@@ -123,12 +122,15 @@ function init() {
 
     // Join lobby room (cas où le joueur membre d'un groupe)
     // !IMPORTANT! permet au joueur membre d'un groupe de recevoir la confirmation de matchmaking
-    ws.on('lobby_join_room', () => ws.emit('lobby_join_room'))
+    ws.on('lobby_join_room', () => {
+      ws.emit('lobby_join_room')
+    })
+
 
     // Matchmaking confirm >> lancement de la partie
     ws.on('matchmaking_confirm', (response: MatchmakingResponse) => {
       menuInfo.matchmaking.response = response
-      //TODO: Compte à rebours !
+      router.push('/game')
     })
 
     // Ping par le serveur
@@ -165,8 +167,7 @@ function showPopup(title: string, message: string) {
  */
 function matchmakingError(error: MatchmakingError) {
   console.error(error.error_type);
-  menuInfo.matchmaking.isInQueue = false;
-  showOrHiddenMatchmakingBanner();
+  showMatchmakingBanner();
   showPopup("Any trays in the sky!", error.message);
 }
 
@@ -179,8 +180,7 @@ function startMatchmaking(game: string) {
 
   if (menuInfo.matchmaking.canStart) {
     menuInfo.matchmaking.response = {message: "Searching a party..."}
-    menuInfo.matchmaking.isInQueue = true;
-    showOrHiddenMatchmakingBanner();
+    showMatchmakingBanner();
     ws.emit('matchmaking', game, (error: MatchmakingError, response: MatchmakingResponse) => {
       if (error) { // pas de matchmaking
         matchmakingError(error)
@@ -196,9 +196,10 @@ function startMatchmaking(game: string) {
 /**
  * Afficher ou Cacher la bannière de matchmaking.
  */
-function showOrHiddenMatchmakingBanner() {
+function showMatchmakingBanner() {
+  console.log('cc')
   if (matchmakingBanner.value) {
-    if (menuInfo.matchmaking.isInQueue) {
+    if (!menuInfo.matchmaking.isInQueue) {
       matchmakingBanner.value.style.setProperty('transition', 'all .1s');
       matchmakingBanner.value.style.opacity = 1+"";
       matchmakingBanner.value.style.transform = "scaleX(1)";
@@ -209,11 +210,12 @@ function showOrHiddenMatchmakingBanner() {
       matchmakingBanner.value.style.transform = "scaleX(0)";
     }
   }
+  menuInfo.matchmaking.isInQueue = !menuInfo.matchmaking.isInQueue;
 
 }
 
 /**
- * Afficher la barre de navigation latérale.
+ * Afficher ou Cacher la barre de navigation latérale.
  */
 function sideNavAccessAction() {
   if (sidenav.value) {
@@ -228,7 +230,7 @@ function sideNavAccessAction() {
 }
 
 /**
- * Afficher le widget social.
+ * Afficher ou Cacher le widget social.
  */
 function showSocialWidget() {
 
@@ -290,7 +292,6 @@ function inviteInGroup(userId: number) {
       notification.action = null;
       notification.showNotification = true;
       closeNotification();
-
     }
   })
 }
@@ -318,6 +319,7 @@ init();
       <div class="matchmaking-banner" ref="matchmakingBanner">
         <p>{{menuInfo.matchmaking.response?.message}}</p>
         <svg xmlns="http://www.w3.org/2000/svg" class="icon-load" viewBox="0 0 512 512"><path d="M434.67 285.59v-29.8c0-98.73-80.24-178.79-179.2-178.79a179 179 0 00-140.14 67.36m-38.53 82v29.8C76.8 355 157 435 256 435a180.45 180.45 0 00140-66.92" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="46"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M32 256l44-44 46 44M480 256l-44 44-46-44"/></svg>
+        <svg @click="() => {ws.emit('matchmaking_leave'); showMatchmakingBanner();}" xmlns="http://www.w3.org/2000/svg" class="cancel-button" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M368 368L144 144M368 144L144 368"/></svg>
       </div>
       <TopBarMenu :menu-info="menuInfo" :show-social-widget="showSocialWidget"></TopBarMenu>
     </section>
@@ -359,7 +361,7 @@ init();
     left: 1.5vw;
     height: 7.5vh;
     width: 7.5vh;
-    z-index: 5;
+    z-index: 3;
     position: fixed;
     cursor: pointer;
   }
@@ -404,10 +406,19 @@ init();
     }
   }
 
-  .matchmaking-banner>.icon-load {
+  .matchmaking-banner>svg {
     height: 3.75vh;
+  }
+
+  .matchmaking-banner>.icon-load {
     margin-left: 0.25%;
     animation: loadAnimation 5s linear infinite;
+  }
+
+  .matchmaking-banner>.cancel-button {
+    position: absolute;
+    right: 2.5%;
+    cursor: pointer;
   }
 
   @keyframes loadAnimation {
