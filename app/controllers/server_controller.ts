@@ -31,9 +31,11 @@ export default class ServerController {
 
   async legitUser({request, response}: HttpContext) {
     const {userID, userToken, lobbyUUID} = request.only(['userID', 'userToken', 'lobbyUUID']);
+
     if (userID && userToken && lobbyUUID) {
       const user: User | null = await User.find(Number(userID))
-      if (user) {
+
+      if (user && (await user.getLobby())?.uuid == lobbyUUID) {
         const decodedToken = AccessToken.decode(userToken.substring(0, 4), userToken)
         if (decodedToken && (await (User.accessTokens.all(user)))[0].verify(decodedToken.secret)) {
           return response.ok('Authorized')
