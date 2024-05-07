@@ -38,7 +38,7 @@ La Landing Page sera découpé en plusieurs sections : About, Games (pour prése
 jeux), Contact.
 
 **_État d'avancement :_**
-- [ ] Navbar
+- [x] Navbar
 - [ ] Welcome Section
 - [ ] About Section
 - [ ] Games Section
@@ -62,11 +62,11 @@ seront définies pour des touches spécifiques.
 **_État d'avancement :_**
 - [ ] UHD
 - [ ] Scoreboard
-- [ ] Scene 3D universelle
-- [ ] Modèle de partie universelle
-- [ ] Textures et modèles
-- [ ] Intégration du modèle de chacun des jeux
-- [ ] Intéractions utilisateurs
+- [x] Scene 3D universelle
+- [x] Modèle de partie universelle
+- [x] Textures et modèles
+- [x] Intégration du modèle de chacun des jeux
+- [x] Intéractions utilisateurs
 
 ## Menu de l'Application
 
@@ -78,9 +78,9 @@ sur la même page.
 
 **_État d'avancement :_**
 - [ ] Navbar
-- [ ] Grille de sélection des jeux
-- [ ] Interface liste des parties publique
-- [ ] Formulaire partie privée
+- [x] Grille de sélection des jeux
+- [x] Interface réseau social
+- [x] Système de matchmaking
 
 
 # VueJS
