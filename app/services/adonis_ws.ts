@@ -77,7 +77,7 @@ class AdonisWS {
     this.io?.use(async (socket, next) => await this.authMiddleware(socket, next))
     this.io?.on('connect', async (socket) => {
       socket.rooms.clear();
-      socket.join('u'+socket.data.user.id)
+      socket.join('u'+(socket.data.user as User).id)
       /*
       * Évènement émis par l'utilisateur pour lancer un matchmaking
       *
@@ -86,7 +86,31 @@ class AdonisWS {
       */
       socket.on('matchmaking', async (game: string, callback: any) => {
         try {
-          return await this.startMatchmaking(socket, callback, game)
+          const _l: Lobby | null = (await (socket.data.user as User).getLobby());
+          if (!_l) { // le joueur n'est pas dans un lobby
+            await this.startMatchmaking(socket, callback, game)
+          } else { // si le joueur est déjà dans un lobby
+
+            if (await _l.isReady()) {
+              socket.emit('matchmaking_confirm', {
+                message: 'Connection to the party...'
+              })
+            }
+            else {
+              socket.emit('matchmaking_info', {
+                message: "Lobby found ! Searching players..."
+              } as MatchmakingResponse)
+            }
+          }
+
+        } catch (e) {
+          console.error(e)
+        }
+      })
+
+      socket.on('matchmaking_leave', async () => {
+        try {
+          (socket.data.user as User).leaveLobby()
         } catch (e) {
           console.error(e)
         }
@@ -99,15 +123,37 @@ class AdonisWS {
       })
 
       socket.on('user_ping', async (userId: number, callback) => {
-        return await this.pingFriend(userId, (socket.data.user as User), callback);
+        try {
+          await this.pingFriend(userId, (socket.data.user as User), callback);
+        } catch (e) {
+          console.error(e)
+        }
+
       })
 
       socket.on('group_invite', async (userId: number, callback) => {
-        return await this.groupInvitation(socket, userId, callback);
+        try {
+          await this.groupInvitation(socket, userId, callback);
+        } catch (e) {
+          console.error(e)
+        }
+
       })
 
       socket.on('group_accept', async (userId: number, callback) => {
-        return await this.acceptGroupInvitation(userId, socket, callback);
+        try {
+          await this.acceptGroupInvitation(userId, socket, callback);
+        } catch (e) {
+          console.error(e)
+        }
+      })
+
+      socket.on('disconnect', () => {
+        try {
+          (socket.data.user as User).leaveLobby()
+        } catch (e) {
+          console.error(e)
+        }
       })
 
       // join la room du groupe
@@ -359,10 +405,12 @@ class AdonisWS {
         message: 'Error! Servers full!\nPlease retry later.',
         error_type: 'servers_full'
       } as MatchmakingError)
-      if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_error', {
-        message: 'Error! Servers full!\nPlease retry later.',
-        error_type: 'servers_full'
-      } as MatchmakingError)
+      if (group?.id) {
+        this.io?.to('g' + group.id).emit('matchmaking_error', {
+          message: 'Error! Servers full!\nPlease retry later.',
+          error_type: 'servers_full'
+        } as MatchmakingError)
+      }
     }
   }
 
@@ -376,7 +424,7 @@ class AdonisWS {
    * @private
    */
   private async setupLobbyOnServer(game: string, visibility: string, users: User[]): Promise<string | null> {
-    const servers: PTServer[] = await PTServer.all()
+    const servers: PTServer[] = await PTServer.query().where('statut', 'online')
     let charge: number = 1
     let server: PTServer | undefined
 
@@ -399,7 +447,7 @@ class AdonisWS {
       let _lobby: Lobby | null = await Lobby.find(uuid)
       let tryIt: number = 1;
 
-      // génére un UUID v4 au maximum X fois tant qu'il n'existe pas dans la table
+      // génère un UUID v4 au maximum X fois tant qu'il n'existe pas dans la table
       while (_lobby && tryIt < 20) { // valeur arbitraire
         uuid = randomUUID();
         _lobby = await Lobby.find(uuid)
@@ -423,18 +471,16 @@ class AdonisWS {
    * @private
    */
   private joinLobbyRoom(socket: Socket) {
-    (socket.data.user as User).getGroup().then((g) => {
-      g?.getLobby().then(async (lobby) => {
-        if (lobby) {
-          socket.join('l' + lobby.uuid)
-          if (await lobby.isReady()) socket.emit('matchmaking_confirm', {
-            message: 'Connection to the party...'
-          })
-          else socket.emit('matchmaking_info', {
-            message: "Lobby found ! Searching players..."
-          } as MatchmakingResponse)
-        }
-      })
+    (socket.data.user as User).getLobby().then(async (lobby) => {
+      if (lobby) {
+        socket.join('l' + lobby.uuid)
+        if (await lobby.isReady()) socket.emit('matchmaking_confirm', {
+          message: 'Connection to the party...'
+        })
+        else socket.emit('matchmaking_info', {
+          message: "Lobby found ! Searching players..."
+        } as MatchmakingResponse)
+      }
     })
   }
 }
