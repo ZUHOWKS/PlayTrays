@@ -72,4 +72,29 @@ export default class AccountServices {
     static getUserInfos() {
         return Axios.get('/user/info');
     }
+
+    static inviteFriend(email: string) {
+        const form = new FormData()
+        form.append('email', email)
+        return Axios.post('/friend/invite', form)
+    }
+
+    static acceptFriend(id: number) {
+        const form = new FormData()
+        form.append('id', id)
+        return Axios.post('/friend/accept', form)
+    }
+
+    static getFriends() {
+        return Axios.get('/user/friends')
+    }
+
+    static getFriendInvitations() {
+        return Axios.get('/friend/invitations')
+    }
+
+    static getOwnFriendInvitations() {
+        return Axios.get('/friend/own-invitations')
+    }
+
 }
