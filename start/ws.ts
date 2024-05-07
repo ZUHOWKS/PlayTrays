@@ -3,17 +3,15 @@ import AdonisWS from "#services/adonis_ws";
 import PTServer from "#models/pt_server";
 import Lobby from "#models/lobby";
 import db from "@adonisjs/lucid/services/db";
+import Group from "#models/group";
 
 app.ready(async () => {
 
 
-  /*
+
   // reset des groupes (en cascade sur la table 'user_groups')
   Group.query()
     .delete()
-
-   */
-
 
   // reset des lobbies (en cascade sur la table 'user_lobbies')
   Lobby.query()
@@ -24,7 +22,6 @@ app.ready(async () => {
 
 
   try {
-
     const result = await db.rawQuery(`
       SELECT EXISTS (
         SELECT 1
