@@ -97,4 +97,8 @@ export default class AccountServices {
         return Axios.get('/friend/own-invitations')
     }
 
+    static getLobby() {
+        return Axios.get('/user/lobby')
+    }
+
 }
