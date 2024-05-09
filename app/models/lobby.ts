@@ -3,6 +3,7 @@ import db from "@adonisjs/lucid/services/db";
 import User from "#models/user";
 import Adonis_ws from "#services/adonis_ws";
 import Group from "#models/group";
+import PTServer from "#models/pt_server";
 
 
 export default class Lobby extends BaseModel {
@@ -84,7 +85,7 @@ export default class Lobby extends BaseModel {
    */
   public async isReady(): Promise<boolean> {
     const resGame = await db.from('games').select('game', 'max_player as max').where('game', this.game).first()
-    return await this.getPlayerNumber() >= (resGame.max)
+    return await this.getPlayerNumber() >= (resGame.max) && (await PTServer.find(this.server_id))?.statut === 'online';
   }
 
   /**
