@@ -17,8 +17,8 @@ button {
 
 /* Style par défaut  */
 button:hover {
-    border-color: rgb(var(--primary-color));
-    background: white;
+    border-color: rgb(var(--secondary-color));
+    background: rgb(var(--selector-color));
 }
 
 a {
