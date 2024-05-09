@@ -8,9 +8,10 @@
 
 /* Variable de base */
 :root {
-    --primary-color: 255, 230, 109; /* #FFE66D in decimal RGB */
-    --secondary-color: 197, 137, 232; /* #C589E8 in decimal RGB */
-    --background-color: 247, 255, 247; /* #F7FFF7 in decimal RGB */
+    --primary-color: 255, 229, 99; /* #FFE563FF in decimal RGB */
+    --secondary-color: 200, 107, 250; /* #C77DFFFF in decimal RGB */
+    --selector-color: 250, 250, 255; /* #FAFAFFFF in decimal RGB */
+    --background-color: 249, 255, 249; /* #F9FFF9FF in decimal RGB */
 
     --text-color: 30, 30, 30; /* #1E1E1E in decimal RGB */
     --link-color: 107, 103, 117; /* #6B6775 in decimal RGB */
