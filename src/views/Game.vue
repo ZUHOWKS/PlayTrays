@@ -210,6 +210,9 @@ function establishConnectionWithGameServer(uuid: string, game: string,  url: str
     }
   });
 
+  ws.on('connect_error', () => router.push('/app'))
+  ws.on('disconnect', () => router.push('/app'))
+
   gameTray = new TrayGame(game, "waiting", user, ws, game, scene, camera, controls);
   gameTray.setup();
 }
@@ -311,7 +314,7 @@ init(); //lancer l'initialisation de la scène Three
   <div class="game">
     <canvas ref="experience"/>
   </div>
-  <HUD class="hud"></HUD>
+  <HUD></HUD>
 </template>
 
 <style scoped>
@@ -326,10 +329,4 @@ init(); //lancer l'initialisation de la scène Three
   height: 100%;
 }
 
-.hud {
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1;
-}
 </style>
