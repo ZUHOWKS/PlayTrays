@@ -146,7 +146,7 @@ export default class PTServer {
         try {
             const authUserData: AuthUserData = auth as AuthUserData;
 
-            if (authUserData.user && authUserData.token && authUserData.lobbyUUID) {
+            if (authUserData.user && authUserData.token && authUserData.lobbyUUID && this.lobbies.get(authUserData.lobbyUUID) && this.lobbies.get(authUserData.lobbyUUID)?.getStatus() != 'finished') {
                 const formData = new FormData();
                 formData.append('userID', authUserData.user+"");
                 formData.append('userToken', authUserData.token);
