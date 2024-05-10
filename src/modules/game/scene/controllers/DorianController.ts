@@ -64,16 +64,16 @@ export default class DorianGame extends SupportController{
 
         //Ajout des 4 pions
         this.loadGLTFSceneModel(loader, "DorianGame/pionRouge.glb").then((obj) => {
-            this.registerObject(new playerPawn("PlayerPawn1", obj))
+            this.registerObject(new playerPawn("PlayerPawn1", obj, "Majurax"))
         });
         this.loadGLTFSceneModel(loader, "DorianGame/pionBleu.glb").then((obj) => {
-            this.registerObject(new playerPawn("PlayerPawn2", obj))
+            this.registerObject(new playerPawn("PlayerPawn2", obj, "User1"))
         });
         this.loadGLTFSceneModel(loader, "DorianGame/pionVeigar.glb").then((obj) => {
-            this.registerObject(new playerPawn("PlayerPawn3", obj))
+            this.registerObject(new playerPawn("PlayerPawn3", obj, "User2"))
         });
         this.loadGLTFSceneModel(loader, "DorianGame/pionDrake.glb").then((obj) => {
-            this.registerObject(new playerPawn("PlayerPawn4", obj))
+            this.registerObject(new playerPawn("PlayerPawn4", obj, "User3"))
         });
 
         // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
@@ -118,7 +118,7 @@ export default class DorianGame extends SupportController{
     selectObject(name: string) {
 
         //Abaisse la carte d'information si l'objet cliqué est la même carte que celle deja en mémoire
-        if (this.selectedObject && this.selectedObject instanceof CaseSelector && this.selectedObject.getName() == name) {(document.getElementsByClassName("hud")[0] as HTMLElement).style.transform = "translateY(60vh)";}
+        if (this.selectedObject && this.selectedObject instanceof CaseSelector && this.selectedObject.getName() == name && this.selectedObject.case.caseType == "ville") {(document.getElementsByClassName("hud")[0] as HTMLElement).style.transform = "translateY(60vh)";}
 
         //Sinon on effectue le code classique
         else{
@@ -128,6 +128,7 @@ export default class DorianGame extends SupportController{
         //Si l'objet selectionné est une caseselector, on applique des modififcations en fonction du type de la case
         if (this.selectedObject && this.selectedObject instanceof CaseSelector) {
             const tempcase: CaseSelector = this.selectedObject as CaseSelector;
+            (document.getElementsByClassName("hud")[0] as HTMLElement).style.transform = "translateY(60vh)";
             if (tempcase.case.caseType == "start") {
             } else if (tempcase.case.caseType == "prison") {
                 this.getObject("Prison")?.select();

@@ -7,10 +7,13 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
     animationQueue: AnimationQueue;
     case : {casePawnX : number ,casePawnY : number}
     positionTest : Vector3 = new Vector3(0, 0, 0);
+    user: {name : string, pfp : string};
 
-    constructor(name: string, object3D: Object3D) {
+
+    constructor(name: string, object3D: Object3D, user : {name : string, pfp : string}) {
         super(name, object3D);
         this.animationQueue = new AnimationQueue();
+        this.user = user;
 
         /*
         Voici comment sont comptées les cases du plateau:
