@@ -31,7 +31,7 @@ const menuInfo = reactive({
   grouped_users: undefined,
   showSideNav: false,
   showSocialWidget: false,
-  friendList: [],
+  friendList: ([] as FriendInterface[]),
 });
 
 const notification = reactive({
@@ -60,11 +60,11 @@ function getFriendList() {
     _friends.forEach((friend: FriendInterface) => {
 
       if (friend.id != _friends[_friends.length - 1].id) {
-        ws.emit('user_ping', friend.id, (error, response) => {
+        ws.emit('user_ping', friend.id, (error: any, response: any) => {
           if (!error) friends.push(response);
         })
       } else {
-        ws.emit('user_ping', friend.id, (error, response) => {
+        ws.emit('user_ping', friend.id, (error: any, response: any) => {
           if (!error) {
             friends.push(response);
             menuInfo.friendList = friends;
@@ -105,9 +105,9 @@ function init() {
     })
 
     // Initialisation du matchmaking
-    ws.on('matchmaking_init', (response: MatchmakingResponse, leader_id) => {
-      menuInfo.matchmaking.response = {message: "Searching a party..."}
-      showMatchmakingBanner();
+    ws.on('matchmaking_init', (response: MatchmakingResponse) => {
+      menuInfo.matchmaking.response = response
+      if (!menuInfo.matchmaking.isInQueue) showMatchmakingBanner();
     })
 
     // Information du matchmaking
@@ -141,6 +141,10 @@ function init() {
     // Lorsqu'un utilisateur nous invite
     ws.on('group_invite', (userId: number, response: {message: string}) => {
       showNotification(response.message, () => acceptGroupInvitation(userId), true)
+    })
+
+    ws.on('matchmaking_leave', () => {
+      if (menuInfo.matchmaking.isInQueue) showMatchmakingBanner()
     })
 
   }).catch(error => {
@@ -197,20 +201,20 @@ function startMatchmaking(game: string) {
  * Afficher ou Cacher la bannière de matchmaking.
  */
 function showMatchmakingBanner() {
-  console.log('cc')
+
   if (matchmakingBanner.value) {
-    if (!menuInfo.matchmaking.isInQueue) {
+    menuInfo.matchmaking.isInQueue = !menuInfo.matchmaking.isInQueue;
+    if (menuInfo.matchmaking.isInQueue) {
       matchmakingBanner.value.style.setProperty('transition', 'all .1s');
       matchmakingBanner.value.style.opacity = 1+"";
       matchmakingBanner.value.style.transform = "scaleX(1)";
-
     } else {
       matchmakingBanner.value.style.setProperty('transition', '');
       matchmakingBanner.value.style.opacity = 0+"";
       matchmakingBanner.value.style.transform = "scaleX(0)";
     }
   }
-  menuInfo.matchmaking.isInQueue = !menuInfo.matchmaking.isInQueue;
+
 
 }
 
@@ -250,7 +254,7 @@ function showSocialWidget() {
 }
 
 function acceptGroupInvitation(userId: number) {
-  ws.emit('group_accept', userId, (error, response) => {
+  ws.emit('group_accept', userId, (error: any, response: any) => {
     if (!error) {
       showNotification(response.message, null, true)
     }
@@ -285,7 +289,7 @@ function closeNotification() {
 }
 
 function inviteInGroup(userId: number) {
-  ws.emit('group_invite', userId, (error, response) => {
+  ws.emit('group_invite', userId, (error: any, response: any) => {
     if (!error) {
       notification.id++;
       notification.message = response.message;
@@ -319,7 +323,7 @@ init();
       <div class="matchmaking-banner" ref="matchmakingBanner">
         <p>{{menuInfo.matchmaking.response?.message}}</p>
         <svg xmlns="http://www.w3.org/2000/svg" class="icon-load" viewBox="0 0 512 512"><path d="M434.67 285.59v-29.8c0-98.73-80.24-178.79-179.2-178.79a179 179 0 00-140.14 67.36m-38.53 82v29.8C76.8 355 157 435 256 435a180.45 180.45 0 00140-66.92" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="46"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M32 256l44-44 46 44M480 256l-44 44-46-44"/></svg>
-        <svg @click="() => {ws.emit('matchmaking_leave'); showMatchmakingBanner();}" xmlns="http://www.w3.org/2000/svg" class="cancel-button" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M368 368L144 144M368 144L144 368"/></svg>
+        <svg @click="() => ws.emit('matchmaking_leave')" xmlns="http://www.w3.org/2000/svg" class="cancel-button" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M368 368L144 144M368 144L144 368"/></svg>
       </div>
       <TopBarMenu :menu-info="menuInfo" :show-social-widget="showSocialWidget"></TopBarMenu>
     </section>
