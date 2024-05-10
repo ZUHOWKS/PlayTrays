@@ -87,7 +87,7 @@ class AdonisWS {
       socket.on('matchmaking', async (game: string, callback: any) => {
         try {
           const _l: Lobby | null = (await (socket.data.user as User).getLobby());
-          if (!_l) { // le joueur n'est pas dans un lobby
+          if (!_l || (_l && _l.statut == 'finished')) { // le joueur n'est pas dans un lobby (en partie ou en attente)
             await this.startMatchmaking(socket, callback, game)
           } else { // si le joueur est déjà dans un lobby
 
@@ -168,7 +168,8 @@ class AdonisWS {
         socket.join('g'+_g.id);
       }
       const _l: Lobby | null = await  (socket.data.user as User).getLobby()
-      if (_l) {
+      if (_l && _l.statut != 'finished') {
+        socket.join('l'+_l.uuid)
         socket.emit('matchmaking_init')
         if (await _l.isReady()) {
           socket.emit('matchmaking_confirm', {
