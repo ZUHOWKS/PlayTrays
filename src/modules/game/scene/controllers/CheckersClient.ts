@@ -51,6 +51,11 @@ export default class CheckersClient extends SupportController {
         this.selectedActuator = undefined;
     }
 
+    /**
+     * Executer l'action du pion séléctionné.
+     *
+     * @private
+     */
     private performPawnAction() {
 
         const subject: PTObject | undefined = this.selectedActuator?.getSubject();
@@ -161,21 +166,26 @@ export default class CheckersClient extends SupportController {
     }
 
     setup(): void {
+        // loader
         const loader = new GLTFLoader();
 
+        // on génére par défaut le plateau de jeu
         this.loadGLTFSceneModel(loader, "checkers/checkers_tray.glb").then((obj) => {
             obj.name = "checkersTray";
             this.registerObject(new Tray(obj.name, obj));
         });
 
+        // on précharge les modèles des pions
         const modelWhitePawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_white.glb")
         const modelBlackPawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_black.glb");
 
-        this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}, callbakc): void => {
+        // configuration de la partie selon le serveur
+        this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}, callbakc) => {
             await this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
             return callbakc(undefined, {loaded: true});
         })
 
+        // en cas de désynchronisation
         this.ws.on("rollback game", (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], team: string): void => {
             pawns.forEach((pawn) => {
                 const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
@@ -185,16 +195,24 @@ export default class CheckersClient extends SupportController {
             })
         })
 
+        // exécuté une ou plusieurs actions d'un même pion
         this.ws.on("pawn action", (actions: Action[], gameInfo: {team: string, canPlay: boolean}) => {
 
-            const toKill: any[] = [];
+            /*
+
+            Dans le jeu des dames, il existe une règle selon laquelle tous les pions qui ont été pris lors d'une série
+            de coup ne doivent être retirer qu'après que le pion
+
+             */
+
+            const toKill: any[] = []; // liste des pions à tuer
             actions.forEach((action) => {
                 const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
                 if (pawn) {
 
                     if (action.pawnKilled) {
 
-                        toKill.push(() => {
+                        toKill.push(() => { // on push dans la liste des pions pris
                             //@ts-ignore
                             this.killPawn(action.pawnKilled);
                         });
@@ -204,7 +222,7 @@ export default class CheckersClient extends SupportController {
                         (this.getObject(action.pawn) as Pawn).queen = action.queen;
                     }
 
-                    if (actions.indexOf(action) == actions.length-1) {
+                    if (actions.indexOf(action) == actions.length-1) { // lorsqu'il s'agit de la dernière action, on enlève tous les pions du plateau
                         pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
                             toKill.forEach((kill) => kill());
 
@@ -221,7 +239,10 @@ export default class CheckersClient extends SupportController {
                 }
             });
 
-            this.showSelectedObjectActuators();
+            // évènement de fin de partie
+            this.ws.on('end game', (whoWin) => {
+                setTimeout(() => this.ws.disconnect(), 30000)
+            })
         })
 
     }
@@ -244,14 +265,16 @@ export default class CheckersClient extends SupportController {
         queen: boolean
     }[], modelWhitePawn: Promise<Object3D>, modelBlackPawn: Promise<Object3D>, gameInfo: {team: string, canPlay: boolean}) {
 
+        const whitePawn: Object3D = await modelWhitePawn;
+        const blackPawn: Object3D = await modelBlackPawn;
 
-        for (pawn in pawns) {
+        for (const pawn of pawns) {
             // filtre pour les pions mort
             if (!pawn.dead) {
                 if (pawn.name.includes("white")) {
-                    await this.registerPawn(modelWhitePawn, pawn);
+                    await this.registerPawn(whitePawn, pawn);
                 } else if (pawn.name.includes("black")) {
-                    await this.registerPawn(modelBlackPawn, pawn);
+                    await this.registerPawn(blackPawn, pawn);
                 }
             }
         }
@@ -259,6 +282,7 @@ export default class CheckersClient extends SupportController {
         this.team = gameInfo.team;
         this.canPlay = gameInfo.canPlay;
 
+        // configuration spéciale de la caméra selon que l'on soit dans l'équipe blanc ou noir
         if (this.team == "white" || this.team == "black") {
 
             const side: number = this.team == "white" ? -1 : 1;
@@ -300,7 +324,7 @@ export default class CheckersClient extends SupportController {
      * @param pawn
      * @private
      */
-    private async registerPawn(modelPawn: Promise<Object3D>, pawn: {
+    private async registerPawn(modelPawn: Object3D, pawn: {
         name: string;
         x: number;
         y: number;
@@ -308,7 +332,7 @@ export default class CheckersClient extends SupportController {
         dead: boolean;
         queen: boolean;
     }) {
-        const obj: Object3D = (await modelPawn).clone();
+        const obj: Object3D =  modelPawn.clone();
         obj.name = pawn.name;
         obj.position.x = pawn.x;
         obj.position.y = pawn.y;
@@ -373,6 +397,8 @@ export default class CheckersClient extends SupportController {
             sideMoveUp = -1;
         }
         if (pawn.queen) {
+
+            // action de mouvement d'une reine
             for (let i: number = -1; i <= 1; i+=2) {
                 const pasZ = i * 6;
                 for (let j: number = -1; j <= 1; j+=2) {
@@ -382,6 +408,7 @@ export default class CheckersClient extends SupportController {
                     let z: number = pos.z + pasZ;
                     let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
 
+                    // tant qu'on ne recontre pas de pion on enregistre une action possible
                     while (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !(_pawn && pawn.getName().includes(_pawn.getName().split("-")[0]))) {
                         if (!_pawn) {
                             this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
@@ -394,9 +421,12 @@ export default class CheckersClient extends SupportController {
                         }
                     }
 
+                    // s'il y a un pion de l'équipe adverse sur le chemin...
                     if (_pawn && !pawn.getName().includes(_pawn.getName().split("-")[0])) {
                         x+=pasX;
                         z+=pasZ;
+
+                        // ...alors tant qu'il n'y a d'autre pion >> enregistrer une action
                         while (!(this.anyPawnAt(new Vector3(x, pos.y, z), pawns)) && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
                             this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
                             n++;
@@ -408,6 +438,7 @@ export default class CheckersClient extends SupportController {
                 }
             }
         } else {
+
             // actions des mouvements en avant simple + prises en avant
             for (let i: number = -1; i <= 1; i += 2) {
                 let x: number = pos.x + i * 6;
@@ -438,13 +469,13 @@ export default class CheckersClient extends SupportController {
 
                 let _pawn: Pawn | undefined = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
                 if (Math.abs(x) <= 21 && Math.abs(z) <= 21) {
-                    if (_pawn && !pawn.getName().includes(_pawn.getName().split("-")[0])) { // s'il y a un pion.
+                    if (_pawn && !pawn.getName().includes(_pawn.getName().split("-")[0])) { // s'il y a un pion de l'équipe adverse...
 
                         x += i * 6;
                         z -= sideMoveUp * 6;
 
                         _pawn = this.anyPawnAt(new Vector3(x, pos.y, z), pawns);
-                        if (!_pawn && Math.abs(x) <= 21 && Math.abs(z) <= 21) {
+                        if (!_pawn && Math.abs(x) <= 21 && Math.abs(z) <= 21) { // si l'action est possible...
                             this.registerPawnActuator(geometry, material, x, pos.y, z, "actuator-" + pawn.name + "" + n, pawn);
                             n++;
                         }
