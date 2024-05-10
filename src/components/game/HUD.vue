@@ -2,6 +2,13 @@
 </script>
 
 <template>
+
+  <div class="money">
+    <img src="https://i.pinimg.com/originals/9f/41/09/9f410947631b1d109bda0b5e91ace3ff.jpg" height="50" width="50" class="img-user">
+    <p class="username">Majurax</p>
+    <p class="nbargent">Argent: £ 20000</p>
+  </div>
+
   <div class="hud">
     <div class="container column">
       <div class="title column">
@@ -74,6 +81,30 @@
 </template>
 
 <style scoped>
+
+.money{
+  position: fixed;
+  top: 1%;
+  left: 0.5%;
+  width: 30vh;
+  height: 30vh;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.img-user{
+  height: 15vh;
+  width: 15vh;
+  border-radius: 50%;
+}
+.money>.nbargent{
+  bacground-color: black;
+  width: 100%;
+  height: 100%;
+}
 
 .hud {
   position: fixed;
