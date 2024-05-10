@@ -110,7 +110,13 @@ class AdonisWS {
 
       socket.on('matchmaking_leave', async () => {
         try {
-          (socket.data.user as User).leaveLobby()
+          const _g = await (socket.data.user as User).getGroup();
+          if (_g) {
+            this.io?.emit('matchmaking_leave');
+          } else {
+            (socket.data.user as User).leaveLobby();
+            socket.emit('matchmaking_leave');
+          }
         } catch (e) {
           console.error(e)
         }
@@ -340,7 +346,7 @@ class AdonisWS {
     const resGame = await db.from('games').select('game', 'max_player as max').where('game', game).first()
     if (resGame?.game && resGame.max >= users.length) {
       callback(undefined, {message: 'Searching a party...'})
-      if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_init', {message: "Searching a party..."} as MatchmakingResponse, group.leader_id)
+      if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_init', {message: "Searching a party..."} as MatchmakingResponse)
 
       // si le groupe rempli au max un lobby vide >> création d'un lobby privé
       if (resGame.max == users.length) {
