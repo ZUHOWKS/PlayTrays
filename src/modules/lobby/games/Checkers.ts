@@ -67,7 +67,7 @@ export default class Checkers extends PTLobby {
             if (!error && response.loaded && this.status === 'waiting') {
                 if (this.whitePlayer && this.blackPlayer) {
                     this.status = 'running';
-                    this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status)
+                    this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
                     this.server.io.to(this.uuid).emit('start');
                 }
             }
@@ -91,7 +91,7 @@ export default class Checkers extends PTLobby {
                 if (result.length > 0) {
                     if (action.moveX != result[0].moveX || action.moveY != result[0].moveY || action.moveZ != result[0].moveZ) {
                         callback("Error: can't perform this action !", {team: userTeam, canPlay: this.whoPlay == userTeam, rollback: false});
-                        return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam})
+                        return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam});
                     } else {
                         return callback("", {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam, replay: action.pawn});
                     }
@@ -178,7 +178,7 @@ export default class Checkers extends PTLobby {
                             });
 
                             if (pawnToKill && !pawnToKill.dead) {
-                                break // le chemin serra interrompu dans tous les cas (règle de la prise maximale obligatoire ou abort move)
+                                break; // le chemin serra interrompu dans tous les cas (règle de la prise maximale obligatoire ou abort move)
                             } else {
                                 pawnToKill = undefined;
                             }
@@ -214,16 +214,16 @@ export default class Checkers extends PTLobby {
                                         this.getPawn(action.pawnKilled)?.dead = true; // l'action comporte toujours un pion tué
                                     })
 
-                                    this.emitWithout(socket, "pawn action", actions)
+                                    this.emitWithout(socket, "pawn action", actions);
                                     return actions;
                                 }
 
                             }
                         } else {
-                            this.whoPlay = this.getTeam(socket.data.user) == "black" ? "white" : "black"
+                            this.whoPlay = this.getTeam(socket.data.user) == "black" ? "white" : "black";
                             pawn.setPosition(pos);
 
-                            this.emitWithout(socket, "pawn action", actions)
+                            this.emitWithout(socket, "pawn action", actions);
                             return actions;
                         }
                     }
@@ -235,10 +235,11 @@ export default class Checkers extends PTLobby {
                             pawn.setPosition(pos);
 
                             if (pawn.queen) {
-                                actions[0].queen = true
+                                actions[0].queen = true;
                             }
 
-                            this.emitWithout(socket, "pawn action", actions)
+                            this.emitWithout(socket, "pawn action", actions);
+                            this.checkEndGame();
                             return actions;
                         }
 
@@ -268,10 +269,12 @@ export default class Checkers extends PTLobby {
                                     })
 
                                     if (pawn.queen) {
-                                        actions[actions.length - 1].queen = true
+                                        actions[actions.length - 1].queen = true;
                                     }
 
-                                    this.emitWithout(socket, "pawn action", actions)
+
+                                    this.emitWithout(socket, "pawn action", actions);
+                                    this.checkEndGame();
                                     return actions;
                                 }
                             }
@@ -328,61 +331,66 @@ export default class Checkers extends PTLobby {
      * des actions à effectuer.
      *
      * @param pawn pion responsable
-     * @param pos position checké
-     * @param lastActions les actions précèdement effectués
+     * @param pos position du pion
+     * @param lastActions actions déjà effectuées
      * @private
      */
     private obligatoryKill(pawn: Pawn, pos: {x: number; y: number; z: number}, lastActions: Action[]): Action[] {
-        let actions: Action[] = lastActions;
+        let actions: Action[] = [];
 
+        for (let i: number = -1; i <= 1; i += 2) {
+            const pasZ = i * 6;
+            for (let j: number = -1; j <= 1; j += 2) {
+                const pasX = j * 6;
 
-            for (let i: number = -1; i <= 1; i+=2) {
-                const pasZ = i * 6;
-                for (let j: number = -1; j <= 1; j+=2) {
-                    const pasX = j * 6;
+                let x: number = pos.x + pasX;
+                let z: number = pos.z + pasZ;
 
-                    let x: number = pos.x + pasX;
-                    let z: number = pos.z + pasZ;
+                const pawnToKill: Pawn | undefined = this.anyPawnAt({x: x, y: pos.y, z: z});
 
-                    const pawnToKill: Pawn | undefined = this.anyPawnAt({x: x, y: pos.y, z: z});
+                if (pawnToKill && !(pawnToKill.name.includes(pawn.name.split("-")[0]) || pawnToKill.dead || this.pawnWasKilledInActions(pawnToKill, lastActions))) {
 
-                    if (pawnToKill && !(pawnToKill.name.includes(pawn.name.split("-")[0]) || pawnToKill.dead || this.pawnWasKilledInActions(pawnToKill, lastActions))) {
+                    x += pasX;
+                    z += pasZ;
 
-                        x+=pasX;
-                        z+=pasZ;
+                    if (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !this.anyPawnAt({x: x, y: pos.y, z: z})) {
+                        let _actions: Action[] = [];
 
-                        if (Math.abs(x) <= 21 && Math.abs(z) <= 21 && !this.anyPawnAt({x: x, y: pos.y, z: z})) {
-                            let _actions: Action[] = lastActions;
+                        lastActions.forEach((a) => _actions.push(a));
 
-                            _actions.push({
-                                pawn: pawn.name,
-                                queen: false,
-                                moveX: x,
-                                moveY: pos.y,
-                                moveZ: z,
-                                pawnKilled: pawnToKill.name
-                            } as Action);
+                        _actions.push({
+                            pawn: pawn.name,
+                            queen: false,
+                            moveX: x,
+                            moveY: pos.y,
+                            moveZ: z,
+                            pawnKilled: pawnToKill.name
+                        } as Action);
 
-                            _actions = this.obligatoryKill(pawn, {x: x, y: pos.y, z: z}, _actions);
+                        _actions = this.obligatoryKill(pawn, {x: x, y: pos.y, z: z}, _actions);
 
-                            if (_actions.length > actions.length) {
-
-                                actions = _actions;
-                            }
+                        if (_actions.length > actions.length) {
+                            actions = _actions;
                         }
-
                     }
                 }
             }
+        }
 
-
-        return actions;
+        return actions.length == 0 ? lastActions : actions;
     }
 
+    /**
+     * Vérifier si un pion a déjà été tué dans les actions précédentes.
+     *
+     * @param pawn pion vérifié
+     * @param actions liste des actions
+     * @private
+     */
     private pawnWasKilledInActions(pawn: Pawn, actions: Action[]): boolean {
 
-        for(let i: number = 0; i < actions.length; i++) {
-            if (actions[i].pawnKilled === pawn.name) {
+        for (let i = 0; i < actions.length; i++) {
+            if (actions[i].pawnKilled && actions[i].pawnKilled === pawn.name) {
                 return true;
             }
         }
@@ -408,6 +416,85 @@ export default class Checkers extends PTLobby {
         }))
 
         return pawns;
+    }
+
+    /**
+     * Obtenir la liste des pions des blancs.
+     *
+     * @private
+     */
+    private getWhitePawns(): Pawn[] {
+        const whitePawns: Pawn[] = [];
+        this.pawns.forEach((pawn) => {
+            if (pawn.name.includes('white')) whitePawns.push(pawn)
+        })
+
+        return whitePawns;
+    }
+
+    /**
+     * Obtenir la liste des pions des noirs.
+     *
+     * @private
+     */
+    private getBlackPawns(): Pawn[] {
+        const blackPawns: Pawn[] = [];
+        this.pawns.forEach((pawn) => {
+            if (pawn.name.includes('black')) blackPawns.push(pawn)
+        })
+
+        return blackPawns;
+    }
+
+    /**
+     * Checker si la tous les pions de la liste sont morts
+     *
+     * @param pawns
+     * @private
+     */
+    private teamDeath(pawns: Pawn[]): boolean {
+        let count = 0;
+        for (const pawn of pawns) {
+            if (pawn.dead) count++;
+        }
+
+        return count == pawns.length;
+    }
+
+    /**
+     * Retourner le nom du gagnant.
+     * Null si la partie n'est toujours pas remporté
+     *
+     * @private
+     */
+    private isWinBy(): "black" | "white" | null {
+        if (this.teamDeath(this.getBlackPawns())) return 'black';
+        else if (this.teamDeath(this.getWhitePawns())) return 'black';
+        else return null;
+    }
+
+    /**
+     * Checker s'il s'agit d'une fin de partie.
+     *
+     * @private
+     */
+    private checkEndGame() {
+        const whoWin = this.isWinBy();
+        if (whoWin) {
+            this.endGame(whoWin);
+        }
+    }
+
+    /**
+     * Mettre fin à la partie.
+     *
+     * @param args
+     * @private
+     */
+    private endGame(...args: any[]) {
+        this.server.io.to(this.uuid).emit('end game', args);
+        this.status = 'finished';
+        this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
     }
 
 
