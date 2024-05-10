@@ -83,4 +83,8 @@ export default abstract class PTLobby {
         }
     }
 
+    public getStatus(): "waiting" | "running" | "finished" {
+        return this.status
+    }
+
 }
