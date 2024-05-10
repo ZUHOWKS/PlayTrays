@@ -3,9 +3,16 @@ import {BoxGeometry, type Color, Mesh, MeshBasicMaterial, type Object3D, Vector3
 import {cardHelper, cardCityHelper} from "@/modules/game/scene/objects/DorianGameObjects/CardHelper";
 import {prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
 
+interface ville{
+    casePawnX : number ,casePawnY : number, caseType : string, colorCase : string,  cityName : string, m0 : number, m1 : number, m2 : number, m3 : number, m4 : number, m5 : number, m6 : number, maison : number, prix : number
+}
+
+interface autre{
+    casePawnX : number ,casePawnY : number, caseType : string
+}
 
 export class CaseSelector extends PTObject{
-    case : {casePawnX : number ,casePawnY : number, caseType : string, colorCase : string,  cityName : string, m0 : number, m1 : number, m2 : number, m3 : number, m4 : number, m5 : number, m6 : number, maison : number, prix : number} | {casePawnX : number ,casePawnY : number, caseType : string}
+    case : ville | autre;
 
 
     constructor(name: string, object3D: Object3D, caseX : number, caseY : number) {
