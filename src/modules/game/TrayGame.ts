@@ -8,7 +8,7 @@ import CheckersClient from "@/modules/game/scene/controllers/CheckersClient";
 
 export default class TrayGame {
     id: string;
-    statement: "waiting" | "running" | "finished";
+    status: "waiting" | "running" | "finished";
     player: any;
     controller: SupportController | undefined;
     ws: Socket;
@@ -18,7 +18,7 @@ export default class TrayGame {
      * et données utilisateurs
      *
      * @param id id ou uuid de la partie
-     * @param statement statut de la partie ("en attente de joueurs" | "en cours" | "terminée")
+     * @param status statut de la partie ("en attente de joueurs" | "en cours" | "terminée")
      * @param player données de l'utilisateur
      * @param ws
      * @param game jeu de la partie
@@ -27,9 +27,9 @@ export default class TrayGame {
      * @param orbitControlsRef Contrôles orbitaux de la caméra (autour d'un point,
      * par défaut le point de coordonnée x=0;y=0;z=0)
      */
-    constructor(id: string, statement: "waiting" | "running" | "finished", player: any, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>,) {
+    constructor(id: string, status: "waiting" | "running" | "finished", player: any, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>,) {
         this.id = id;
-        this.statement = statement;
+        this.status = status;
         this.player = player; //TODO: remplacer any par la UserInterface class
         this.ws = ws;
 
@@ -44,6 +44,9 @@ export default class TrayGame {
     setup(): void {
         if (this.controller) {
             this.controller.setup();
+            this.ws.on('end game', (whoWin) => {
+                this.status = 'finished'
+            })
         } else {
             this.ws.disconnect();
         }
