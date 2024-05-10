@@ -113,14 +113,14 @@ function getAllFriendInvitations() {
     width: 15vw;
     border-top: solid 3px;
     border-bottom: solid 3px;
-    border-color: rgba(var(--background-color), 0.45);
+    border-color: rgba(var(--background-color), 0.65);
     cursor: pointer;
     transition: border-color .125s ease-in-out, border-radius .125s ease-in-out;
   }
 
   .friend-card:hover {
     border-radius: 15px;
-    border-color: rgba(var(--secondary-color), .95);
+    border-color: rgba(var(--selector-color), .95);
   }
 
   .friend-card>div:nth-child(1) {
@@ -169,13 +169,13 @@ function getAllFriendInvitations() {
     align-items: center;
     justify-items: center;
     justify-content: space-evenly;
-    border-bottom: solid 5px rgba(var(--background-color), 0.35);
-    transition: border-color .075s linear;
+    border-bottom: solid 5px rgba(var(--selector-color), 0.75);
+    transition: border-color .065s linear;
     margin: 2.5% 0;
   }
 
   .social-nav-bar:hover {
-    border-color: rgba(var(--background-color), 0.9);
+    border-color: rgba(var(--selector-color), 0.9);
   }
 
   .social-nav-bar>.nav-icon {
@@ -187,11 +187,11 @@ function getAllFriendInvitations() {
   }
 
   .social-nav-bar>.nav-icon:hover {
-    background: rgba(var(--background-color), 0.75);
+    background: rgba(var(--selector-color), 1);
   }
 
   .nav-icon-selected {
-    background: rgba(var(--background-color), 0.35);
+    background: rgba(var(--selector-color), 0.65);
   }
 
   .form-invite {
@@ -224,7 +224,7 @@ function getAllFriendInvitations() {
   }
 
   .send-invitation:hover {
-    background-color: rgb(var(--background-color));
+    background-color: rgb(var(--selector-color));
   }
 
   .ask-title {
