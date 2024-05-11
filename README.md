@@ -53,7 +53,7 @@ De cette manière nous venons d'instancier un serveur jeu. Pour s'y connecter de
 - Authentification de type utilisateur. Via celle-ci, on ne se connecte non pas au serveur mais à un lobby spécifique du serveur.
 
 ```typescript
-// dans src/PTServer.ts
+// dans src/modules/PTServer.ts
 /**
  * Permet de modéliser les données d'authentification serveur
  */
@@ -115,3 +115,41 @@ export class PTServer {
 
     //... code de la classe
 }
+```
+
+## Création d'un lobby
+
+Vous disposez de la classe `PTLobby` vous permettant d'accéder aux attributs et aux méthodes de bases d'un lobby. Nous allons
+imaginer que l'on souhaite créer un lobby pour le jeu DorianGame. Dans le dossier `src/modules/lobby/games/` créer le fichier
+du nom de votre jeu, ici `Dorian.ts` et créer la classe étendu à `PTLobby`:
+
+```typescript
+// dans src/modules/lobby/games/Dorian.ts
+// imports...
+
+export default class Dorian extends PTLobby {
+    // implémenter les méthodes abstraites
+}
+```
+
+Une fois votre classe définie, inscrivez dans le registre des modes de jeu du serveur votre nouveau type de lobby:
+
+```typescript
+export default class PTServer {
+
+    // ...code de la classe
+    /**
+     * Initialiser les jeux jouables sur le lobby.
+     * @private
+     */
+    private initGames(): void {
+        this.games.set("checkers", Checkers);
+        // clé : nom de la classe
+        this.games.set("dorianGame", Dorian);
+    }
+
+    // ...code de la classe
+}
+```
+
+Maintenant vous pouvez créer un lobby grâce à la méthode `createLobby()` accessible depuis l'instance du PTServer.
