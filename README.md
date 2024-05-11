@@ -49,8 +49,9 @@ gServer.init();
 Dans cet exemple, on écoute le serveur sur le port 25526. Enfin on initialise le game server via la méthode `init()`.
 
 De cette manière nous venons d'instancier un serveur jeu. Pour s'y connecter deux possibilités:
-- Authentification de type serveur. Permet d'avoir un contrôle sur le serveur jeu tel que la supression/creation/obtiention des lobbies
+- Authentification de type serveur. Permet d'avoir un contrôle sur le serveur jeu tel que la supression/création/obtention des lobbies
 - Authentification de type utilisateur. Via celle-ci, on ne se connecte non pas au serveur mais à un lobby spécifique du serveur.
+
 ```typescript
 // dans src/PTServer.ts
 /**
