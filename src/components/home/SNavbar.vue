@@ -1,23 +1,4 @@
 <script setup lang="ts">
-import {useRouter} from "vue-router";
-
-  const router = useRouter();
-
-  const register = () => {
-    if (localStorage.getItem("PTToken")) {
-      router.push('/app');
-    } else {
-      router.push('/register');
-    }
-
-  }
-  const login = () => {
-    if (localStorage.getItem("PTToken")) {
-      router.push('/app');
-    } else {
-      router.push('/login');
-    }
-  }
 </script>
 
 <template>
@@ -36,22 +17,21 @@ import {useRouter} from "vue-router";
       </div>
 
       <!-- hypertextes -->
-      <a>About</a>
-      <a id="a-games">Games</a>
-      <a>Contact</a>
-
+      <a href="#about">About</a>
+      <a href="#games">Games</a>
+      <a href="#contact">Contact</a>
     </div>
 
     <!-- Deuxième ranger contenant les boutons pour entrer dans l'application -->
     <div class="row">
 
       <!-- bouton pour aller au menu -->
-      <button class="play-button" @click="login">
+      <button class="play-button">
         Play on a Tray!
       </button>
 
       <!-- bouton pour se connecter ou s'enregistrer -->
-      <button class="sign-up-button" @click="register">
+      <button class="sign-up-button">
         Sign up
       </button>
     </div>
@@ -99,10 +79,6 @@ import {useRouter} from "vue-router";
     transition: transform .2s ease-in;
   }
 
-  .s-navbar>div:nth-child(1)>#a-games::after {
-    background: rgb(var(--secondary-color));
-  }
-
   .s-navbar>div:nth-child(1)>a:hover::after {
     transform: scaleX(1.05);
   }
@@ -140,7 +116,7 @@ import {useRouter} from "vue-router";
   .sign-up-button {
     width: 200px;
     height: 60px;
-    border-color: rgb(var(--secondary-color));
+    border-color: rgb(var(--text-color));
     background-color: transparent;
   }
 

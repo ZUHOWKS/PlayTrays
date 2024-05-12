@@ -2,6 +2,7 @@
 import SNavbar from "@/components/home/SNavbar.vue";
 import Welcome from "@/components/home/Welcome.vue";
 import Footer from "@/components/home/Footer.vue";
+import About from "@/components/home/About.vue";
 </script>
 
 <template>
@@ -9,7 +10,12 @@ import Footer from "@/components/home/Footer.vue";
   <main>
     <Welcome></Welcome>
   </main>
-  <Footer></Footer>
+  <main>
+    <About></About>
+  </main>
+  <main>
+    <Footer></Footer>
+  </main>
 </template>
 
 <style scoped>
