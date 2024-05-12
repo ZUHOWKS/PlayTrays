@@ -63,6 +63,7 @@ a {
     font-size: 20px;
     color: rgb(var(--link-color));
     cursor: pointer;
+    text-decoration: none;
 }
 
 /* Classe par défaut */
