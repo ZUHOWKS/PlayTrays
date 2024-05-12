@@ -34,8 +34,8 @@ export default class DorianGame extends SupportController{
         //this.displayCardHUD();
     }
 
-    getSelectedActuator(): Actuator | null | undefined {
-        return undefined;
+    getSelectedActuator(): Actuator | null {
+        return null;
     }
 
     selectActuator(name: string): void {
