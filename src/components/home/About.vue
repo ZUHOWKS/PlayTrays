@@ -7,8 +7,8 @@
     <h1>ABOUT US</h1>
     <p>We are a group of 4 students from the Polytech Annecy-Chambéry school, attached to the University of Savoie Mont-Blanc. As part of our school career, we created this video game website. This project aims to make us learn a computer language while also taking care of the project management part. To create this website, we used javascript with come framework Vue.js.</p>
     <div class="logos">
-      <img src="C:\Users\mathi\OneDrive\Documents\dev\PlayTrays\src\assets\image\logo-polytech-annecy-chambery-blanc.png" alt="Polytech Annecy-Chambéry Logo" class="image">
-      <img src="C:\Users\mathi\OneDrive\Documents\dev\PlayTrays\src\assets\image\1200px-Logo_Université_Savoie_Mont_Blanc_2015.svg.png" alt="Université Savoie Mont Blanc Logo" class="image">
+      <img src="@/assets/image/logo-polytech-annecy-chambery-blanc.png" alt="Polytech Annecy-Chambéry Logo" class="image">
+      <img src="@/assets/image/1200px-Logo_Université_Savoie_Mont_Blanc_2015.svg.png" alt="Université Savoie Mont Blanc Logo" class="image">
     </div>
   </div>
 </template>

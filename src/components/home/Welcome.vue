@@ -4,7 +4,7 @@
 
 <template>
   <section class="welcome-section">
-    <img src="C:\Users\mathi\OneDrive\Documents\dev\PlayTrays\src\assets\image\logoPT(1).png" alt="PlayTrays Logo" class="logo">
+    <img src="@/assets/image/logoPT(1).png" alt="PlayTrays Logo" class="logo">
     <div class="welcome-text">
       <h1>Welcome on</h1>
       <h1>PlayTrays</h1>
