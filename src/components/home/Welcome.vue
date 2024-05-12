@@ -11,7 +11,6 @@
         <h1 id="name">PlayTrays</h1>
       </div>
     </div>
-
   </section>
 </template>
 
