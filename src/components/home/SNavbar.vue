@@ -17,10 +17,9 @@
       </div>
 
       <!-- hypertextes -->
-      <a>About</a>
-      <a>Games</a>
-      <a>Contact</a>
-
+      <a href="#about">About</a>
+      <a href="#games">Games</a>
+      <a href="#contact">Contact</a>
     </div>
 
     <!-- Deuxième ranger contenant les boutons pour entrer dans l'application -->
