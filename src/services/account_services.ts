@@ -81,7 +81,7 @@ export default class AccountServices {
 
     static acceptFriend(id: number) {
         const form = new FormData()
-        form.append('id', id)
+        form.append('id', id+'')
         return Axios.post('/friend/accept', form)
     }
 
