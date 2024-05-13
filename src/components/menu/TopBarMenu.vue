@@ -16,7 +16,7 @@ const router = useRouter();
     </div>
     <div class="center-nav"></div>
     <div class="right-content">
-      <svg @click="showSocialWidget" xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path d="M402 168c-2.93 40.67-33.1 72-66 72s-63.12-31.32-66-72c-3-42.31 26.37-72 66-72s69 30.46 66 72z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="40"/><path d="M336 304c-65.17 0-127.84 32.37-143.54 95.41-2.08 8.34 3.15 16.59 11.72 16.59h263.65c8.57 0 13.77-8.25 11.72-16.59C463.85 335.36 401.18 304 336 304z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/><path d="M200 185.94c-2.34 32.48-26.72 58.06-53 58.06s-50.7-25.57-53-58.06C91.61 152.15 115.34 128 147 128s55.39 24.77 53 57.94z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M206 306c-18.05-8.27-37.93-11.45-59-11.45-52 0-102.1 25.85-114.65 76.2-1.65 6.66 2.53 13.25 9.37 13.25H154" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32"/></svg>
+      <svg @click="showSocialWidget" xmlns="http://www.w3.org/2000/svg" class="social-button" viewBox="0 0 512 512"><path d="M402 168c-2.93 40.67-33.1 72-66 72s-63.12-31.32-66-72c-3-42.31 26.37-72 66-72s69 30.46 66 72z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="40"/><path d="M336 304c-65.17 0-127.84 32.37-143.54 95.41-2.08 8.34 3.15 16.59 11.72 16.59h263.65c8.57 0 13.77-8.25 11.72-16.59C463.85 335.36 401.18 304 336 304z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/><path d="M200 185.94c-2.34 32.48-26.72 58.06-53 58.06s-50.7-25.57-53-58.06C91.61 152.15 115.34 128 147 128s55.39 24.77 53 57.94z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M206 306c-18.05-8.27-37.93-11.45-59-11.45-52 0-102.1 25.85-114.65 76.2-1.65 6.66 2.53 13.25 9.37 13.25H154" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32"/></svg>
       <div v-if="menuInfo.group != undefined" class="group-container">
         <div class="group-players">
           <div v-for="player in menuInfo.group.players" class="group-player">
@@ -50,29 +50,39 @@ const router = useRouter();
   }
 
   .right-content {
-    min-width: 25vw;
     display: flex;
     flex-direction: row-reverse;
     align-items: center;
     padding: 0.5% 1.5%;
   }
 
-  .right-content>svg {
+  .right-content>.social-button {
     height: 6vh;
-    width: 6vh;
+    width: 10vh;
     cursor: pointer;
   }
 
   .group-container {
     padding: 0.5% 0.45vh;
     margin: 5%;
-    min-width: 29.5vh;
+    min-width: 0;
     height: 6vh;
     background-color: rgba(var(--secondary-color));
     display: flex;
     border-radius: 5vh;
     align-items: center;
     justify-content: space-between;
+    transform-origin: 100% 50%;
+    animation: groupContainerAppear .5s .1s both ease-in-out;
+  }
+
+  @keyframes groupContainerAppear {
+    0% {
+      min-width: 0;
+    }
+    100% {
+      min-width: 29.5vh;
+    }
   }
 
   .group-players {
@@ -100,15 +110,18 @@ const router = useRouter();
   }
 
   .group-player>p {
+    font-weight: 500;
+    font-size: 2.5vh;
     color: rgb(var(--text-color));
   }
 
   .group-container>.button-leave {
-    width: 5.5vh;
+    width: 7vh;
     height: 5.5vh;
     cursor: pointer;
     color: rgb(var(--link-color));
     transition: color .095s ease-in-out;
+    z-index: 5;
   }
 
   .group-container>.button-leave:hover {

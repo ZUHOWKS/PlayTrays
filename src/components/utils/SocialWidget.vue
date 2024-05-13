@@ -123,7 +123,7 @@ async function getAllFriendInvitations(): Promise<void> {
 
   .friend-card:hover {
     border-radius: 15px;
-    border-color: rgba(var(--selector-color), .95);
+    border-color: rgba(var(--secondary-color), .95);
   }
 
   .friend-card>div:nth-child(1) {

@@ -344,7 +344,6 @@ init();
   <!-- Contenue de la page ainsi que la top bar -->
   <main>
 
-
     <section class="top-section">
       <div class="matchmaking-banner" ref="matchmakingBanner">
         <p>{{menuInfo.matchmaking.response?.message}}</p>

@@ -37,7 +37,7 @@ const modeChoose: Ref<string> = ref('Choose')
 
   .mode-card {
     height: 40vh;
-    width: 15vw;
+    width: 27.5vh;
     background: white;
     border: solid 2px rgb(var(--primary-color));
     border-radius: 10px;
