@@ -372,30 +372,6 @@ init();
 
 <style scoped>
 
-  .side-nav {
-    height: 100vh;
-    width: 0;
-    overflow: hidden;
-    position: fixed;
-    z-index: 3;
-
-    background-color: rgb(var(--secondary-color));
-    transition: width .25s ease-out;
-
-    color: white;
-    box-shadow: 0 0 15px rgba(0,0,0, 0.2);
-  }
-
-  .side-nav-button {
-    top: 3vh;
-    left: 1.5vw;
-    height: 7.5vh;
-    width: 7.5vh;
-    z-index: 3;
-    position: fixed;
-    cursor: pointer;
-  }
-
   .top-section {
     height: 13vh;
     width: 100vw;
