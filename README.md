@@ -22,7 +22,7 @@ nous permettra d'instancier un serveur de jeu PlayTrays qui aura pour mission de
 # Documentation API
 
 L'API **Game Server** permet à un serveur Node.js d'instancier un websocket tout en contrôlant plusieurs lobbies à la
-fois. Le serveur peut-être contrôler à distance via une authentification de type serveur pour créer/supprimer/obtenir 
+fois. Le serveur peut-être contrôlé à distance via une authentification de type serveur pour créer/supprimer/obtenir 
 les lobbies. Les authentifications utilisateurs elles permettent seulement d'être redirigé vers un lobbie dans le but
 de communiquer avec ce dernier.
 
