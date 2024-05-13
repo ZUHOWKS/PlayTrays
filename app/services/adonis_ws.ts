@@ -246,19 +246,20 @@ class AdonisWS {
     const friend: User | null = await User.find(userId); // l'ami qui a invité l'utilisateur
     const user: User = (socket.data.user as User) // l'utilisateur qui accepte l'invitation
 
-    if (friend && await user.isFriend(friend)) {
+    if (friend) {
       const _g: Group | null = await friend.getGroup()
+      if (await user.isFriend(friend)) {
+        if (_g && await _g.isInvited(user.id)) _g.confirmInvitationOf(user).then(async () => {
+          socket.join('g' + _g.id)
+          this.io?.to('g' + _g.id).emit('group_update')
 
-      if (_g && await _g.isInvited(user.id)) _g.confirmInvitationOf(user).then(async () => {
-        socket.join('g' + _g.id)
-
-        callback(undefined, {message: 'Vous avez rejoins !', group: await _g.getUsers()})
-      })
-      else return callback("Unauthorized!", undefined)
-
-    } else {
-      return callback("Unauthorized!", undefined)
+          return callback(undefined, {message: 'Vous avez rejoins le groupe !', group: await _g.getUsers()})
+        })
+      } else {
+        _g?.deleteUserInvitation(user.id);
+      }
     }
+    return callback("Unauthorized!", undefined)
   }
 
   /**
