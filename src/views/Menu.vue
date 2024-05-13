@@ -9,7 +9,6 @@ import Popup from "@/components/utils/Popup.vue";
 import {io, type Socket} from "socket.io-client";
 import type {MatchmakingError, MatchmakingResponse} from "@/modules/utils/matchmaking/MatchmakingResponse";
 import PTMatchmaking from "@/modules/utils/matchmaking/PTMatchmaking";
-import SideNavMenu from "@/components/menu/SideNavMenu.vue";
 import {PopupObject} from "@/modules/utils/Popup";
 import SocialWidget from "@/components/utils/SocialWidget.vue";
 import Notification from "@/components/utils/Notification.vue";
@@ -18,7 +17,6 @@ import type {UserInterface, FriendInterface} from "@/modules/utils/UserInterface
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
 
-const sidenav: Ref<HTMLElement | null> = ref(null);
 const matchmakingBanner: Ref<HTMLElement | null> = ref(null);
 const wsocial: Ref<HTMLElement | null> = ref(null);
 
@@ -29,7 +27,6 @@ const menuInfo = reactive({
   page: "main",
   matchmaking: new PTMatchmaking(),
   grouped_users: undefined,
-  showSideNav: false,
   showSocialWidget: false,
   friendList: ([] as FriendInterface[]),
 });
@@ -91,7 +88,7 @@ function init() {
       }
     });
 
-    ws.connect()
+    ws.connect();
 
     // lorsque le socket est connecté
     ws.on('connect', () => {
@@ -102,54 +99,57 @@ function init() {
     // lors d'une déconnexion
     ws.on('disconnect', () => {
       menuInfo.matchmaking.canStart = false;
-    })
+    });
 
     // Initialisation du matchmaking
     ws.on('matchmaking_init', (response: MatchmakingResponse) => {
-      menuInfo.matchmaking.response = response
+      menuInfo.matchmaking.response = response;
       if (!menuInfo.matchmaking.isInQueue) showMatchmakingBanner();
-    })
+    });
 
     // Information du matchmaking
     ws.on('matchmaking_info', (response: MatchmakingResponse) => {
       menuInfo.matchmaking.response = response;
-    })
+    });
 
     // MatchmakingError >> cancel
     ws.on('matchmaking_error', (error: MatchmakingError) => {
-      matchmakingError(error)
-    })
+      matchmakingError(error);
+    });
+
+    // Matchmaking confirm >> lancement de la partie
+    ws.on('matchmaking_confirm', (response: MatchmakingResponse) => {
+      menuInfo.matchmaking.response = response;
+      router.push('/game');
+    });
+
+    ws.on('matchmaking_leave', () => {
+      if (menuInfo.matchmaking.isInQueue) showMatchmakingBanner()
+    });
 
     // Join lobby room (cas où le joueur membre d'un groupe)
     // !IMPORTANT! permet au joueur membre d'un groupe de recevoir la confirmation de matchmaking
     ws.on('lobby_join_room', () => {
-      ws.emit('lobby_join_room')
-    })
-
-
-    // Matchmaking confirm >> lancement de la partie
-    ws.on('matchmaking_confirm', (response: MatchmakingResponse) => {
-      menuInfo.matchmaking.response = response
-      router.push('/game')
-    })
+      ws.emit('lobby_join_room');
+    });
 
     // Ping par le serveur
     ws.on('ping', (callback) => {
       return callback(undefined, undefined)
-    })
+    });
 
     // Lorsqu'un utilisateur nous invite
     ws.on('group_invite', (userId: number, response: {message: string}) => {
       showNotification(response.message, () => acceptGroupInvitation(userId), true)
-    })
+    });
 
-    ws.on('matchmaking_leave', () => {
-      if (menuInfo.matchmaking.isInQueue) showMatchmakingBanner()
-    })
+    ws.on('group_update', () => {
+      getGroupInfo();
+    });
 
   }).catch(error => {
     AccountServices.logout(router);
-  })
+  });
 }
 
 /**
@@ -218,20 +218,6 @@ function showMatchmakingBanner() {
 
 }
 
-/**
- * Afficher ou Cacher la barre de navigation latérale.
- */
-function sideNavAccessAction() {
-  if (sidenav.value) {
-    if (!menuInfo.showSideNav) {
-      sidenav.value.style.width = 15 + "vw";
-    } else {
-      sidenav.value.style.width = 0 + "vw";
-    }
-  }
-
-  menuInfo.showSideNav = !menuInfo.showSideNav
-}
 
 /**
  * Afficher ou Cacher le widget social.
@@ -253,10 +239,15 @@ function showSocialWidget() {
   }
 }
 
+/**
+ * Accepter l'invitation au groupe.
+ *
+ * @param userId
+ */
 function acceptGroupInvitation(userId: number) {
   ws.emit('group_accept', userId, (error: any, response: any) => {
     if (!error) {
-      showNotification(response.message, null, true)
+      showNotification(response.message, null, true);
     }
   })
 }
@@ -288,6 +279,11 @@ function closeNotification() {
   }, 6000)
 }
 
+/**
+ * Inviter un utilisateur dans un groupe.
+ *
+ * @param userId
+ */
 function inviteInGroup(userId: number) {
   ws.emit('group_invite', userId, (error: any, response: any) => {
     if (!error) {
@@ -307,10 +303,7 @@ init();
 <template>
   <Popup :popup="popup"/>
   <Notification :notification="notification"/>
-  <!-- Bar de navigation -->
-  <nav class="side-nav" ref="sidenav">
-    <SideNavMenu :menu-info="menuInfo" :side-nav-access-action="sideNavAccessAction"></SideNavMenu>
-  </nav>
+
   <div class="social-widget" ref="wsocial">
     <SocialWidget :menu-info="menuInfo" :show-social-widget="showSocialWidget" :invite-in-group="inviteInGroup" :get-friend-list="getFriendList" :show-notification="showNotification"/>
   </div>
@@ -319,7 +312,6 @@ init();
 
 
     <section class="top-section">
-      <svg @click="sideNavAccessAction" xmlns="http://www.w3.org/2000/svg" class="side-nav-button" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M160 144h288M160 256h288M160 368h288"/><circle cx="80" cy="144" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><circle cx="80" cy="256" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><circle cx="80" cy="368" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>
       <div class="matchmaking-banner" ref="matchmakingBanner">
         <p>{{menuInfo.matchmaking.response?.message}}</p>
         <svg xmlns="http://www.w3.org/2000/svg" class="icon-load" viewBox="0 0 512 512"><path d="M434.67 285.59v-29.8c0-98.73-80.24-178.79-179.2-178.79a179 179 0 00-140.14 67.36m-38.53 82v29.8C76.8 355 157 435 256 435a180.45 180.45 0 00140-66.92" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="46"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M32 256l44-44 46 44M480 256l-44 44-46-44"/></svg>
