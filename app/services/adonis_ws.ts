@@ -154,6 +154,22 @@ class AdonisWS {
         }
       })
 
+      socket.on('group_leave', async () => {
+        try {
+          await (socket.data.user as User).leaveGroup()
+        } catch (e) {
+          console.error(e)
+        }
+      })
+
+      socket.on('group_info', async (callback) => {
+        try {
+          await this.getGroupInfo(socket, callback)
+        } catch (e) {
+          console.error(e)
+        }
+      })
+
       socket.on('disconnect', async () => {
         try {
           await this.interruptConnection((socket.data.user as User))
@@ -552,6 +568,32 @@ class AdonisWS {
         } as MatchmakingResponse)
       }
     })
+  }
+
+  /**
+   * Obtenir les informations du groupe.
+   *
+   * @param socket socket de l'utilisateur
+   * @param callback callback
+   * @private
+   */
+  private async getGroupInfo(socket: Socket, callback: any) {
+    const _g: Group | null = (socket.data.user).getGroup()
+    if (_g) {
+      const friendList: FriendInterface[] = []
+      const _users: User[] = await _g.getUsers()
+
+      _users.forEach((_u: User) => {
+        friendList.push({
+          id: _u.id,
+          username: _u.username,
+        } as FriendInterface)
+      })
+
+      callback(undefined, {group: _g.id, leader: _g.leader_id, players: friendList})
+    } else {
+      callback(undefined, undefined)
+    }
   }
 }
 
