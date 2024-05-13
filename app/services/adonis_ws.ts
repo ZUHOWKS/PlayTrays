@@ -12,6 +12,7 @@ import Group from "#models/group";
 import {MatchmakingError, MatchmakingResponse} from "../modules/utils/MatchmakingResponse.js";
 import {FriendInterface} from "../modules/utils/UserInterface.js";
 
+
 interface AuthUserData {
   user: number;
   token: string;
@@ -78,6 +79,7 @@ class AdonisWS {
     this.io?.on('connect', async (socket) => {
       socket.rooms.clear();
       socket.join('u'+(socket.data.user as User).id)
+
       /*
       * Évènement émis par l'utilisateur pour lancer un matchmaking
       *
@@ -86,7 +88,7 @@ class AdonisWS {
       */
       socket.on('matchmaking', async (game: string, callback: any) => {
         try {
-          const _l: Lobby | null = (await (socket.data.user as User).getLobby());
+          const _l: Lobby | null = (await (socket.data.user as User).getLobby())
           if (!_l || (_l && _l.statut == 'finished')) { // le joueur n'est pas dans un lobby (en partie ou en attente)
             await this.startMatchmaking(socket, callback, game)
           } else { // si le joueur est déjà dans un lobby
@@ -134,21 +136,19 @@ class AdonisWS {
         } catch (e) {
           console.error(e)
         }
-
       })
 
       socket.on('group_invite', async (userId: number, callback) => {
         try {
-          await this.groupInvitation(socket, userId, callback);
+          await this.groupInvitation(socket, userId, callback)
         } catch (e) {
           console.error(e)
         }
-
       })
 
       socket.on('group_accept', async (userId: number, callback) => {
         try {
-          await this.acceptGroupInvitation(userId, socket, callback);
+          await this.acceptGroupInvitation(userId, socket, callback)
         } catch (e) {
           console.error(e)
         }
@@ -156,7 +156,15 @@ class AdonisWS {
 
       socket.on('disconnect', async () => {
         try {
-          if (!(await (await (socket.data.user as User).getLobby())?.isReady())) (socket.data.user as User).leaveLobby()
+          await this.interruptConnection((socket.data.user as User))
+        } catch (e) {
+          console.error(e)
+        }
+      })
+
+      socket.on('connect_error', async () => {
+        try {
+          await this.interruptConnection((socket.data.user as User), true)
         } catch (e) {
           console.error(e)
         }
@@ -167,6 +175,8 @@ class AdonisWS {
       if (_g) {
         socket.join('g'+_g.id);
       }
+
+
       const _l: Lobby | null = await  (socket.data.user as User).getLobby()
       if (_l && _l.statut != 'finished') {
         socket.join('l'+_l.uuid)
@@ -184,6 +194,44 @@ class AdonisWS {
 
 
     })
+  }
+
+  /**
+   * Intérruption de connexion >> kick du lobby & du groupe si le joueur
+   * n'est pas actif.
+   *
+   * @param user
+   * @param disconnect
+   * @private
+   */
+  private async interruptConnection(user: User, disconnect?: boolean) {
+    const _l: Lobby | null = (await user.getLobby())
+    let intervalID: any
+    let check: number = 0
+
+    const disco = () => {
+      this.io?.to('u' + user.id).emit('ping', (error: any, response: any) => {
+        if (error || response.length == 0) {
+          if (check == 6) {
+            if (disconnect) this.io?.to('u' + user.id).disconnectSockets();
+            else user.leaveGroup();
+          } else {
+            check++
+          }
+        } else {
+          clearInterval(intervalID)
+        }
+      })
+    }
+
+    if (_l?.statut == "waiting" && !(await _l?.isReady())) {
+      user.leaveLobby()
+      intervalID = setInterval(disco, 2000)
+    } else if (_l?.statut == "finished") {
+      intervalID = setInterval(disco, 5750)
+    } else if (!_l) {
+      intervalID = setInterval(disco, 2000)
+    }
   }
 
   /**
