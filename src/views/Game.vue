@@ -15,9 +15,12 @@ import {useRouter} from "vue-router";
 import AccountServices from "@/services/account_services";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type {LobbyInterface} from "@/modules/utils/LobbyInterface";
+import LoaderFiller from "@/components/utils/LoaderFiller.vue";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
+
+const showLoader: Ref<boolean> = ref(true);
 
 let gameTray: TrayGame; // Game Manager
 const user: Ref<UserInterface> = ref({
@@ -214,7 +217,7 @@ function establishConnectionWithGameServer(uuid: string, game: string,  url: str
   ws.on('disconnect', () => router.push('/app'))
 
   gameTray = new TrayGame(game, "waiting", user, ws, game, scene, camera, controls);
-  gameTray.setup();
+  gameTray.setup(showLoader);
 }
 
 /**
@@ -311,6 +314,7 @@ init(); //lancer l'initialisation de la scène Three
 </script>
 
 <template>
+  <LoaderFiller :show-loader="showLoader"/>
   <div class="game">
     <canvas ref="experience"/>
   </div>

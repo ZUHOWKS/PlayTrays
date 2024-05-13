@@ -165,7 +165,7 @@ export default class CheckersClient extends SupportController {
         }
     }
 
-    setup(): void {
+    setup(loaderFiller?: Ref<boolean>): void {
         // loader
         const loader = new GLTFLoader();
 
@@ -182,6 +182,8 @@ export default class CheckersClient extends SupportController {
         // configuration de la partie selon le serveur
         this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}, callbakc) => {
             await this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
+
+            if (loaderFiller) setTimeout(() => loaderFiller.value = false, 2500);
             return callbakc(undefined, {loaded: true});
         })
 

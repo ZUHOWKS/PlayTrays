@@ -14,12 +14,14 @@ import SocialWidget from "@/components/utils/SocialWidget.vue";
 import Notification from "@/components/utils/Notification.vue";
 import type {UserInterface, FriendInterface} from "@/modules/utils/UserInterface";
 import type {GroupInterface} from "@/modules/utils/GroupInterface";
+import LoaderFiller from "@/components/utils/LoaderFiller.vue";
 
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
 
 const matchmakingBanner: Ref<HTMLElement | null> = ref(null);
 const wsocial: Ref<HTMLElement | null> = ref(null);
+const showLoader: Ref<boolean> = ref(true);
 
 let ws: Socket;
 
@@ -32,6 +34,7 @@ const menuInfo = reactive({
   friendList: ([] as FriendInterface[]),
   group: (undefined as GroupInterface | undefined)
 });
+
 
 const notification = reactive({
   id: 0,
@@ -116,7 +119,7 @@ function init() {
       menuInfo.matchmaking.canStart = true;
       getFriendList();
       getGroupInfo();
-
+      showLoader.value = false;
     });
 
     // lors d'une déconnexion
@@ -335,6 +338,8 @@ init();
 </script>
 
 <template>
+  <LoaderFiller :show-loader="showLoader"/>
+
   <Popup :popup="popup"/>
   <Notification :notification="notification"/>
 

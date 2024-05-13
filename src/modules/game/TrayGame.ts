@@ -41,9 +41,9 @@ export default class TrayGame {
     /**
      * Setup de la partie
      */
-    setup(): void {
+    setup(loaderFiller?: Ref<boolean>): void {
         if (this.controller) {
-            this.controller.setup();
+            this.controller.setup(loaderFiller);
             this.ws.on('end game', (whoWin) => {
                 this.status = 'finished'
             })

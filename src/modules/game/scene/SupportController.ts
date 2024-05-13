@@ -41,7 +41,7 @@ export default abstract class SupportController {
     /**
      * Permet d'initialiser tous les évènements liés à la partie
      */
-    abstract setup(): void;
+    abstract setup(loaderFiller?: Ref<boolean>): void;
 
     /**
      * Obtenir la caméra qui correspond à la vue courante du joueur
