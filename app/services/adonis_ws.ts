@@ -114,10 +114,10 @@ class AdonisWS {
         try {
           const _g = await (socket.data.user as User).getGroup();
           if (_g) {
-            this.io?.emit('matchmaking_leave');
+            this.io?.emit('matchmaking_leave')
           } else {
-            (socket.data.user as User).leaveLobby();
-            socket.emit('matchmaking_leave');
+            (socket.data.user as User).leaveLobby()
+            socket.emit('matchmaking_leave')
           }
         } catch (e) {
           console.error(e)
@@ -154,9 +154,10 @@ class AdonisWS {
         }
       })
 
-      socket.on('group_leave', async () => {
+      socket.on('group_leave', async (callback) => {
         try {
           await (socket.data.user as User).leaveGroup()
+          callback(undefined, {message: "The group has been leaved successfully !"})
         } catch (e) {
           console.error(e)
         }
@@ -264,18 +265,18 @@ class AdonisWS {
 
     if (friend) {
       const _g: Group | null = await friend.getGroup()
-      if (await user.isFriend(friend)) {
         if (_g && await _g.isInvited(user.id)) _g.confirmInvitationOf(user).then(async () => {
+          _g?.deleteUserInvitation(user.id)
           socket.join('g' + _g.id)
           this.io?.to('g' + _g.id).emit('group_update')
-
-          return callback(undefined, {message: 'Vous avez rejoins le groupe !', group: await _g.getUsers()})
+          return callback(undefined, {message: 'Vous avez rejoins le groupe !'})
         })
-      } else {
-        _g?.deleteUserInvitation(user.id);
       }
+
+    else {
+      return callback("Unauthorized!", undefined)
     }
-    return callback("Unauthorized!", undefined)
+
   }
 
   /**
@@ -578,10 +579,11 @@ class AdonisWS {
    * @private
    */
   private async getGroupInfo(socket: Socket, callback: any) {
-    const _g: Group | null = (socket.data.user).getGroup()
+    const _g: Group | null = await (socket.data.user).getGroup()
+
     if (_g) {
       const friendList: FriendInterface[] = []
-      const _users: User[] = await _g.getUsers()
+      const _users: User[] = (await _g.getUsers())
 
       _users.forEach((_u: User) => {
         friendList.push({

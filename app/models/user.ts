@@ -105,10 +105,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
         if (_u.id == this.id) {
           _gUsers.splice(i, 1)
         }
-        i++;
+        i++
       })
-
-      Adonis_ws.io?.to('g' + _g.id).emit('group_update')
 
       if (_g.leader_id == this.id) {
         if (_gUsers.length > 0) {
@@ -121,6 +119,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
       await db.from('user_groups').delete()
         .where('user_id', this.id)
         .andWhere('group_id', _g.id)
+
+      Adonis_ws.io?.to('g' + _g.id).emit('group_update')
     }
   }
 

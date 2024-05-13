@@ -31,7 +31,7 @@ export default class Group extends BaseModel {
   public async getUsers(): Promise<User[]> {
     return User
       .query()
-      .select('users.id')
+      .select('users.*')
       .leftJoin('groups', join => {
         join.on('users.id', 'groups.leader_id').andOnVal('groups.id', this.id)
       })
