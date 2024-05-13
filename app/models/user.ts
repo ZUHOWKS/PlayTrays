@@ -97,8 +97,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
    */
   public async leaveGroup() {
     const _g: Group | null = await this.getGroup()
+
     if (_g) {
-      const _gUsers: User[] = await _g.getUsers();
+      let _gUsers: User[] = await _g.getUsers();
       let i = 0;
       _gUsers.forEach((_u) => {
         if (_u.id == this.id) {
@@ -107,7 +108,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
         i++;
       })
 
-      Adonis_ws.io?.to('g' + _g.id).emit('group_leave', (_gUsers), _g.leader_id, this.id)
+      Adonis_ws.io?.to('g' + _g.id).emit('group_update')
 
       if (_g.leader_id == this.id) {
         if (_gUsers.length > 0) {
@@ -115,11 +116,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
         } else {
           await _g.delete() // supprime le groupe s'il est vide
         }
-      } else {
-        await db.from('user_groups').delete()
-          .where('user_id', this.id)
-          .andWhere('group_id', this.id)
       }
+
+      await db.from('user_groups').delete()
+        .where('user_id', this.id)
+        .andWhere('group_id', _g.id)
     }
   }
 
