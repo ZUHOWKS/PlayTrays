@@ -13,6 +13,7 @@ import {PopupObject} from "@/modules/utils/Popup";
 import SocialWidget from "@/components/utils/SocialWidget.vue";
 import Notification from "@/components/utils/Notification.vue";
 import type {UserInterface, FriendInterface} from "@/modules/utils/UserInterface";
+import type {GroupInterface} from "@/modules/utils/GroupInterface";
 
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -29,6 +30,7 @@ const menuInfo = reactive({
   grouped_users: undefined,
   showSocialWidget: false,
   friendList: ([] as FriendInterface[]),
+  group: (undefined as GroupInterface | undefined)
 });
 
 const notification = reactive({
@@ -72,6 +74,25 @@ function getFriendList() {
   })
 }
 
+function getGroupInfo() {
+  ws.emit('group_info', (error: any, response: any) => {
+    if (response) {
+      menuInfo.group = {
+        group: response.group,
+        leader: response.leader,
+        players: response.players as FriendInterface[]
+      } as GroupInterface;
+
+      menuInfo.group.players.forEach((player: FriendInterface) => {
+        console.log(player.username);
+      })
+    } else {
+      menuInfo.group = undefined;
+    }
+
+  })
+}
+
 function init() {
 
   AccountServices.getUserInfos().then((response) => {
@@ -94,7 +115,9 @@ function init() {
     ws.on('connect', () => {
       menuInfo.matchmaking.canStart = true;
       getFriendList();
-    })
+      getGroupInfo();
+
+    });
 
     // lors d'une déconnexion
     ws.on('disconnect', () => {
@@ -292,7 +315,18 @@ function inviteInGroup(userId: number) {
       notification.action = null;
       notification.showNotification = true;
       closeNotification();
+
+      ws.emit('group_info', (error: any, response: any) => {
+        console.log(response)
+        menuInfo.group = response;
+      })
     }
+  })
+}
+
+function leaveGroup() {
+  ws.emit('group_leave', (error: any, response: any) => {
+    if (!error) showNotification(response.message, undefined, true)
   })
 }
 
@@ -317,7 +351,7 @@ init();
         <svg xmlns="http://www.w3.org/2000/svg" class="icon-load" viewBox="0 0 512 512"><path d="M434.67 285.59v-29.8c0-98.73-80.24-178.79-179.2-178.79a179 179 0 00-140.14 67.36m-38.53 82v29.8C76.8 355 157 435 256 435a180.45 180.45 0 00140-66.92" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="46"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M32 256l44-44 46 44M480 256l-44 44-46-44"/></svg>
         <svg @click="() => ws.emit('matchmaking_leave')" xmlns="http://www.w3.org/2000/svg" class="cancel-button" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M368 368L144 144M368 144L144 368"/></svg>
       </div>
-      <TopBarMenu :menu-info="menuInfo" :show-social-widget="showSocialWidget"></TopBarMenu>
+      <TopBarMenu :menu-info="menuInfo" :show-social-widget="showSocialWidget" :leave-group="leaveGroup"></TopBarMenu>
     </section>
 
     <!-- Contenue de la page -->
