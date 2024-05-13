@@ -16,7 +16,7 @@
 
 <style scoped>
 .welcome-section {
-    padding: 2.5% 2.5% 15% 2.5%;
+    padding: 5% 2.5% 15% 2.5%;
     width: 100vw;
     height: 50vh;
 }
