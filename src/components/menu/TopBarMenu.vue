@@ -73,7 +73,7 @@ const router = useRouter();
     align-items: center;
     justify-content: space-between;
     transform-origin: 100% 50%;
-    animation: groupContainerAppear .5s .1s both ease-in-out;
+    animation: groupContainerAppear .5s .05s both ease-in-out;
   }
 
   @keyframes groupContainerAppear {
@@ -107,6 +107,12 @@ const router = useRouter();
     box-shadow: 0px 0px 10px rgba(0,0,0,0.075);
     background-color: rgb(var(--primary-color));
     cursor: pointer;
+  }
+
+  .group-players>.group-player:nth-child(n+5) {
+    width: 0;
+    height: 0;
+    visibility: hidden;
   }
 
   .group-player>p {
