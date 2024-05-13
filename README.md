@@ -39,11 +39,11 @@ jeux), Contact.
 
 **_État d'avancement :_**
 - [x] Navbar
-- [ ] Welcome Section
-- [ ] About Section
+- [x] Welcome Section
+- [x] About Section
 - [ ] Games Section
-- [ ] Contact Section (en foot page)
-- [ ] Rendre fonctionnelle les boutons
+- [x] Contact Section (en foot page)
+- [x] Rendre fonctionnelle les boutons
 
 ## Interface jeu
 
