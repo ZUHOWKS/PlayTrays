@@ -3,30 +3,33 @@
 
 import {reactive, ref, type Ref} from "vue";
 import AccountServices from "@/services/account_services";
+import type {FriendInterface} from "@/modules/utils/UserInterface";
 
 const props = defineProps(['menuInfo', 'showSocialWidget', 'inviteInGroup', 'getFriendList', 'showNotification'])
 const email = ref('');
 
 const fInvitations = reactive({
-  own: [],
-  ask: []
+  own: ([] as FriendInterface[]),
+  ask: ([] as FriendInterface[])
 })
 
 const section: Ref<string> = ref('list');
 
 function searchFriend() {
   AccountServices.inviteFriend(email.value).then(() => {
-    props.showNotification(friend.username + ' is now your friend !', null, true)
-    getAllFriendInvitations()
+    getAllFriendInvitations().then(() => {
+      props.showNotification('Invite send to ' + fInvitations.own[fInvitations.own.length - 1].username + '!', null, true)
+    })
   });
 }
 
-function getAllFriendInvitations() {
+async function getAllFriendInvitations(): Promise<void> {
   AccountServices.getOwnFriendInvitations().then((response) => {
     console.log(response)
     fInvitations.own = response.data
   })
-  AccountServices.getFriendInvitations().then((response) => {
+
+  return AccountServices.getFriendInvitations().then((response) => {
     console.log(response)
     fInvitations.ask = response.data
   })
@@ -67,7 +70,7 @@ function getAllFriendInvitations() {
 
       <div v-for="friend in fInvitations.ask" class="friend-card" @click="() => {AccountServices.acceptFriend(friend.id).then(() => {getFriendList(); getAllFriendInvitations(); showNotification(friend.username + ' is now your friend !', null, true)})}">
         <div class="row">
-          <h3>{{ friend .username }}</h3>
+          <h3>{{ friend?.username }}</h3>
           <svg xmlns="http://www.w3.org/2000/svg" :class="[friend?.online ? 'online-indicator' : 'offline-indicator']" viewBox="0 0 512 512"><path d="M256 464c-114.69 0-208-93.31-208-208S141.31 48 256 48s208 93.31 208 208-93.31 208-208 208z"/></svg>
         </div>
         <p>{{ friend?.status.length > 20 ? friend?.status.substring(0, 17) + "..." : friend?.status }}</p>
@@ -75,9 +78,9 @@ function getAllFriendInvitations() {
 
       <h3 class="ask-title">Own Asks : </h3>
 
-      <div v-for="friend in fInvitations.own" class="friend-card" @click="AccountServices.inviteFriend(friend.id)">
+      <div v-for="friend in fInvitations.own" class="friend-card">
         <div class="row">
-          <h3>{{ friend .username }}</h3>
+          <h3>{{ friend.username }}</h3>
           <svg xmlns="http://www.w3.org/2000/svg" :class="[friend?.online ? 'online-indicator' : 'offline-indicator']" viewBox="0 0 512 512"><path d="M256 464c-114.69 0-208-93.31-208-208S141.31 48 256 48s208 93.31 208 208-93.31 208-208 208z"/></svg>
         </div>
         <p>{{ friend?.status.length > 20 ? friend?.status.substring(0, 17) + "..." : friend?.status }}</p>
