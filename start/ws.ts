@@ -11,11 +11,11 @@ app.ready(async () => {
 
   // reset des groupes (en cascade sur la table 'user_groups')
   Group.query()
-    .delete()
+    .delete().then(() => console.log('groups reset !'))
 
   // reset des lobbies (en cascade sur la table 'user_lobbies')
   Lobby.query()
-    .delete()
+    .delete().then(() => console.log('lobbies reset !'))
 
   AdonisWS.boot()
   AdonisWS.initSocketEvents()
