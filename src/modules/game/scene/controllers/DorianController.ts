@@ -21,6 +21,15 @@ import type PTObject from "@/modules/game/scene/objects/PTObject";
 import {playerPawn} from "@/modules/game/scene/objects/DorianGameObjects/PlayerPawn";
 import {CaseSelector} from "@/modules/game/scene/objects/DorianGameObjects/CaseSelector";
 import Pawn from "@/modules/game/scene/objects/Pawn";
+import {de} from "@/modules/game/scene/objects/DorianGameObjects/De";
+
+interface Players{
+    name: string;
+    city: string[];
+    exitPrison: number;
+    money: number;
+    caseNb: number;
+}
 
 export default class DorianGame extends SupportController{
 
@@ -47,6 +56,25 @@ export default class DorianGame extends SupportController{
     // Permet d'initialiser le jeu DorianGame lors du lancement de la page
     setup(): void {
         const loader = new GLTFLoader();
+        this.ws.on("PlayerJoin", (players : Players, id : number) : void => {
+            console.log(players);
+            this.loadGLTFSceneModel(loader, "DorianGame/pion" + id + ".glb").then((obj) => {
+                this.registerObject(new playerPawn("pion" + id, obj, players.name));
+                const tempObject = this.getObject("pion" + id) as playerPawn | undefined;
+                if (tempObject) for (let i = 0; i < players.caseNb; i++){
+                     tempObject.moveCase(false);
+                }
+            });
+        })
+
+
+        this.ws.on("pawnMove", (id, r) => {
+            const pawnToMove = (this.getObject("pion" + id) as playerPawn | undefined);
+            if (pawnToMove) for (let i = 0 ; i < r; i++){
+                pawnToMove.moveCase();
+            }
+
+        })
 
         //Ajout d'un plateau
         this.loadGLTFSceneModel(loader, "DorianGame/dorianTray.glb").then((obj) => {
@@ -61,11 +89,13 @@ export default class DorianGame extends SupportController{
         this.loadGLTFSceneModel(loader, "DorianGame/prison.glb").then((obj) => {
             this.registerObject(new prison("Prison", obj))
         });
-
+        /*
         //Ajout des 4 pions
-        this.loadGLTFSceneModel(loader, "DorianGame/pionRouge.glb").then((obj) => {
+
+        this.loadGLTFSceneModel(loader, "DorianGame/pion2.glb").then((obj) => {
             this.registerObject(new playerPawn("PlayerPawn1", obj, "Majurax"))
         });
+
         this.loadGLTFSceneModel(loader, "DorianGame/pionBleu.glb").then((obj) => {
             this.registerObject(new playerPawn("PlayerPawn2", obj, "User1"))
         });
@@ -75,7 +105,7 @@ export default class DorianGame extends SupportController{
         this.loadGLTFSceneModel(loader, "DorianGame/pionDrake.glb").then((obj) => {
             this.registerObject(new playerPawn("PlayerPawn4", obj, "User3"))
         });
-
+        */
         // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
         //Ajout des plans des coins
         this.addPlaneOnTray(2.9, 2.9, 9.48458, 9.53537, "StartCard", 0, 0);
@@ -90,6 +120,10 @@ export default class DorianGame extends SupportController{
             this.addPlaneOnTray(1.71969, 2.88127, -7.10946 + 1.7767*i, -9.49983, "card_" + (i+21), 10-(i+1), 10);
             this.addPlaneOnTray(2.89, 1.74, 9.4985, -7.14 +1.7788 * i, "card_" + (i+31), 0, 10-(i+1));
         }
+        const geometry = new BoxGeometry(2,2,2);
+        const material = new MeshBasicMaterial( { color: 0x000000 } );
+        const cube = new Mesh( geometry, material );
+        this.registerObject(new de("dé", cube));
     }
 
     //Cree un plan et le register
@@ -163,6 +197,10 @@ export default class DorianGame extends SupportController{
 
         }
     }
+
+        if (this.selectedObject instanceof de){
+            this.lancerDe();
+        }
         }
     // Inutile car trop d'inconvénients
     displayCardHUD(): void {
@@ -183,6 +221,20 @@ export default class DorianGame extends SupportController{
 
         console.log("position: \nx: " + Math.round(cam.position.x) + "\ny: " + Math.round(cam.position.y) + "\nz: " + Math.round(cam.position.z) + "\n\nrotation: \nx: " + (cam.rotation.x).toFixed(2) + "\ny: " + Math.round(cam.rotation.y) + "\nz: " + Math.round(cam.rotation.z));
     }
+    lancerDe() : void {
+        this.ws.emit("Lancede", (error : any, response : any) => {
+            if (error) throw error;
+            else{
+                console.log(response.random);
+                const tempPion : playerPawn | undefined = (this.getObject("pion" + response.id) as playerPawn | undefined);
 
+                if (tempPion){
+                    for (let i: number = 0; i < response.random; i++) {
+                        tempPion.moveCase();
+                    }
+                }
+            }
+        })
+    }
 
 }
