@@ -25,3 +25,15 @@ Voici la liste des fonctionnalités développées:
 - [x] Réseau social. Les utilisateurs peuvent demander en ami !
 - [x] Système de groupage pour être lancé dans une même partie.
 - [x] Processus de Matchmaking pour matché des utilisateurs recherchant une partie d'un même mode de jeu.
+
+# Documentation
+
+Cette documentation retrace les features developpées pour une future reprise de développement.
+
+## Fonctionnement
+
+Adonis joue un rôle majeur dans le fonctionnement de PlayTrays. Il permet de gérer les requêtes utilisateurs, coordiner les
+les serveurs jeu et balancer les joueurs dans des lobbies. En effet, il est le seul à pouvoir accèder à la base de données.
+Dans l'état actuel, cela facilite la sécurisation de cette dernière et d'éviter la saturation des pulls.
+
+De marnière globale, VueJS réagit avec Adonis afin d'obtenir toutes les données lié à un compte authentifié.
