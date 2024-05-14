@@ -5,12 +5,12 @@ import {AnimationQueue, type AnimationQueueInterface} from "@/modules/utils/Anim
 
 export class playerPawn extends PTObject implements AnimationQueueInterface {
     animationQueue: AnimationQueue;
-    case : {casePawnX : number ,casePawnY : number}
+    case : {casePawnX : number ,casePawnY : number, casseNb: number}
     positionTest : Vector3 = new Vector3(0, 0, 0);
-    user: {name : string, pfp : string};
+    user: string;
 
 
-    constructor(name: string, object3D: Object3D, user : {name : string, pfp : string}) {
+    constructor(name: string, object3D: Object3D, user: string) {
         super(name, object3D);
         this.animationQueue = new AnimationQueue();
         this.user = user;
@@ -29,14 +29,15 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
           2  B                             B
           1  B                             B
           0  B  B  B  B  B  B  B  B  B  B  B
-             0  1  2  3  4  5  6  7  8  9  10
+             10 9  8  7  6  5  4  3  2  1  0
 
          */
-        this.case = {casePawnX : 0 ,casePawnY : 0}
+        this.case = {casePawnX : 0 ,casePawnY : 0, casseNb: 0}
     }
 
     // Permet d'avancer jusque la case choisie
     moveTo(caseX : number, caseY : number): void {
+
         //Gere la cas ou la case demandée est la même que celle ou est le pion
         if (this.case.casePawnX == caseX && this.case.casePawnY == caseY) {this.moveCase();}
 
@@ -50,15 +51,14 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
     }
 
     //Juste pour les tests (modifié plus tard)
-    select(x: number, y: number): void {
-        this.moveTo(x, y);
+    select(): void {
     }
 
     unselect(): void {
     }
 
     //Avance jusque la case suivante de l'objet
-    moveCase() : void {
+    moveCase(anim: boolean = true) : void {
             //Initialisation de constantes utiles
             const GRANDSAUT : number = 2.325;
             const PETITSAUT : number = 1.795;
@@ -86,21 +86,28 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
             this.positionTest.y = vectArrivee.y;
             this.positionTest.z = vectArrivee.z;
 
+            if (anim){
+                this.animationQueue.push({
+                    duration: 100,
+                    startCallback: (): void => {
+                    },
+                    animationCallback: (progress: number): void => {
+                        position.x = vectDepart.x + movVec.x * progress;
+                        position.y = vectDepart.y + movVec.y * progress;
+                        position.z = vectDepart.z + movVec.z * progress;
+                    },
+                    finalCallback: (): void => {
+                        position.x = vectArrivee.x;
+                        position.y = vectArrivee.y;
+                        position.z = vectArrivee.z;
+                    }
+                })
+            }
+            else {
+                position.x = vectArrivee.x;
+                position.y = vectArrivee.y;
+                position.z = vectArrivee.z;
+            }
 
-            this.animationQueue.push({
-                duration: 100,
-                startCallback: (): void => {
-                },
-                animationCallback: (progress: number): void => {
-                    position.x = vectDepart.x + movVec.x * progress;
-                    position.y = vectDepart.y + movVec.y * progress;
-                    position.z = vectDepart.z + movVec.z * progress;
-                },
-                finalCallback: (): void => {
-                    position.x = vectArrivee.x;
-                    position.y = vectArrivee.y;
-                    position.z = vectArrivee.z;
-                }
-            })
         }
 }
