@@ -4,7 +4,7 @@
 button {
     border: 2px solid rgb(var(--primary-color));
     border-radius: 30px;
-    font-size: 30px;
+    font-size: 1.5vw;
     font-weight: 300;
     text-decoration: none;
     text-align: center;

@@ -28,8 +28,7 @@
 }
 
 .logo {
-    width: 100%; 
-    max-width: 500px; 
+    width: 30vw;
     height: auto;
     transition: transform 0.6s ease-in-out; 
 }

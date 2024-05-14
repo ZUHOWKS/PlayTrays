@@ -44,23 +44,23 @@ body {
 
 /* Définie la police et sa taille */
 h1, .h1 {
-    font-size: 164px;
+    font-size: 8.5vw;
 }
 
 h2, .h2 {
-    font-size: 72px;
+    font-size: 3.75vw
 }
 
 h3, .h3 {
-    font-size: 32px;
+    font-size: 1.6vw;
 }
 
 p, .p {
-    font-size: 20px;
+    font-size: 1.04vw;
 }
 
 a {
-    font-size: 20px;
+    font-size: 1.04vw;
     color: rgb(var(--link-color));
     cursor: pointer;
     text-decoration: none;

@@ -62,7 +62,7 @@
 
   /* style des hypertextes */
   .s-navbar>div:nth-child(1)>a {
-    font-size: 32px;
+    font-size: 1.6vw;
     font-weight: 300;
     position: relative;
   }
@@ -94,7 +94,7 @@
 
   /* style de la police du logo */
   #logo>h3 {
-    font-size: 48px;
+    font-size: 2.5vw;
     font-weight: 800;
   }
 
@@ -109,16 +109,16 @@
 
   /* style du bouton pour entrer dans le menu */
   .play-button {
-    width: 300px;
-    height: 60px;
+    width: 15vw;
+    height: 5vh;
     border-color: rgb(var(--primary-color));
   }
 
 
   /* style du bouton pour se connecter ou s'enregistrer */
   .sign-up-button {
-    width: 200px;
-    height: 60px;
+    width: 10vw;
+    height: 5vh;
     border-color: rgb(var(--text-color));
     background-color: transparent;
   }

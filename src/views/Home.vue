@@ -6,7 +6,7 @@ import About from "@/components/home/About.vue";
 import Games from "@/components/home/Games.vue";
 </script>
 
-<template>
+<template >
   <SNavbar></SNavbar>
   <main>
     <Welcome></Welcome>
