@@ -16,7 +16,7 @@ L'application a été developpée par :
 
 # Adonis pour PlayTrays
 
-Adonis est une technologie robuste et puissante pour créer des API REST. Dans le cadre ce projet, Adonis joue le rôle de chef
+Adonis est une technologie robuste et puissante pour créer des API REST. Dans le cadre de ce projet, Adonis joue le rôle de chef
 d'orchestre ! C’est lui qui gère en arrière plan toutes les requêtes utilisateurs. En plus de cela, en complément de
 l'API Game Server, il est capable de balancer les utilisateurs sur l'un des lobbies des serveurs jeu grâce au processus de
 Matchmaking.
