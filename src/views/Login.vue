@@ -133,7 +133,7 @@ main {
   border-radius: 20px;
   align-items: center;
   width: 60%;
-  height: 70%;
+  height: 40vw;
   box-shadow: 0px 8px 20px rgba(0,0,0, 0.15);
 }
 
@@ -170,7 +170,7 @@ form>.inputs {
   background: linear-gradient(120deg, rgb(var(--primary-color)) -175%, rgb(var(--secondary-color)) 100%);
   width: 30%;
   left: 50%;
-  height: 70%;
+  height: 40vw;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
