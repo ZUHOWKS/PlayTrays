@@ -4,7 +4,7 @@
 
 
 <template>
-  <div class="games" id="games">
+  <section class="games-section">
     <h2 class="game-title">GAMES</h2>
     <div class="game-images">
       <div class="flip-card">
@@ -28,16 +28,13 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.game-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: 20px;
-  margin-top: 10px;
+.games-section {
+  width: 100vw;
+  overflow: hidden;
 }
 
 .game-title {
