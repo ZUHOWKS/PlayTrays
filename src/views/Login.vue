@@ -36,9 +36,10 @@ import {onMounted, type Ref, ref} from "vue";
       isLoginMode.value = !isLoginMode.value
       if (!isLoginMode.value) {
         signUpMode.value.style.transform = "translateX(0)"
-
+        loginMode.value.style.transform = "translateX(200%)"
       } else {
         signUpMode.value.style.transform = "translateX(-200%)"
+        loginMode.value.style.transform = "translateX(0)"
       }
     }
   }
@@ -176,6 +177,7 @@ form>.inputs {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  transition: left 1s ease-in-out;
 }
 
 .sign-mode-content {
@@ -184,11 +186,11 @@ form>.inputs {
   align-items: center;
   justify-content: center;
   position: absolute;
+  transition: transform 1s 0.5s ease-in-out;
 }
 
 .sign-up-mode {
   transform: translateX(-200%);
-  transition: transform 1s 0.5s ease-in-out;
 }
 
 </style>
