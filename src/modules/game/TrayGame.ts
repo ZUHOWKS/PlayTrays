@@ -12,6 +12,7 @@ export default class TrayGame {
     player: any;
     controller: SupportController | undefined;
     ws: Socket;
+    game: string;
 
     /**
      * Cette classe facilite le rassemblement entre contrôleur de partie
@@ -32,6 +33,7 @@ export default class TrayGame {
         this.status = status;
         this.player = player; //TODO: remplacer any par la UserInterface class
         this.ws = ws;
+        this.game = game;
 
         if (game == "checkers") {
             this.controller = new CheckersClient(scene, cameraRef, orbitControlsRef, this.ws);
