@@ -32,6 +32,7 @@ interface Players{
     caseNb: number;
 }
 
+
 export default class DorianGame extends SupportController{
 
     previousObjectSelected: PTObject | undefined;
@@ -62,7 +63,6 @@ export default class DorianGame extends SupportController{
     setup(): void {
         const loader = new GLTFLoader();
         this.ws.on("PlayerJoin", (players : Players, id : number) : void => {
-            console.log(players);
             this.loadGLTFSceneModel(loader, "DorianGame/pion" + id + ".glb").then((obj) => {
                 this.registerObject(new playerPawn("pion" + id, obj, players.name));
                 const tempObject = this.getObject("pion" + id) as playerPawn | undefined;
@@ -73,17 +73,11 @@ export default class DorianGame extends SupportController{
         })
 
 
-        this.ws.on("pawnMove", (id, r) => {
+        this.ws.on("pawnMove", (id, r, caseInfo) => {
             const pawnToMove = (this.getObject("pion" + id) as playerPawn | undefined);
             if (pawnToMove) for (let i = 0 ; i < r; i++){
                 pawnToMove.moveCase();
             }
-
-        })
-
-        this.ws.on("AfficherEventCard", (caseType : cardTypeInterface) => {
-            if (caseType.type == "ville") console.log("oui")
-
         })
 
         //Ajout d'un plateau
@@ -235,7 +229,6 @@ export default class DorianGame extends SupportController{
         this.ws.emit("Lancede", (error : any, response : any) => {
             if (error) throw error;
             else{
-                console.log(response.random);
                 const tempPion : playerPawn | undefined = (this.getObject("pion" + response.id) as playerPawn | undefined);
 
                 if (tempPion){
@@ -243,6 +236,38 @@ export default class DorianGame extends SupportController{
                         tempPion.moveCase();
                     }
                 }
+                if (response.caseInfo.type == "chances") this.ws.emit("FinTour");
+                else if (response.caseInfo.type == "war") this.ws.emit("FinTour");
+                else if (response.caseInfo.type == "bank") this.ws.emit("FinTour");
+                else if (response.caseInfo.type == "start") this.ws.emit("FinTour");
+                else if (response.caseInfo.type == "bataille") this.ws.emit("FinTour");
+                else if (response.caseInfo.type == "ville"){
+
+                    console.log("quel est l'user: ", response.caseInfo.info.user);
+                    (document.getElementsByClassName("name")[1] as HTMLElement).innerText = ""+response.caseInfo.name;
+                    (document.getElementsByClassName("title")[1] as HTMLElement).style.backgroundColor = ""+response.caseInfo.info.color;
+                    (document.getElementsByClassName("price-default")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.m0;
+                    (document.getElementsByClassName("price-1")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.m1;
+                    (document.getElementsByClassName("price-2")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.m2;
+                    (document.getElementsByClassName("price-3")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.m3;
+                    (document.getElementsByClassName("price-4")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.m4;
+                    (document.getElementsByClassName("price-5")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.m5;
+                    (document.getElementsByClassName("price-hotel")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.maison + "\nplus 4 maisons";
+                    (document.getElementsByClassName("price-maison")[1] as HTMLElement).innerText = "£"+response.caseInfo.info.maison;
+                    (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "visible";
+                    (document.querySelector('#Buy') as HTMLElement).onclick = () => {
+                        if (response.player.money > response.caseInfo.info.m0 && response.caseInfo.info.user == undefined){
+                            (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "hidden";
+                            this.ws.emit("Achat");
+                        }
+                        else console.log("Tu ne peux pas");
+                    }
+                    (document.querySelector('#Quit') as HTMLElement).onclick = () => {
+                        (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "hidden";
+                        this.ws.emit("FinTour");
+                        }
+                    }
+
             }
         })
     }
