@@ -22,6 +22,7 @@ import {playerPawn} from "@/modules/game/scene/objects/DorianGameObjects/PlayerP
 import {CaseSelector} from "@/modules/game/scene/objects/DorianGameObjects/CaseSelector";
 import Pawn from "@/modules/game/scene/objects/Pawn";
 import {de} from "@/modules/game/scene/objects/DorianGameObjects/De";
+import type {cardTypeInterface} from "@/modules/game/scene/objects/DorianGameObjects/CardHelper";
 
 interface Players{
     name: string;
@@ -32,6 +33,8 @@ interface Players{
 }
 
 export default class DorianGame extends SupportController{
+
+    previousObjectSelected: PTObject | undefined;
 
     constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
         super(scene, cameraRef, orbitControlsRef, ws);
@@ -51,6 +54,8 @@ export default class DorianGame extends SupportController{
     }
 
     unselectObject() {
+        this.previousObjectSelected = this.getSelectedObject();
+        super.unselectObject();
     }
 
     // Permet d'initialiser le jeu DorianGame lors du lancement de la page
@@ -73,6 +78,11 @@ export default class DorianGame extends SupportController{
             if (pawnToMove) for (let i = 0 ; i < r; i++){
                 pawnToMove.moveCase();
             }
+
+        })
+
+        this.ws.on("AfficherEventCard", (caseType : cardTypeInterface) => {
+            if (caseType.type == "ville") console.log("oui")
 
         })
 
@@ -147,13 +157,13 @@ export default class DorianGame extends SupportController{
     }
 
     unselectAll(): void {
+        this.unselectObject();
     }
 
     selectObject(name: string) {
 
         //Abaisse la carte d'information si l'objet cliqué est la même carte que celle deja en mémoire
-        if (this.selectedObject && this.selectedObject instanceof CaseSelector && this.selectedObject.getName() == name && this.selectedObject.case.caseType == "ville") {(document.getElementsByClassName("hud")[0] as HTMLElement).style.transform = "translateY(60vh)";}
-
+        if (this.getObject(name) instanceof CaseSelector && name === this.previousObjectSelected?.getName()) {(document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(60vh)";}
         //Sinon on effectue le code classique
         else{
 
@@ -162,7 +172,7 @@ export default class DorianGame extends SupportController{
         //Si l'objet selectionné est une caseselector, on applique des modififcations en fonction du type de la case
         if (this.selectedObject && this.selectedObject instanceof CaseSelector) {
             const tempcase: CaseSelector = this.selectedObject as CaseSelector;
-            (document.getElementsByClassName("hud")[0] as HTMLElement).style.transform = "translateY(60vh)";
+            (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(60vh)";
             if (tempcase.case.caseType == "start") {
             } else if (tempcase.case.caseType == "prison") {
                 this.getObject("Prison")?.select();
@@ -185,7 +195,7 @@ export default class DorianGame extends SupportController{
 
 
 
-                (document.getElementsByClassName("hud")[0] as HTMLElement).style.transform = "translateY(0vh)";
+                (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(0vh)";
             }
 
             //Juste pour les tests (avance jusque la case et affiche des choses importantes)
