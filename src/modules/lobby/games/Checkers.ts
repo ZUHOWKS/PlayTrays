@@ -19,6 +19,8 @@ export default class Checkers extends PTLobby {
     blackPlayer: string | undefined;
     whoPlay: "black" | "white" = "black";
 
+    actualTimer: number = 120;
+
     /**
      * Permet d'instancier un lobby pour le jeu des dames.
      *
@@ -63,12 +65,26 @@ export default class Checkers extends PTLobby {
 
         // émettre une update de la partie
         const userTeam = this.setTeam(socket.data.user);
-        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam}, (error: any, response: any) => {
+        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer}, (error: any, response: any) => {
             if (!error && response.loaded && this.status === 'waiting') {
                 if (this.whitePlayer && this.blackPlayer) {
                     this.status = 'running';
                     this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
                     this.server.io.to(this.uuid).emit('start');
+
+                    const intervalID = setInterval(() => {
+                        if (this.status === 'finished') clearInterval(intervalID);
+
+                        if (this.actualTimer == 0) {
+                            this.actualTimer = 95;
+                            this.whoPlay = this.whoPlay == "black" ? "white" : "black";
+
+                            this.emitWithout(null, 'pawn action', []);
+                            this.checkEndGame();
+                        } else {
+                            this.actualTimer-=1;
+                        }
+                    }, 1000)
                 }
             }
         });
@@ -91,9 +107,9 @@ export default class Checkers extends PTLobby {
                 if (result.length > 0) {
                     if (action.moveX != result[0].moveX || action.moveY != result[0].moveY || action.moveZ != result[0].moveZ) {
                         callback("Error: can't perform this action !", {team: userTeam, canPlay: this.whoPlay == userTeam, rollback: false});
-                        return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam});
+                        return socket.emit("pawn action", result, {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer});
                     } else {
-                        return callback("", {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam, replay: action.pawn});
+                        return callback(undefined, {actions: result, team: userTeam, canPlay: this.whoPlay == userTeam, replay: action.pawn, timer: this.actualTimer});
                     }
                 }
             }
@@ -213,8 +229,9 @@ export default class Checkers extends PTLobby {
                                         // @ts-ignore
                                         this.getPawn(action.pawnKilled)?.dead = true; // l'action comporte toujours un pion tué
                                     })
-
+                                    this.actualTimer = 90;
                                     this.emitWithout(socket, "pawn action", actions);
+                                    this.checkEndGame();
                                     return actions;
                                 }
 
@@ -222,8 +239,9 @@ export default class Checkers extends PTLobby {
                         } else {
                             this.whoPlay = this.getTeam(socket.data.user) == "black" ? "white" : "black";
                             pawn.setPosition(pos);
-
+                            this.actualTimer = 90;
                             this.emitWithout(socket, "pawn action", actions);
+                            this.checkEndGame();
                             return actions;
                         }
                     }
@@ -237,7 +255,7 @@ export default class Checkers extends PTLobby {
                             if (pawn.queen) {
                                 actions[0].queen = true;
                             }
-
+                            this.actualTimer = 90;
                             this.emitWithout(socket, "pawn action", actions);
                             this.checkEndGame();
                             return actions;
@@ -272,7 +290,7 @@ export default class Checkers extends PTLobby {
                                         actions[actions.length - 1].queen = true;
                                     }
 
-
+                                    this.actualTimer = 90;
                                     this.emitWithout(socket, "pawn action", actions);
                                     this.checkEndGame();
                                     return actions;
@@ -503,7 +521,7 @@ export default class Checkers extends PTLobby {
         socketArray.forEach((socket) => {
             if (!socketNotEmit || socket.data.user != socketNotEmit.data.user) {
                 const userTeam = this.getTeam(socket.data.user)
-                socket.emit(event, ...args, {team: userTeam, canPlay: this.whoPlay == userTeam});
+                socket.emit(event, ...args, {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer});
             }
         })
     }
