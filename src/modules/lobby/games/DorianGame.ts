@@ -2,7 +2,9 @@ import { Socket } from "socket.io";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import PTLobby from "../PTLobby";
 import PTServer from "../../PTServer";
-import { cardAllHelper } from "../../DorianGame/CardHelper";
+import {Card} from "../../DorianGame/cards/Card";
+import {cardConfig} from "../../DorianGame/cards/CardConfig";
+import {TownCard} from "../../DorianGame/cards/TownCard";
 
 interface Players{
     name: string;
@@ -20,15 +22,38 @@ export default class DorianGame extends PTLobby {
     theOnePlaying: number = 1;
     hasDice = true;
 
+    cards: Map<number, Card>; // caseNb, Card
+
     constructor(uuid: string, game: string, visibility: "public" | "private", server: PTServer) {
         super(uuid, game, visibility, server);
-        this.setupGame();
         this.players = new Map();
+        this.cards = new Map();
+
+        this.setupGame();
 
     }
 
 
     protected setupGame(): void {
+
+        this.cards.set(cardConfig.start, new Card(cardConfig.start, "start"))
+        this.cards.set(cardConfig.prison, new Card(cardConfig.prison, "prison"))
+        this.cards.set(cardConfig.bank, new Card(cardConfig.bank, "bank"))
+        this.cards.set(cardConfig.war, new Card(cardConfig.war, "war"))
+
+        cardConfig.batailles.forEach((caseNb: number) => {
+            this.cards.set(caseNb, new Card(caseNb, "bataille"))
+        })
+
+        cardConfig.chances.forEach((caseNb: number) => {
+            this.cards.set(caseNb, new Card(caseNb, "chances"))
+        })
+
+        cardConfig.villes.forEach((town) => {
+            this.cards.set(town.caseNb, new TownCard(town.caseNb, town.nameCity, town.infoCard))
+        })
+
+
     }
 
     registerNewSocket(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void {
