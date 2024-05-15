@@ -1,5 +1,20 @@
-import {Color} from "three";
-
+export interface cardTypeInterface{type : string,
+        infocard : null | {
+            "m0" : number,
+            "m1" : number,
+            "m2" : number,
+            "m3" : number,
+            "m4": number,
+            "m5" : number,
+            "m6" : number,
+            maison : number,
+            prix : number,
+            nbMaison : number ,
+            hypotheque : boolean,
+            user: string,
+            nameCity: string
+    }
+}
 //Dictionnaire permettant de link des cases à des types
 export const cardHelper = {
     "40" : "chance",
