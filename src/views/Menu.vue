@@ -385,7 +385,7 @@ init();
   }
 
   .matchmaking-banner {
-    z-index: 3;
+    z-index: 10;
     top: 0;
     height: 5vh;
     padding: 0.1% 1%;
