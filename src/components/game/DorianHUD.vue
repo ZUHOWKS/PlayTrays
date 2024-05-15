@@ -9,7 +9,7 @@
     </div>
     <div class="content">
       <p class="username">You</p>
-      <p class="argent">Argent: <span>£</span><span class="otherMoney">550 000</span></p>
+      <p class="argent">Argent: <span>£</span><span class="user-money">550 000</span></p>
     </div>
   </div>
 
@@ -20,7 +20,7 @@
 
     <div class="content">
       <p class="username" ref="otherUsername">Unselect</p>
-      <p class="argent">Argent: <span>£</span><span class="user-money">550 000</span></p>
+      <p class="argent">Argent: <span>£</span><span class="other-money">550 000</span></p>
     </div>
   </div>
 
@@ -161,8 +161,8 @@
       </div>
 
     <div class="actions">
-      <button class="action">Buy</button>
-      <button class="action">Sell</button>
+      <button class="action" id="Buy">Buy</button>
+      <button class="action" id="Quit">Quit</button>
     </div>
 
   </div>
@@ -324,7 +324,7 @@
   height: 25%;
   align-items: center;
   justify-content: center;
-  background-color: #000000;
+  background-color: white;
   border-radius: 5px;
 }
 
