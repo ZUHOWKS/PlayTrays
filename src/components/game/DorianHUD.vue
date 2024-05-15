@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <div class="caseCard">
+  <div class="caseCard card">
     <div class="container column">
       <div class="title column">
         <p class="sub-title">titre de propriété</p>
@@ -91,6 +91,80 @@
 
 
     </div>
+  </div>
+
+  <div class="card-action">
+
+    <div class="caseCardAction card">
+      <div class="container column">
+        <div class="title column">
+          <p class="sub-title">titre de propriété</p>
+          <h3 class="name">rue de la paix</h3>
+        </div>
+        <div class="content">
+          <div class="details row">
+
+            <div class="column">
+              <p>Loyer</p>
+              <p>  <<</p>
+              <p>  <<</p>
+              <p>  <<</p>
+              <p>  <<</p>
+              <p>  <<</p>
+            </div>
+
+            <div class="column .terrain">
+              <p>- Terrain</p>
+              <p>- Avec &nbsp;1</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5</p>
+            </div>
+            <div class="column">
+              <p>nu</p>
+              <p>maison</p>
+              <p><<</p>
+              <p><<</p>
+              <p><<</p>
+              <p> hotel</p>
+            </div>
+            <div class="column">
+              <p class="price-default"></p>
+              <p class="price-1"></p>
+              <p class="price-2"></p>
+              <p class="price-3"></p>
+              <p class="price-4"></p>
+              <p class="price-5"></p>
+            </div>
+
+            </div>
+
+            <div class="desc row">
+              <p>Si un joueur possède TOUS les terrains d'une même couleur, la valeur de ceux-ci est doublée</p>
+            </div>
+
+            <div class="info row">
+              <div class="column">
+                <p>Prix des maisons</p>
+                <p>Prix d'un hotel</p>
+              </div>
+
+              <div class="column">
+                <p class="price-maison"></p>
+                <p class="price-hotel"></p>
+                <p></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div class="actions">
+      <button class="action">Buy</button>
+      <button class="action">Sell</button>
+    </div>
+
   </div>
 
 </template>
@@ -177,10 +251,33 @@
   height: 100%;
 }
 
-.caseCard {
+.card-action {
   position: fixed;
-  bottom: 1%;
-  right: 0.5%;
+  top: 12.5vh;
+  left: 30%;
+  width: 75vh;
+  background: transparent;
+  height: 75vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  visibility: hidden;
+  justify-content: space-evenly;
+}
+
+.card-action>.actions {
+  width: 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-action>.actions>.action {
+  width: 35%;
+  margin: 0 2.5%;
+}
+
+.card {
   width: 32.5vh;
   height: 47.5vh;
   padding: 0.5%;
@@ -191,8 +288,6 @@
   justify-content: center;
   align-items: center;
 
-  transform: translateY(60vh);
-  transition: transform .5s ease-out;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -200,7 +295,17 @@
   -ms-user-select: none;
   user-select: none;
 }
-.container {
+
+.caseCard {
+  position: fixed;
+  bottom: 1%;
+  right: 0.5%;
+  transform: translateY(60vh);
+  transition: transform .5s ease-out;
+}
+
+
+.card>.container  {
   width: 100%;
   height: 97.5%;
   position: relative;
@@ -214,7 +319,7 @@
   justify-content: space-evenly;
 }
 
-.container>.title {
+.card>.container>.title {
   width: 100%;
   height: 25%;
   align-items: center;
@@ -223,33 +328,41 @@
   border-radius: 5px;
 }
 
-.container>.title:nth-child(n) {
+.card>.container>.title>.name {
+  font-size: 2vw;
+}
+
+.card>.container>.title>.sub-title {
+  font-size: 1.25vw;
+}
+
+.card>.container>.title:nth-child(n) {
   text-align: center;
   text-transform: uppercase;
 }
 
-.container>.content {
+.card>.container>.content {
   height: 75%;
   width: 100%;
 }
 
-.content>div>p, .content>div>div>p {
-  font-size: 98%;
+.card>.container>.content>div>p, .card>.container>.content>div>div>p {
+  font-size: 0.85vw;
 }
 
-.content>.details {
+.card>.container>.content>.details {
   height: 45%;
   width: 100%;
   margin: 0 1%;
   justify-content: space-between;
 }
 
-.content>.details>div {
+.card>.container>.content>.details>div{
   width: 100%;
   margin: 0 1%;
 }
 
-.content>.desc {
+.card>.container>.content>.desc {
   height: 20%;
   margin: 0 2%;
   border-top: solid 2px black;
@@ -257,7 +370,7 @@
   padding: 1% 0.1%;
 }
 
-.content>.info {
+.card>.container>.content>.info {
   height: 30%;
   justify-content: space-evenly;
 }
