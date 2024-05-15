@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import PTLobby from "../PTLobby";
 import PTServer from "../../PTServer";
+import { cardAllHelper } from "../../DorianGame/CardHelper";
 
 interface Players{
     name: string;
@@ -37,6 +38,7 @@ export default class DorianGame extends PTLobby {
         }
 
         socket.join(this.uuid);
+        console.log(socket.data.user);
         for (let i = 1; i <= this.players.size; i++) {
             this.server.io.to(this.uuid).emit("PlayerJoin", this.players.get(i), i);
         }
@@ -45,14 +47,18 @@ export default class DorianGame extends PTLobby {
         }
         socket.on("Lancede", (callBack)=>{
             let r = (this.hasDice)? Math.floor(Math.random()*11+1) : Math.floor(Math.random()*5+1);
-            if(socket.data.user == this.theOnePlaying){
-                // @ts-ignore
-                this.players.get(this.theOnePlaying).caseNb += r;
-                // @ts-ignore
-                if (this.players.get(this.theOnePlaying).caseNb > 40) this.players.get(this.theOnePlaying).caseNb -= 40;
-                callBack(undefined, {random: r, player: this.players.get(this.theOnePlaying), id: this.theOnePlaying});
+            if(socket.data.user == this.theOnePlaying && this.players.get(this.theOnePlaying)){
+                const player = this.players.get(this.theOnePlaying);
+                if (player != undefined){
+                player.caseNb += r;
+                this.players.set(this.theOnePlaying, player);
+                if (player.caseNb > 40) player.caseNb -= 40;
+                callBack(undefined, {random: r, player: player, id: this.theOnePlaying});
                 this.emitWithout(socket,"pawnMove", this.theOnePlaying, r);
+                const whatCase = player.caseNb.toString();
+                //if (whatCase in cardAllHelper) this.server.io.to(this.uuid).emit("AfficherEventCard", cardAllHelper."1");
                 this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying+1;
+                }
             }
         })
     }
