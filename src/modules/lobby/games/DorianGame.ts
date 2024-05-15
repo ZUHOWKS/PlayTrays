@@ -6,15 +6,13 @@ import {Card} from "../../DorianGame/cards/Card";
 import {cardConfig} from "../../DorianGame/cards/CardConfig";
 import {TownCard} from "../../DorianGame/cards/TownCard";
 
-interface Players{
+export interface Players{
     name: string;
     city: string[];
     exitPrison: number;
     money: number;
     caseNb: number;
 }
-
-
 
 export default class DorianGame extends PTLobby {
 
@@ -59,7 +57,13 @@ export default class DorianGame extends PTLobby {
     registerNewSocket(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void {
         this.sockets.set(socket.data.user, socket);
         if (!(this.players.get(socket.data.user))) {
-            this.players.set(socket.data.user, {name: "User" + socket.data.user, city: [], exitPrison: 0, money: 0, caseNb: 0});
+            this.players.set(socket.data.user, {
+                name: "User" + socket.data.user,
+                city: [],
+                exitPrison: 0,
+                money: 550000,
+                caseNb: 0
+            });
         }
 
         socket.join(this.uuid);
@@ -70,21 +74,54 @@ export default class DorianGame extends PTLobby {
         if (this.players.size >= 2) {
             this.server.io.to(this.uuid).emit("SetupGame");
         }
-        socket.on("Lancede", (callBack)=>{
-            let r = (this.hasDice)? Math.floor(Math.random()*11+1) : Math.floor(Math.random()*5+1);
-            if(socket.data.user == this.theOnePlaying && this.players.get(this.theOnePlaying)){
+        socket.on("Lancede", (callBack) => {
+
+            let r = (this.hasDice) ? Math.floor(Math.random() * 11 + 1) : Math.floor(Math.random() * 5 + 1);
+
+            if (socket.data.user == this.theOnePlaying && this.players.get(this.theOnePlaying)) {
                 const player = this.players.get(this.theOnePlaying);
-                if (player != undefined){
-                player.caseNb += r;
-                this.players.set(this.theOnePlaying, player);
-                if (player.caseNb > 40) player.caseNb -= 40;
-                callBack(undefined, {random: r, player: player, id: this.theOnePlaying});
-                this.emitWithout(socket,"pawnMove", this.theOnePlaying, r);
-                const whatCase = player.caseNb.toString();
-                //if (whatCase in cardAllHelper) this.server.io.to(this.uuid).emit("AfficherEventCard", cardAllHelper."1");
-                this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying+1;
+
+                if (player != undefined) {
+                    player.caseNb += r;
+                    this.players.set(this.theOnePlaying, player);
+
+                    if (player.caseNb > 40) {
+                        player.caseNb -= 40;
+                        player.money += 20000;
+                    }
+
+                    callBack(undefined, {
+                        random: r,
+                        player: player,
+                        id: this.theOnePlaying,
+                        caseInfo: this.cards.get(player.caseNb)
+                    });
+
+                    this.emitWithout(socket, "pawnMove", this.theOnePlaying, r, this.cards.get(player.caseNb));
+
                 }
             }
+        })
+        socket.on("FinTour", () => {
+            this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;
+        })
+        socket.on("Achat", () => {
+            const player = this.players.get(this.theOnePlaying);
+
+            if (player != undefined) {
+                const cardToSell = this.cards.get(player.caseNb);
+                if (cardToSell != undefined && cardToSell instanceof TownCard){
+                if (player.money > cardToSell.info.m0 && cardToSell.user == undefined) {
+                    player.money -= cardToSell.info.m0
+                    player.city.push(cardToSell.name);
+                    cardToSell.user = player.name;
+                    this.players.set(this.theOnePlaying, player);
+                    this.cards.set(player.caseNb, cardToSell);
+                    this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;
+                }
+                }
+            }
+            console.log(this.players);
         })
     }
 }
