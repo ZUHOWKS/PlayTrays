@@ -4,7 +4,6 @@ import {computed, onMounted, type Ref, ref} from "vue";
 import {useWindowSize} from "@vueuse/core";
 import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
-import HUD from "@/components/game/HUD.vue";
 import TrayGame from "@/modules/game/TrayGame";
 import {io, type Socket} from "socket.io-client";
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
@@ -16,6 +15,7 @@ import AccountServices from "@/services/account_services";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type {LobbyInterface} from "@/modules/utils/LobbyInterface";
 import LoaderFiller from "@/components/utils/LoaderFiller.vue";
+import CheckersHUD from "@/components/game/CheckersHUD.vue";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -318,7 +318,10 @@ init(); //lancer l'initialisation de la scène Three
   <div class="game">
     <canvas ref="experience"/>
   </div>
-  <HUD></HUD>
+  <div class="hud user-unselect-any">
+    <CheckersHUD v-if="gameTray && gameTray.game == 'checkers'"></CheckersHUD>
+  </div>
+
 </template>
 
 <style scoped>
@@ -331,6 +334,14 @@ init(); //lancer l'initialisation de la scène Three
 .game canvas {
   width: 100%;
   height: 100%;
+}
+
+.hud {
+  top: 0;
+  left: 0;
+  position: fixed;
+  overflow: hidden;
+  z-index: 1;
 }
 
 </style>
