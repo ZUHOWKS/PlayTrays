@@ -31,6 +31,7 @@ export default class CheckersClient extends SupportController {
 
     team: string | undefined;
     canPlay: boolean = false;
+    timer: number = 0;
 
     constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
         super(scene, cameraRef, orbitControlsRef, ws);
@@ -59,8 +60,8 @@ export default class CheckersClient extends SupportController {
     private performPawnAction() {
 
         const subject: PTObject | undefined = this.selectedActuator?.getSubject();
-        if (subject instanceof Pawn && this.team && this.canPlay) {
-            if (true && subject.name.includes(this.team)) {
+        if (subject instanceof Pawn && this.team && this.canPlay && this.timer > 0) {
+            if (subject.name.includes(this.team)) {
 
                 // position de l'actionneur dans l'espace
                 const actPos: Vector3 = (this.selectedActuator as ActuatorObject).getObject3D().position;
@@ -75,7 +76,7 @@ export default class CheckersClient extends SupportController {
                         moveX: actPos.x,
                         moveY: actPos.y,
                         moveZ: actPos.z,
-                    } as Action), (error: any, response: any) => {
+                    } as Action), (error: any, response: any) => { // Callback
                         if (error) {
                             console.error(error);
                             if (response.rollback) {
@@ -89,6 +90,9 @@ export default class CheckersClient extends SupportController {
                                 })
                             }
                         } else if (response) {
+
+                            this.timer = response.timer;
+
                             const actions: Action[] = response.actions as Action[];
                             const firstPawnToKill = response.actions[0].pawnKilled;
 
@@ -133,11 +137,11 @@ export default class CheckersClient extends SupportController {
                                 if (actions.length == 0) {
                                     toKill[0]();
                                 }
+
+                                this.team = response.team;
+                                this.canPlay = response.canPlay;
                             }
                         }
-
-                        this.team = response.team;
-                        this.canPlay = response.canPlay
                     }
                 );
             }
@@ -180,11 +184,25 @@ export default class CheckersClient extends SupportController {
         const modelBlackPawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_black.glb");
 
         // configuration de la partie selon le serveur
-        this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean}, callbakc) => {
+        this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean, timer: number}, callback) => {
+
+            this.timer = gameInfo.timer
+
+            setInterval(() => {
+                if (this.timer > 0) {
+                    this.timer--;
+
+                    const minutes: number = Math.floor(this.timer/60);
+                    const secondes: number = this.timer - minutes * 60;
+
+                    (document.querySelector('.timer p') as HTMLElement).innerText = "" + (minutes < 10 ? '0' + minutes : minutes) + ':' + (secondes < 10 ? '0' + secondes : secondes)
+                }
+            }, 1000)
+
             await this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
 
             if (loaderFiller) setTimeout(() => loaderFiller.value = false, 2500);
-            return callbakc(undefined, {loaded: true});
+            callback(undefined, {loaded: true});
         })
 
         // en cas de désynchronisation
@@ -198,7 +216,14 @@ export default class CheckersClient extends SupportController {
         })
 
         // exécuté une ou plusieurs actions d'un même pion
-        this.ws.on("pawn action", (actions: Action[], gameInfo: {team: string, canPlay: boolean}) => {
+        this.ws.on("pawn action", (actions: Action[], gameInfo: {team: string, canPlay: boolean, timer: number}) => {
+
+            this.timer = gameInfo.timer;
+
+            if (actions.length == 0) {
+                this.team = gameInfo.team;
+                this.canPlay = gameInfo.canPlay;
+            }
 
             /*
 
