@@ -62,7 +62,7 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
     }
 
     //Avance jusque la case suivante de l'objet
-    moveCase() : void {
+    moveCase(anim: boolean = true) : void {
         //Initialisation de constantes utiles
         const GRANDSAUT : number = 2.325;
         const PETITSAUT : number = 1.795;
@@ -90,21 +90,27 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
         this.positionTest.y = vectArrivee.y;
         this.positionTest.z = vectArrivee.z;
 
-
+        if (anim){
         this.animationQueue.push({
             duration: 100,
             startCallback: (): void => {
-            },
+                },
             animationCallback: (progress: number): void => {
                 position.x = vectDepart.x + movVec.x * progress;
                 position.y = vectDepart.y + movVec.y * progress;
                 position.z = vectDepart.z + movVec.z * progress;
-            },
+                },
             finalCallback: (): void => {
                 position.x = vectArrivee.x;
                 position.y = vectArrivee.y;
                 position.z = vectArrivee.z;
-            }
-        })
+                }
+            })
+        }
+        else{
+            position.x = vectArrivee.x;
+            position.y = vectArrivee.y;
+            position.z = vectArrivee.z;
+        }
     }
 }
