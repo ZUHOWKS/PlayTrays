@@ -128,7 +128,7 @@ export default class Checkers extends PTLobby {
         //TODO:Timeout de setup de party -> si la party ne se lance pas au bout de 30 secondes, déconnecter tout le monde + fermer le lobby
 
         socket.on('leave party', (callback) => {
-            this.endGame((userTeam == 'black' ? 'white' : 'black'));
+            if (this.status != "finished") this.endGame((userTeam == 'black' ? 'white' : 'black'));
             callback(undefined, {status: 200});
         })
 
