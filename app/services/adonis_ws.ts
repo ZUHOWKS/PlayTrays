@@ -78,8 +78,7 @@ class AdonisWS {
   public initSocketEvents() {
     this.io?.use(async (socket, next) => await this.authMiddleware(socket, next))
     this.io?.on('connect', async (socket) => {
-      socket.rooms.clear();
-      socket.join('u'+(socket.data.user as User).id)
+      await this.connectedInit(socket);
 
       /*
       * Évènement émis par l'utilisateur pour lancer un matchmaking
@@ -176,7 +175,8 @@ class AdonisWS {
         try {
           const user: User = (socket.data.user as User)
           socket.leave('g'+(await user.getGroup())?.id)
-          await this.interruptConnection(user)
+          socket.leave('u'+user.id)
+          await this.interruptConnection(socket)
         } catch (e) {
           console.error(e)
         }
@@ -186,48 +186,60 @@ class AdonisWS {
         try {
           const user: User = (socket.data.user as User)
           socket.leave('g'+(await user.getGroup())?.id)
-          await this.interruptConnection(user, true)
+          socket.leave('u'+user.id)
+          await this.interruptConnection(socket, true)
         } catch (e) {
           console.error(e)
         }
       })
 
-      // join la room du groupe
-      const _g: Group | null = await (socket.data.user as User).getGroup();
-      if (_g) {
-        socket.join('g'+_g.id);
-      }
-
-
-      const _l: Lobby | null = await  (socket.data.user as User).getLobby()
-      if (_l && _l.statut != 'finished') {
-        socket.join('l'+_l.uuid)
-        socket.emit('matchmaking_init')
-        if (await _l.isReady()) {
-          socket.emit('matchmaking_confirm', {
-            message: 'Connection to the party...'
-          })
-        } else {
-          socket.emit('matchmaking_info', {
-            message: "Lobby found ! Searching players..."
-          } as MatchmakingResponse)
-        }
-      }
-
-
+      socket.on('reconnect', async () => {
+        await this.connectedInit(socket)
+      })
     })
+  }
+
+  private async connectedInit(socket: Socket) {
+
+    const user: User = (socket.data.user as User)
+
+    socket.rooms.clear();
+    socket.join('u' + user.id)
+
+    // join la room du groupe
+    const _g: Group | null = await user.getGroup();
+    if (_g) {
+      socket.join('g' + _g.id);
+    }
+
+
+    const _l: Lobby | null = await user.getLobby()
+    if (_l && _l.statut != 'finished') {
+      socket.join('l' + _l.uuid)
+      socket.emit('matchmaking_init')
+      if (await _l.isReady()) {
+        socket.emit('matchmaking_confirm', {
+          message: 'Connection to the party...'
+        })
+      } else {
+        socket.emit('matchmaking_info', {
+          message: "Lobby found ! Searching players..."
+        } as MatchmakingResponse)
+      }
+    }
   }
 
   /**
    * Intérruption de connexion >> kick du lobby & du groupe si le joueur
    * n'est pas actif.
    *
-   * @param user
+   * @param socket Socket utilisateur
    * @param disconnect
    * @private
    */
-  private async interruptConnection(user: User, disconnect?: boolean) {
-    const _l: Lobby | null = (await user.getLobby())
+  private async interruptConnection(socket: Socket, disconnect?: boolean) {
+    const user: User = (socket.data.user as User)
+    const _l: Lobby | null = (await (user).getLobby())
     let intervalID: any
     let check: number = 0
 
@@ -235,7 +247,9 @@ class AdonisWS {
       this.io?.to('u' + user.id).emit('ping', (error: any, response: any) => {
         if (error || response.length == 0) {
           if (check == 6) {
-            if (disconnect) this.io?.to('u' + user.id).disconnectSockets();
+            if (disconnect) {
+              socket.disconnect()
+            }
             user.leaveGroup();
           } else {
             check++
