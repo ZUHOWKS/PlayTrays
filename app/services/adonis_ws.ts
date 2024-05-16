@@ -486,9 +486,10 @@ class AdonisWS {
 
       // requête pour obtenir le premier lobby ayant un nombre de place suffisant
       const lobbyFound = await Lobby.query()
-        .select('lobbies.uuid')
+        .select('lobbies.*')
         .leftJoin('user_lobbies', 'lobbies.uuid', 'user_lobbies.lobby_uuid')
-        .select(db.raw('IFNULL(COUNT(user_lobbies.user_id), 0) AS available'))
+        .select(db.raw('COALESCE(COUNT(user_lobbies.user_id), 0) AS available'))
+        //.select(db.raw('IFNULL(COUNT(user_lobbies.user_id), 0) AS available'))
         .where('lobbies.game', resGame.game)
         .andWhere('lobbies.statut', 'waiting')
         .andWhere('lobbies.visibility', 'public')
