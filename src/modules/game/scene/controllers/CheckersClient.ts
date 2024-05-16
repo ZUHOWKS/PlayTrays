@@ -32,143 +32,15 @@ export default class CheckersClient extends SupportController {
     team: string | undefined;
     canPlay: boolean = false;
     timer: number = 0;
+    timerID: NodeJS.Timeout | undefined;
 
     constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
         super(scene, cameraRef, orbitControlsRef, ws);
     }
 
-    confirmAction(): void {
-        if (this.selectedActuator) {
-
-
-            // Lorsque l'actionneur est un objet
-            if (this.selectedActuator instanceof ActuatorObject) {
-
-                // Lorsque que le sujet est pion
-                this.performPawnAction();
-            }
-        }
-
-        this.selectedActuator = undefined;
-    }
-
     /**
-     * Executer l'action du pion séléctionné.
-     *
-     * @private
+     * Permet d'initialiser tous les évènements liés à la partie
      */
-    private performPawnAction() {
-
-        const subject: PTObject | undefined = this.selectedActuator?.getSubject();
-        if (subject instanceof Pawn && this.team && this.canPlay && this.timer > 0) {
-            if (subject.name.includes(this.team)) {
-
-                // position de l'actionneur dans l'espace
-                const actPos: Vector3 = (this.selectedActuator as ActuatorObject).getObject3D().position;
-
-                this.unselectAll();
-                subject.moveTo(actPos.x, actPos.y, actPos.z);
-
-                this.ws.emit("pawn action",
-                    ({
-                        pawn: subject.getName(),
-                        queen: subject.queen,
-                        moveX: actPos.x,
-                        moveY: actPos.y,
-                        moveZ: actPos.z,
-                    } as Action), (error: any, response: any) => { // Callback
-                        if (error) {
-                            console.error(error);
-                            if (response.rollback) {
-                                response.pawns.forEach((pawn: any) => {
-                                    const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
-                                    if (pawnObj) {
-                                        pawnObj.dead = pawn.dead;
-                                        pawnObj.queen = pawn.dead
-                                        pawnObj.setPositionTo(pawn.x, pawn.y, pawn.z);
-                                    }
-                                })
-                            }
-                        } else if (response) {
-
-                            this.timer = response.timer;
-
-                            const actions: Action[] = response.actions as Action[];
-                            const firstPawnToKill = response.actions[0].pawnKilled;
-
-                            if (actions[0].queen) {
-                                (this.getObject(actions[0].pawn) as Pawn).queen = actions[0].queen;
-                            }
-
-                            // s'il un premier pion a été tué alors régle de la prise maxiamle obligatoire
-                            if (firstPawnToKill) {
-                                const toKill: any[] = [() => {this.killPawn(firstPawnToKill);}];
-
-                                actions.shift(); // première animation de déplacement déjà en cours
-
-                                // boucle pour animer les prises suivantes
-                                actions.forEach((action) => {
-                                    const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
-                                    if (pawn) {
-
-                                        if (action.pawnKilled) {
-
-                                            toKill.push(() => {
-                                                //@ts-ignore
-                                                this.killPawn(action.pawnKilled);
-                                            });
-                                        }
-
-                                        if (action.queen) {
-                                            (this.getObject(action.pawn) as Pawn).queen = action.queen;
-                                        }
-
-                                        if (actions.indexOf(action) == actions.length-1) {
-                                            pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
-                                                toKill.forEach((kill) => kill());
-                                            });
-
-                                        } else {
-                                            pawn.moveTo(action.moveX, action.moveY, action.moveZ);
-                                        }
-                                    }
-                                });
-
-                                if (actions.length == 0) {
-                                    toKill[0]();
-                                }
-
-                                this.team = response.team;
-                                this.canPlay = response.canPlay;
-                            }
-                        }
-                    }
-                );
-            }
-        }
-    }
-
-    getSelectedActuator(): Actuator | null {
-        return null;
-    }
-
-    selectActuator(name: string): void {
-        const act: Actuator | undefined = this.actuatorRegistry.get(name);
-
-        if (act) {
-            if (this.selectedActuator) {
-                if (this.selectedActuator.name != act.name) {
-                    this.selectedActuator = act;
-                    this.confirmAction();
-                }
-            } else {
-                this.selectedActuator = act;
-                this.confirmAction();
-            }
-
-        }
-    }
-
     setup(loaderFiller?: Ref<boolean>): void {
         // loader
         const loader = new GLTFLoader();
@@ -188,7 +60,7 @@ export default class CheckersClient extends SupportController {
 
             this.timer = gameInfo.timer
 
-            setInterval(() => {
+            this.timerID = setInterval(() => {
                 if (this.timer > 0) {
                     this.timer--;
 
@@ -254,6 +126,7 @@ export default class CheckersClient extends SupportController {
                             toKill.forEach((kill) => kill());
 
                             if (gameInfo) {
+                                if (this.selectedObject) this.selectObject(this.selectedObject?.name) // on actualise la sélection
                                 this.team = gameInfo.team;
                                 this.canPlay = gameInfo.canPlay;
                             }
@@ -268,6 +141,7 @@ export default class CheckersClient extends SupportController {
 
             // évènement de fin de partie
             this.ws.on('end game', (whoWin) => {
+                clearInterval(this.timerID)
                 setTimeout(() => this.ws.disconnect(), 30000)
             })
         })
@@ -597,6 +471,139 @@ export default class CheckersClient extends SupportController {
             if (this.selectedObject?.getName() == pawnKilled.getName()) {
                 this.unselectAll();
             }
+        }
+    }
+
+    confirmAction(): void {
+        if (this.getSelectedActuator()) {
+
+
+            // Lorsque l'actionneur est un objet
+            if (this.getSelectedActuator() instanceof ActuatorObject) {
+
+                // Lorsque que le sujet est pion
+                this.performPawnAction();
+            }
+        }
+
+        this.selectedActuator = undefined;
+    }
+
+    /**
+     * Executer l'action du pion séléctionné.
+     *
+     * @private
+     */
+    private performPawnAction() {
+
+        const subject: PTObject | undefined = this.getSelectedActuator()?.getSubject();
+        if (subject instanceof Pawn && this.team && this.canPlay && this.timer > 0) {
+            if (subject.name.includes(this.team)) {
+
+                // position de l'actionneur dans l'espace
+                const actPos: Vector3 = (this.getSelectedActuator() as ActuatorObject).getObject3D().position;
+
+                this.unselectAll();
+                subject.moveTo(actPos.x, actPos.y, actPos.z);
+
+                this.ws.emit("pawn action",
+                    ({
+                        pawn: subject.getName(),
+                        queen: subject.queen,
+                        moveX: actPos.x,
+                        moveY: actPos.y,
+                        moveZ: actPos.z,
+                    } as Action), (error: any, response: any) => { // Callback
+                        if (error) {
+                            console.error(error);
+                            if (response.rollback) {
+                                response.pawns.forEach((pawn: any) => {
+                                    const pawnObj: Pawn | undefined = this.getObject(pawn.name) as Pawn;
+                                    if (pawnObj) {
+                                        pawnObj.dead = pawn.dead;
+                                        pawnObj.queen = pawn.dead
+                                        pawnObj.setPositionTo(pawn.x, pawn.y, pawn.z);
+                                    }
+                                })
+                            }
+                        } else if (response) {
+
+                            this.timer = response.timer;
+
+                            const actions: Action[] = response.actions as Action[];
+                            const firstPawnToKill = response.actions[0].pawnKilled;
+
+                            if (actions[0].queen) {
+                                (this.getObject(actions[0].pawn) as Pawn).queen = actions[0].queen;
+                            }
+
+                            // s'il un premier pion a été tué alors régle de la prise maxiamle obligatoire
+                            if (firstPawnToKill) {
+                                const toKill: any[] = [() => {this.killPawn(firstPawnToKill);}];
+
+                                actions.shift(); // première animation de déplacement déjà en cours
+
+                                // boucle pour animer les prises suivantes
+                                actions.forEach((action) => {
+                                    const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
+                                    if (pawn) {
+
+                                        if (action.pawnKilled) {
+
+                                            toKill.push(() => {
+                                                //@ts-ignore
+                                                this.killPawn(action.pawnKilled);
+                                            });
+                                        }
+
+                                        if (action.queen) {
+                                            (this.getObject(action.pawn) as Pawn).queen = action.queen;
+                                        }
+
+                                        if (actions.indexOf(action) == actions.length-1) {
+                                            pawn.moveTo(action.moveX, action.moveY, action.moveZ, () => {
+                                                toKill.forEach((kill) => kill());
+                                            });
+
+                                        } else {
+                                            pawn.moveTo(action.moveX, action.moveY, action.moveZ);
+                                        }
+                                    }
+                                });
+
+                                if (actions.length == 0) {
+                                    toKill[0]();
+                                }
+
+                                this.team = response.team;
+                                this.canPlay = response.canPlay;
+                            }
+                        }
+                    }
+                );
+            }
+        }
+    }
+
+    /**
+     * Sélectionner un actionneur en fonctionnant de son identifiant
+     *
+     * @param name identifiant de l'actionneur
+     */
+    selectActuator(name: string): void {
+        const act: Actuator | undefined = this.actuatorRegistry.get(name);
+
+        if (act) {
+            if (this.selectedActuator) {
+                if (this.selectedActuator.name != act.name) {
+                    this.selectedActuator = act;
+                    this.confirmAction();
+                }
+            } else {
+                this.selectedActuator = act;
+                this.confirmAction();
+            }
+
         }
     }
 
