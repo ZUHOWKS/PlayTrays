@@ -49,6 +49,12 @@ export default class TrayGame {
             this.ws.on('end game', (whoWin) => {
                 this.status = 'finished'
             })
+
+            this.ws.on('start', () => {
+                this.status = 'running';
+
+                console.log(this.status)
+            })
         } else {
             this.ws.disconnect();
         }
