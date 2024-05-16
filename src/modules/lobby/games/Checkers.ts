@@ -66,25 +66,34 @@ export default class Checkers extends PTLobby {
         // émettre une update de la partie
         const userTeam = this.setTeam(socket.data.user);
         socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer}, (error: any, response: any) => {
-            if (!error && response.loaded && this.status === 'waiting') {
-                if (this.whitePlayer && this.blackPlayer) {
-                    this.status = 'running';
-                    this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
-                    this.server.io.to(this.uuid).emit('start');
+            if (!error && response.loaded) {
+                if (this.status === 'waiting') {
+                    if (this.whitePlayer && this.blackPlayer) {
+                        this.status = 'running';
+                        this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
 
-                    const intervalID = setInterval(() => {
-                        if (this.status === 'finished') clearInterval(intervalID);
+                        Array.from(this.sockets.values()).forEach((_socket) => {
+                            _socket.emit('start', {team: this.setTeam(_socket.data.user), canPlay: this.whoPlay == userTeam, timer: this.actualTimer})
+                        })
 
-                        if (this.actualTimer == 0) {
-                            this.actualTimer = 95;
-                            this.whoPlay = this.whoPlay == "black" ? "white" : "black";
+                        const intervalID = setInterval(() => {
+                            if (this.status === 'finished') clearInterval(intervalID);
 
-                            this.emitWithout(null, 'pawn action', []);
-                            this.checkEndGame();
-                        } else {
-                            this.actualTimer-=1;
-                        }
-                    }, 1000)
+                            if (this.actualTimer == 0) {
+                                this.actualTimer = 90;
+                                this.whoPlay = this.whoPlay == "black" ? "white" : "black";
+
+                                this.emitWithout(null, 'pawn action', []);
+                                this.checkEndGame();
+                            } else {
+                                this.actualTimer-=1;
+                            }
+
+                            this.server.io.to(this.uuid).emit('timer', this.actualTimer);
+                        }, 1000)
+                    }
+                } else if (this.status === 'running') {
+                    socket.emit('start', {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer})
                 }
             }
         });
@@ -117,6 +126,11 @@ export default class Checkers extends PTLobby {
             return callback("Error: can't perform this action !", {pawns: this.getPawnsJSON(), team: userTeam, canPlay: this.whoPlay == userTeam, rollback: true});
         })
         //TODO:Timeout de setup de party -> si la party ne se lance pas au bout de 30 secondes, déconnecter tout le monde + fermer le lobby
+
+        socket.on('leave party', (callback) => {
+            this.endGame((userTeam == 'black' ? 'white' : 'black'));
+            callback(undefined, {status: 200});
+        })
 
         console.log("The user " + socket.data.user + " join the lobby " + this.uuid + ".")
     }
