@@ -209,13 +209,13 @@ export default class CheckersClient extends SupportController {
         }
     }
 
+    /**
+     * Set les paramètres caméra à par défaut.
+     */
     defaultCamera(): void {
         const camera: PerspectiveCamera = this.getCamera();
         camera.position.y = 40;
         camera.position.z = 35 * (this.team == "white" ? -1 : 1);
-
-        //const controls: OrbitControls = this.getOrbitControls();
-
     }
 
     /**
@@ -241,6 +241,11 @@ export default class CheckersClient extends SupportController {
         this.registerObject(new Pawn(obj.name, obj, pawn.dead, pawn.queen));
     }
 
+    /**
+     * Sélectionner un object
+     *
+     * @param name identifiant de l'objet à sélectionner
+     */
     selectObject(name: string) {
         super.selectObject(name);
         if (this.selectedObject instanceof Pawn && (!this.team || this.team == "spectator" || this.selectedObject.getName().includes((this.team == "white" ? "black" : "white")))) {
@@ -260,13 +265,16 @@ export default class CheckersClient extends SupportController {
         this.actuatorRegistry.clear();
     }
 
+    /**
+     * Afficher les actions liées à l'objet sélectionné.
+     */
     showSelectedObjectActuators(): void {
 
         this.removeActuators();
 
 
-        if (this.selectedObject && this.selectedObject instanceof Pawn) { // vérifie s'il s'agit d'un pion
-            const pawn: Pawn = (this.selectedObject as Pawn);
+        if (this.getSelectedObject() && this.getSelectedObject() instanceof Pawn) { // vérifie s'il s'agit d'un pion
+            const pawn: Pawn = (this.getSelectedObject() as Pawn);
             if (!(pawn.dead)) {
                 this.showPawnActuators(pawn);
             } else {
@@ -276,6 +284,9 @@ export default class CheckersClient extends SupportController {
         }
     }
 
+    /**
+     * Afficher les actions liées à au pion sélectionné.
+     */
     private showPawnActuators(pawn: Pawn) {
         const pos: Vector3 = pawn.position;
         const geometry: BoxGeometry = new BoxGeometry(6, 0.5, 6);
@@ -411,10 +422,9 @@ export default class CheckersClient extends SupportController {
         this.scene.children[this.scene.children.length - 1].name = actuator.getName();
     }
 
-    private registerActuator(act: Actuator) {
-        this.actuatorRegistry.set(act.getName(), act);
-    }
-
+    /**
+     * Désélectionner l'objet et les actions liées à ce premier
+     */
     unselectAll(): void {
         this.unselectObject();
         this.removeActuators();
@@ -461,6 +471,12 @@ export default class CheckersClient extends SupportController {
         return pawns
     }
 
+    /**
+     * Considérer un pion comme pris.
+     *
+     * @param name
+     * @private
+     */
     private killPawn(name: string) {
         const pawnKilled: Pawn | undefined = this.getObject(name) as Pawn;
 
@@ -474,6 +490,31 @@ export default class CheckersClient extends SupportController {
         }
     }
 
+    /**
+     * Sélectionner une action en fonctionnant de son identifiant.
+     *
+     * @param name identifiant de l'actionneur
+     */
+    selectActuator(name: string): void {
+        const act: Actuator | undefined = this.actuatorRegistry.get(name);
+
+        if (act) {
+            if (this.selectedActuator) {
+                if (this.selectedActuator.name != act.name) {
+                    this.selectedActuator = act;
+                    this.confirmAction();
+                }
+            } else {
+                this.selectedActuator = act;
+                this.confirmAction();
+            }
+
+        }
+    }
+
+    /**
+     * Confirmer et exécuter l'action sélectionnée.
+     */
     confirmAction(): void {
         if (this.getSelectedActuator()) {
 
@@ -582,28 +623,6 @@ export default class CheckersClient extends SupportController {
                     }
                 );
             }
-        }
-    }
-
-    /**
-     * Sélectionner un actionneur en fonctionnant de son identifiant
-     *
-     * @param name identifiant de l'actionneur
-     */
-    selectActuator(name: string): void {
-        const act: Actuator | undefined = this.actuatorRegistry.get(name);
-
-        if (act) {
-            if (this.selectedActuator) {
-                if (this.selectedActuator.name != act.name) {
-                    this.selectedActuator = act;
-                    this.confirmAction();
-                }
-            } else {
-                this.selectedActuator = act;
-                this.confirmAction();
-            }
-
         }
     }
 

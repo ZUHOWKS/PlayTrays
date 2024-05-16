@@ -132,7 +132,7 @@ export default abstract class SupportController {
     }
 
     /**
-     * Sélectionner un object
+     * Sélectionner un object.
      *
      * @param name identifiant de l'objet à sélectionner
      */
@@ -146,7 +146,7 @@ export default abstract class SupportController {
     }
 
     /**
-     * Désélectionner l'objet courant
+     * Désélectionner l'objet courant.
      */
     unselectObject(): void {
         if (this.selectedObject) {
@@ -160,31 +160,48 @@ export default abstract class SupportController {
     }
 
     /**
-     * Sélectionner un actionneur en fonctionnant de son identifiant
+     * Enregistrer une action.
+     *
+     * @param act actionneur
+     */
+    registerActuator(act: Actuator) {
+        this.actuatorRegistry.set(act.getName(), act);
+    }
+
+    /**
+     * Sélectionner une action en fonctionnant de son identifiant.
      *
      * @param name identifiant de l'actionneur
      */
     abstract selectActuator(name: string): void
 
     /**
-     * Confirmer et executé l'action de l'actionneur courant
+     * Confirmer et exécuter l'action sélectionnée.
      */
     abstract confirmAction(): void;
 
     /**
-     * Obtenir l'actionneur courant sélectionné
+     * Obtenir l'actionneur courant sélectionné.
      *
      * @return Actuator si un actionneur est en cours de sélection, sinon null
      */
-    abstract getSelectedActuator(): Actuator | null;
+    getSelectedActuator(): Actuator | undefined {
+        return this.selectedActuator
+    }
 
+    /**
+     * Afficher les actions liées à l'objet sélectionné.
+     */
     abstract showSelectedObjectActuators(): void
 
     /**
-     * Désélectionner l'objet et l'actionneur.
+     * Désélectionner l'objet et les actions liées à ce premier
      */
     abstract unselectAll(): void;
 
+    /**
+     * Set les paramètres caméra à par défaut.
+     */
     abstract defaultCamera(): void;
 
 }
