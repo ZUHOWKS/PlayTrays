@@ -4,8 +4,13 @@ import {useRouter} from "vue-router";
 
 
 const Axios = axios.create({
-    baseURL: "http://localhost:3333/api/v1"
+    baseURL: "http://localhost:3333/api/v1",
+
 });
+
+Axios.defaults.headers['Access-Control-Allow-Origin'] = '*'
+Axios.defaults.headers['Access-Control-Allow-Headers'] = '*'
+Axios.defaults.headers['Access-Control-Allow-Headers'] = '*'
 
 /**
  * Intércepteur de requêtes pour intégrer automatiquement le token
