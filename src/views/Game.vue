@@ -123,7 +123,9 @@ function init(): void {
 
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
-    addEventListener('dblclick', selectOnClick);
+    addEventListener('dblclick', () => {
+      if (!showGMenu.value) selectOnClick()
+    });
     addEventListener('keydown', (e) => showGMenuOnPress(e))
   });
 
@@ -335,16 +337,18 @@ function selectOnClick() {
  */
 function animate() {
 
-  renderOutlineSelection();
+  if (!showGMenu.value) renderOutlineSelection();
 
   controls.value.update(); // met à jour le contrôle
   updateRender(); // mise à jour du rendu
   requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
 
-function showGMenuOnPress (event: KeyboardEvent) {
-  if (event.key === 'Escape') {
+function showGMenuOnPress (event: KeyboardEvent | null) {
+  if (event && event.key === 'Escape') {
     showGMenu.value = !showGMenu.value;
+  } else if (!event) {
+    showGMenu.value = false;
   }
 }
 
@@ -362,7 +366,7 @@ init(); //lancer l'initialisation de la scène Three
 
 <template>
   <LoaderFiller :show-loader="showLoader"/>
-  <GMenu ref="gMenu" v-if="showGMenu" :leave-party="leaveParty"/>
+  <GMenu ref="gMenu" v-if="showGMenu" :leave-party="leaveParty" :show-g-menu-on-press="showGMenuOnPress"/>
   <div class="game">
     <canvas ref="experience"/>
   </div>
