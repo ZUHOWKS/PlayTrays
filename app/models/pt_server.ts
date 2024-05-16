@@ -70,13 +70,13 @@ export default class PTServer extends BaseModel {
     // Mettre à jour le statut du lobby
     ws.on('lobby_status', (uuid: string, statut: 'waiting' | 'running' | 'finished') => {
       Lobby.find(uuid).then((lobby) => {
-        lobby?.merge({statut: statut}).save()
-        if (statut == 'finished') {
-          setTimeout(() => {
-            ws.emit('delete lobby', uuid);
-            lobby?.delete();
-          }, 25000)
-        }
+        lobby?.merge({statut: statut}).save().then(() => {
+          if (statut == 'finished') {
+            lobby?.delete().then(() => {
+              ws.emit('delete lobby', uuid)
+            })
+          }
+        })
       })
     })
 
