@@ -89,7 +89,7 @@ class AdonisWS {
       socket.on('matchmaking', async (game: string, callback: any) => {
         try {
           const _l: Lobby | null = (await (socket.data.user as User).getLobby())
-          if (!_l || (_l && _l.statut == 'finished')) { // le joueur n'est pas dans un lobby (en partie ou en attente)
+          if (!_l || (_l && _l.statut.includes('finished'))) { // le joueur n'est pas dans un lobby (en partie ou en attente)
             await this.startMatchmaking(socket, callback, game)
           } else { // si le joueur est déjà dans un lobby
 
@@ -415,55 +415,58 @@ class AdonisWS {
       callback(undefined, {message: 'Searching a party...'})
       if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_init', {message: "Searching a party..."} as MatchmakingResponse)
 
-      // si le groupe rempli au max un lobby vide >> création d'un lobby privé
-      if (resGame.max == users.length) {
-        this.setupLobbyOnServer(resGame.game, "private", users)
-          .then((lobbyUuid) => {
-            this.notifySetupLobby(lobbyUuid, socket, group);
-          })
+      if (users.length > 1) {
+        let start: boolean = true;
+        for (let i= 0; i < users.length-1; i++) {
+          const _user: User = users[i];
+          if (await _user.getLobby()) {
+            callback({
+              message: _user.username + 'is in a party !',
+              error_type: 'matchmaking_conditions'
+            } as MatchmakingError, undefined)
+          } else {
+            let check = 0;
+            let isConnected = false;
+            const interval = setInterval(() => {
+              this.io?.to('u'+_user.id).emit('ping', (error: any, response: any) => {
+                console.log(_user.id)
+                console.log(response)
+                if (!error && response.length > 0 || isConnected) {
+                  isConnected = true;
+                  clearInterval(interval);
+                } else {
+                  if (check == 3 && start && !isConnected) {
+                    start = false;
+                    callback({
+                      message: _user.username + 'is in a party !',
+                      error_type: 'matchmaking_conditions'
+                    } as MatchmakingError, undefined)
 
-      } else { // si non on recherche un lobby à compléter
+                    this.io?.to('g'+group?.id).emit('matchmaking_error', {
+                      message: _user.username + ' is offline !',
+                      error_type: 'matchmaking_conditions'
+                    } as MatchmakingError)
 
-        // requête pour obtenir le premier lobby ayant un nombre de place suffisant
-        const lobbyFound = await Lobby.query()
-          .select('lobbies.uuid')
-          .leftJoin('user_lobbies', 'lobbies.uuid', 'user_lobbies.lobby_uuid')
-          .select(db.raw('IFNULL(COUNT(user_lobbies.user_id), 0) AS available'))
-          .where('lobbies.game', resGame.game)
-          .andWhere('lobbies.statut', 'waiting')
-          .andWhere('lobbies.visibility', 'public')
-          .groupBy('lobbies.uuid')
-          .orderBy('available', "desc")
-          .havingRaw('? <= (? - COUNT(user_lobbies.user_id))', [users.length, resGame.max as number])
-          .first()
+                    clearInterval(interval);
 
-        if (lobbyFound?.uuid) { // lobby trouvé
+                  } else if (check < 3 && start) {
+                    check++
+                  }
+                }
 
-          // on fait rejoindre le lobby
-          const lobby: Lobby | null = await Lobby.find(lobbyFound.uuid)
-          if (lobby) {
-
-            // ajoute l'utilisateur leader du matchmaking à la room du lobby
-            socket.join('l' + lobby.uuid)
-
-            // on fait rejoindre les joueurs
-            lobby.joinAllGrouped(users).then(async () => {
-
-              // si le lobby est prêt (plein) >> lancement de la partie
-              if (await lobby.isReady()) lobby.lauch()
-              else this.io?.to('l' + lobby.uuid).emit('matchmaking_info', {
-                message: "Lobby found ! Searching players..."
-              } as MatchmakingResponse)
-            });
+              })
+            }, 1000)
           }
-
-        } else { // aucun lobby à compléter
-          this.setupLobbyOnServer(game, "public", users)
-            .then((lobbyUuid) => {
-              this.notifySetupLobby(lobbyUuid, socket, group);
-            })
         }
+
+        setTimeout(() => {
+          if (start) this.findLobby(resGame, users, socket, group, game);
+        }, 2000 * 3 * users.length)
+      } else {
+        await this.findLobby(resGame, users, socket, group, game);
       }
+
+
 
     } else if (resGame?.game) { // lorsque le groupe est trop nombreux
       callback({
@@ -475,6 +478,68 @@ class AdonisWS {
         message: 'Unavailable game! Try an another mod.',
         error_type: 'unavailable_game'
       } as MatchmakingError, undefined)
+    }
+  }
+
+  /**
+   * Permet de trouver un lobby.
+   *
+   * @param resGame information sur le jeu
+   * @param users les utilisateurs à lancer
+   * @param socket responsable du matchmaking
+   * @param group group de l'utilisateur s'il existe
+   * @param game le jeu recherché
+   * @private
+   */
+  private async findLobby(resGame: any, users: User[], socket: Socket, group: Group | null, game: string) {
+    // si le groupe rempli au max un lobby vide >> création d'un lobby privé
+    if (resGame.max == users.length) {
+      this.setupLobbyOnServer(resGame.game, "private", users)
+        .then((lobbyUuid) => {
+          this.notifySetupLobby(lobbyUuid, socket, group);
+        })
+
+    } else { // si non on recherche un lobby à compléter
+
+      // requête pour obtenir le premier lobby ayant un nombre de place suffisant
+      const lobbyFound = await Lobby.query()
+        .select('lobbies.uuid')
+        .leftJoin('user_lobbies', 'lobbies.uuid', 'user_lobbies.lobby_uuid')
+        .select(db.raw('IFNULL(COUNT(user_lobbies.user_id), 0) AS available'))
+        .where('lobbies.game', resGame.game)
+        .andWhere('lobbies.statut', 'waiting')
+        .andWhere('lobbies.visibility', 'public')
+        .groupBy('lobbies.uuid')
+        .orderBy('available', "desc")
+        .havingRaw('? <= (? - COUNT(user_lobbies.user_id))', [users.length, resGame.max as number])
+        .first()
+
+      if (lobbyFound?.uuid) { // lobby trouvé
+
+        // on fait rejoindre le lobby
+        const lobby: Lobby | null = await Lobby.find(lobbyFound.uuid)
+        if (lobby) {
+
+          // ajoute l'utilisateur leader du matchmaking à la room du lobby
+          socket.join('l' + lobby.uuid)
+
+          // on fait rejoindre les joueurs
+          lobby.joinAllGrouped(users).then(async () => {
+
+            // si le lobby est prêt (plein) >> lancement de la partie
+            if (await lobby.isReady()) lobby.lauch()
+            else this.io?.to('l' + lobby.uuid).emit('matchmaking_info', {
+              message: "Lobby found ! Searching players..."
+            } as MatchmakingResponse)
+          });
+        }
+
+      } else { // aucun lobby à compléter
+        this.setupLobbyOnServer(game, "public", users)
+          .then((lobbyUuid) => {
+            this.notifySetupLobby(lobbyUuid, socket, group);
+          })
+      }
     }
   }
 
