@@ -60,7 +60,7 @@ certaines choses devront être pensées de manière universelle par exemple les 
 seront définies pour des touches spécifiques.
 
 **_État d'avancement :_**
-- [ ] UHD
+- [x] UHD
 - [ ] Scoreboard
 - [x] Scene 3D universelle
 - [x] Modèle de partie universelle
@@ -77,7 +77,7 @@ Le but est de concevoir un Menu similaire aux applications mobiles, ergonomique 
 sur la même page.
 
 **_État d'avancement :_**
-- [ ] Navbar
+- [x] Navbar
 - [x] Grille de sélection des jeux
 - [x] Interface réseau social
 - [x] Système de matchmaking
