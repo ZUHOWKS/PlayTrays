@@ -29,6 +29,21 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PASSWORD: Env.schema.string.optional(),
   DB_DATABASE: Env.schema.string(),
 
+  //DB CONNECTION CONFIG
+  DB_CONNECTION_CONFIG: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring Postgres database connection
+  |----------------------------------------------------------
+  */
+  DB_HOST_PG: Env.schema.string({ format: 'host' }),
+  DB_PORT_PG: Env.schema.number(),
+  DB_USER_PG: Env.schema.string(),
+  DB_PASSWORD_PG: Env.schema.string.optional(),
+  DB_DATABASE_PG: Env.schema.string(),
+
+  GS_1_HOST: Env.schema.string(),
   GS_1_IDENTIFIER: Env.schema.string(),
   GS_1_TOKEN: Env.schema.string()
 })

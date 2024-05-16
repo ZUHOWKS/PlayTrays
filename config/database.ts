@@ -2,7 +2,7 @@ import env from '#start/env'
 import { defineConfig } from '@adonisjs/lucid'
 
 const dbConfig = defineConfig({
-  connection: 'mysql',
+  connection: env.get('DB_CONNECTION_CONFIG', 'postgres'),
   connections: {
     mysql: {
       client: 'mysql2',
@@ -12,6 +12,22 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
         database: env.get('DB_DATABASE'),
+      },
+      migrations: {
+        naturalSort: true,
+        paths: ['database/migrations'],
+      },
+    },
+
+    postgres: {
+      client: 'pg',
+      connection: {
+        host: env.get('DB_HOST_PG'),
+        port: env.get('DB_PORT_PG'),
+        user: env.get('DB_USER_PG'),
+        password: env.get('DB_PASSWORD_PG'),
+        database: env.get('DB_DATABASE_PG'),
+        ssl: { rejectUnauthorized: false }
       },
       migrations: {
         naturalSort: true,
