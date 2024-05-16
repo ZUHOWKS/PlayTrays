@@ -65,7 +65,7 @@ export default class Checkers extends PTLobby {
 
         // émettre une update de la partie
         const userTeam = this.setTeam(socket.data.user);
-        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer}, (error: any, response: any) => {
+        socket.emit("setup game", this.getPawnsJSON(), {team: userTeam, canPlay: false, timer: this.actualTimer}, (error: any, response: any) => {
             if (!error && response.loaded) {
                 if (this.status === 'waiting') {
                     if (this.whitePlayer && this.blackPlayer) {
@@ -73,7 +73,8 @@ export default class Checkers extends PTLobby {
                         this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
 
                         Array.from(this.sockets.values()).forEach((_socket) => {
-                            _socket.emit('start', {team: this.setTeam(_socket.data.user), canPlay: this.whoPlay == userTeam, timer: this.actualTimer})
+                            const _userTeam = this.getTeam(_socket.data.user)
+                            _socket.emit('start', {team: _userTeam, canPlay: this.whoPlay == _userTeam, timer: this.actualTimer})
                         })
 
                         const intervalID = setInterval(() => {
