@@ -161,7 +161,7 @@ function init() {
 
     // Ping par le serveur
     ws.on('ping', (callback) => {
-      return callback(undefined, undefined)
+      return callback(undefined, "here")
     });
 
     // Lorsqu'un utilisateur nous invite
