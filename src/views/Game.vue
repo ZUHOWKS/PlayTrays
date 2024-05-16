@@ -16,11 +16,14 @@ import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type {LobbyInterface} from "@/modules/utils/LobbyInterface";
 import LoaderFiller from "@/components/utils/LoaderFiller.vue";
 import CheckersHUD from "@/components/game/CheckersHUD.vue";
+import GMenu from "@/components/game/GMenu.vue";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
 
 const showLoader: Ref<boolean> = ref(true);
+const showGMenu: Ref<boolean> = ref(false);
+const gMenu: Ref<HTMLElement | null> = ref(null);
 
 let gameTray: TrayGame; // Game Manager
 const user: Ref<UserInterface> = ref({
@@ -64,6 +67,12 @@ function init(): void {
 
   // methode executé lors de la montée du composant dans le DOM.
   onMounted(() => {
+
+    const escapePressedEvent = new KeyboardEvent("keydown",{
+      'key': 'Escape'
+    });
+    document.dispatchEvent(escapePressedEvent);
+
     // configuration du renderer
     renderer = ref(new THREE.WebGLRenderer({
       canvas: experience.value as unknown as HTMLCanvasElement,
@@ -115,6 +124,7 @@ function init(): void {
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
     addEventListener('dblclick', selectOnClick);
+    addEventListener('keydown', (e) => showGMenuOnPress(e))
   });
 
   AccountServices.getLobby().then((responseLobby) => {
@@ -332,6 +342,18 @@ function animate() {
   requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
 
+function showGMenuOnPress (event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    showGMenu.value = !showGMenu.value;
+  }
+}
+
+
+function leaveParty() {
+  if (gameTray) gameTray.ws.emit('leave party', (error: any, response: any) => {
+   if (response.status == 200) ws.disconnect();
+  })
+}
 
 
 init(); //lancer l'initialisation de la scène Three
@@ -340,9 +362,11 @@ init(); //lancer l'initialisation de la scène Three
 
 <template>
   <LoaderFiller :show-loader="showLoader"/>
+  <GMenu ref="gMenu" v-if="showGMenu" :leave-party="leaveParty"/>
   <div class="game">
     <canvas ref="experience"/>
   </div>
+
   <div class="hud user-unselect-any">
     <CheckersHUD v-if="gameTray && gameTray.game == 'checkers'"></CheckersHUD>
   </div>
