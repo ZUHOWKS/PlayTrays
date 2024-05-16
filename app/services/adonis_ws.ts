@@ -1,4 +1,4 @@
-import { Server } from 'socket.io'
+import {Server} from 'socket.io'
 
 import server from '@adonisjs/core/services/server'
 import {Socket} from "socket.io";
@@ -174,7 +174,9 @@ class AdonisWS {
 
       socket.on('disconnect', async () => {
         try {
-          await this.interruptConnection((socket.data.user as User))
+          const user: User = (socket.data.user as User)
+          socket.leave('g'+(await user.getGroup())?.id)
+          await this.interruptConnection(user)
         } catch (e) {
           console.error(e)
         }
@@ -182,7 +184,9 @@ class AdonisWS {
 
       socket.on('connect_error', async () => {
         try {
-          await this.interruptConnection((socket.data.user as User), true)
+          const user: User = (socket.data.user as User)
+          socket.leave('g'+(await user.getGroup())?.id)
+          await this.interruptConnection(user, true)
         } catch (e) {
           console.error(e)
         }
@@ -232,7 +236,7 @@ class AdonisWS {
         if (error || response.length == 0) {
           if (check == 6) {
             if (disconnect) this.io?.to('u' + user.id).disconnectSockets();
-            else user.leaveGroup();
+            user.leaveGroup();
           } else {
             check++
           }
@@ -420,62 +424,17 @@ class AdonisWS {
       // Conditions sur le groupe >> check si les membres sont bien connectés et qui ne sont pas dans une partie
       if (users.length > 1) {
 
-        let start: boolean = true;
-        let connectedCheck: number = 0;
-
-        // la partie démarrera une fois que tous les joueurs auront était
-        const findLobbyInterval = setInterval(() => {
-          if (connectedCheck == (users.length-1)) {
-            this.findLobby(resGame, users, socket, group, game);
-            clearInterval(findLobbyInterval);
-          }
-        }, 2000)
-
-        for (let i= 0; i < users.length; i++) {
-          const _user: User = users[i];
-
-          if (_user.id != group?.leader_id) {
-
-            let check = 0;
-            let isConnected = false;
-
-            // On ping au maximum 3 fois à interval régulier l'utilisateur
-            const interval = setInterval(() => {
-              //@ts-ignore
-              this.io?.to('u' + _user.id).emit('ping', (error: any, response: any) => {
-
-                if (response.length > 0 && !isConnected) {
-                  isConnected = true;
-                  connectedCheck++;
-
-                  clearInterval(interval);
-
-                } else if (!isConnected) {
-                  if (check == 3 && start) {
-                    start = false;
-
-                    this.io?.to('g' + group?.id).emit('matchmaking_error', {
-                      message: _user.username + ' is not the menu !',
-                      error_type: 'user_not_connected'
-                    } as MatchmakingError)
-
-                    clearInterval(interval);
-                    clearInterval(findLobbyInterval);
-
-                  } else if (check < 3 && start) {
-                    check++
-                  }
-                }
-
-              })
-            }, 1000)
-          }
+        const _rSockets = await this.io?.in('g'+group?.id).fetchSockets()
+        console.log(_rSockets?.length);
+        if (!(_rSockets?.length == users.length)) {
+          return this.io?.to('g' + group?.id).emit('matchmaking_error', {
+            message: 'An user has not leaved his party or is offline !',
+            error_type: 'servers_full'
+          } as MatchmakingError)
         }
-
-      } else {
-        await this.findLobby(resGame, users, socket, group, game);
       }
 
+      await this.findLobby(resGame, users, socket, group, game);
 
 
     } else if (resGame?.game) { // lorsque le groupe est trop nombreux
