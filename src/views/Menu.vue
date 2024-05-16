@@ -53,26 +53,24 @@ const user: Ref<UserInterface> = ref({
   createdAt: ''
 })
 
-function getFriendList() {
-  AccountServices.getFriends().then((response) => {
+async function getFriendList() {
+  return AccountServices.getFriends().then((response) => {
     const _friends: FriendInterface[] = (response.data as FriendInterface[])
     if (menuInfo.friendList.length == 0) menuInfo.friendList = _friends;
-    const friends: FriendInterface[] = []
 
-    _friends.forEach((friend: FriendInterface) => {
+    const friends: FriendInterface[] = ([] as FriendInterface[]);
+    let pushed: number = 0;
 
-      if (friend.id != _friends[_friends.length - 1].id) {
-        ws.emit('user_ping', friend.id, (error: any, response: any) => {
-          if (!error) friends.push(response);
-        })
-      } else {
-        ws.emit('user_ping', friend.id, (error: any, response: any) => {
-          if (!error) {
-            friends.push(response);
-            menuInfo.friendList = friends;
-          }
-        })
-      }
+    _friends.forEach((friend) => {
+      ws.emit('user_ping', friend.id, (error: any, response: FriendInterface) => {
+        if (!error) {
+          friend.status = response.status
+          friend.online = response.online
+          friends.push(friend)
+          pushed++;
+        }
+        if (pushed == _friends.length) menuInfo.friendList = friends;
+      })
     })
   })
 }
@@ -85,10 +83,6 @@ function getGroupInfo() {
         leader: response.leader,
         players: response.players as FriendInterface[]
       } as GroupInterface;
-
-      menuInfo.group.players.forEach((player: FriendInterface) => {
-        console.log(player.username);
-      })
     } else {
       menuInfo.group = undefined;
     }
@@ -146,6 +140,7 @@ function init() {
     // Matchmaking confirm >> lancement de la partie
     ws.on('matchmaking_confirm', (response: MatchmakingResponse) => {
       menuInfo.matchmaking.response = response;
+      ws.disconnect();
       router.push('/game');
     });
 
@@ -249,19 +244,14 @@ function showMatchmakingBanner() {
  * Afficher ou Cacher le widget social.
  */
 function showSocialWidget() {
-
   if (wsocial.value) {
     if (menuInfo.showSocialWidget) {
       wsocial.value.style.transform = "translateX(16vw)";
     } else {
-      wsocial.value.style.transform = "translateX(0)";
-      setTimeout(() => {
-        if (menuInfo.showSocialWidget) {
-          getFriendList()
-        }
-      }, 500)
+      getFriendList()
+      wsocial.value.style.transform = "translateX(0)"
     }
-    menuInfo.showSocialWidget = !menuInfo.showSocialWidget
+    menuInfo.showSocialWidget = !menuInfo.showSocialWidget;
   }
 }
 
@@ -320,7 +310,6 @@ function inviteInGroup(userId: number) {
       closeNotification();
 
       ws.emit('group_info', (error: any, response: any) => {
-        console.log(response)
         menuInfo.group = response;
       })
     }
