@@ -11,6 +11,7 @@ import Lobby from "#models/lobby";
 import Group from "#models/group";
 import {MatchmakingError, MatchmakingResponse} from "../modules/utils/MatchmakingResponse.js";
 import {FriendInterface} from "../modules/utils/UserInterface.js";
+import {clearInterval} from "node:timers";
 
 
 interface AuthUserData {
@@ -411,43 +412,55 @@ class AdonisWS {
 
     // on vérifie si le jeu à lancer existe et si le groupe ne dépasse pas le nombre de joueurs requis pour ce même jeu
     const resGame = await db.from('games').select('game', 'max_player as max').where('game', game).first()
+
     if (resGame?.game && resGame.max >= users.length) {
       callback(undefined, {message: 'Searching a party...'})
       if (group?.id) this.io?.to('g' + group.id).emit('matchmaking_init', {message: "Searching a party..."} as MatchmakingResponse)
 
+      // Conditions sur le groupe >> check si les membres sont bien connectés et qui ne sont pas dans une partie
       if (users.length > 1) {
+
         let start: boolean = true;
-        for (let i= 0; i < users.length-1; i++) {
+        let connectedCheck: number = 0;
+
+        // la partie démarrera une fois que tous les joueurs auront était
+        const findLobbyInterval = setInterval(() => {
+          if (connectedCheck == (users.length-1)) {
+            this.findLobby(resGame, users, socket, group, game);
+            clearInterval(findLobbyInterval);
+          }
+        }, 2000)
+
+        for (let i= 0; i < users.length; i++) {
           const _user: User = users[i];
-          if (await _user.getLobby()) {
-            callback({
-              message: _user.username + 'is in a party !',
-              error_type: 'matchmaking_conditions'
-            } as MatchmakingError, undefined)
-          } else {
+
+          if (_user.id != group?.leader_id) {
+
             let check = 0;
             let isConnected = false;
-            const interval = setInterval(() => {
-              this.io?.to('u'+_user.id).emit('ping', (error: any, response: any) => {
-                console.log(_user.id)
-                console.log(response)
-                if (!error && response.length > 0 || isConnected) {
-                  isConnected = true;
-                  clearInterval(interval);
-                } else {
-                  if (check == 3 && start && !isConnected) {
-                    start = false;
-                    callback({
-                      message: _user.username + 'is in a party !',
-                      error_type: 'matchmaking_conditions'
-                    } as MatchmakingError, undefined)
 
-                    this.io?.to('g'+group?.id).emit('matchmaking_error', {
-                      message: _user.username + ' is offline !',
-                      error_type: 'matchmaking_conditions'
+            // On ping au maximum 3 fois à interval régulier l'utilisateur
+            const interval = setInterval(() => {
+              //@ts-ignore
+              this.io?.to('u' + _user.id).emit('ping', (error: any, response: any) => {
+
+                if (response.length > 0 && !isConnected) {
+                  isConnected = true;
+                  connectedCheck++;
+
+                  clearInterval(interval);
+
+                } else if (!isConnected) {
+                  if (check == 3 && start) {
+                    start = false;
+
+                    this.io?.to('g' + group?.id).emit('matchmaking_error', {
+                      message: _user.username + ' is not the menu !',
+                      error_type: 'user_not_connected'
                     } as MatchmakingError)
 
                     clearInterval(interval);
+                    clearInterval(findLobbyInterval);
 
                   } else if (check < 3 && start) {
                     check++
@@ -459,9 +472,6 @@ class AdonisWS {
           }
         }
 
-        setTimeout(() => {
-          if (start) this.findLobby(resGame, users, socket, group, game);
-        }, 2000 * 3 * users.length)
       } else {
         await this.findLobby(resGame, users, socket, group, game);
       }
