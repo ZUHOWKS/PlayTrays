@@ -247,11 +247,19 @@ function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
   return meshMaterials;
 }
 
+/**
+ * Actualise la position du pointeur.
+ *
+ * @param event
+ */
 function onPointerMove(event: MouseEvent) {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 
+/**
+ * Réalise le rendu des bordures de sélection lorsque la souris passe sur un objet.
+ */
 function renderOutlineSelection() {
 
   // update the picking ray with the camera and pointer position
@@ -261,7 +269,9 @@ function renderOutlineSelection() {
   const intersects = raycaster.intersectObject( scene, true );
   if (intersects.length > 0) {
     let obj: THREE.Object3D = intersects[0].object;
-    while (obj.parent && obj.parent != scene) {
+
+    // remonte jusqu'à l'objet parent pour prendre l'objet entièrement.
+    while (obj.parent && !(obj.parent == scene || obj.name.includes('parent-select'))) {
       obj = obj.parent
     }
     outlinePass.selectedObjects = [];
@@ -274,13 +284,25 @@ function renderOutlineSelection() {
   }
 }
 
+/**
+ * Permet de sélectionné un objet de la scène lorsqu'il est clické.
+ */
 function selectOnClick() {
+
+  // liste les objets potentiellement sélectionné par la souris (index 0, l'objet au premier plan, ect...)
   const intersects = raycaster.intersectObject( scene, true );
+
   if (intersects.length > 0 && gameTray.controller) {
+
+    // objet au premier plan
     let obj: THREE.Object3D = intersects[0].object;
-    while (obj.parent && obj.parent != scene) {
+
+    // remonte jusqu'à l'objet parent pour prendre l'objet entièrement.
+    while (obj.parent && !(obj.parent == scene || obj.name.includes('parent-select'))) {
       obj = obj.parent
     }
+
+    // s'il ne s'agit pas du plateau ou de la skyBox
     if (!(obj.name.includes("Tray") || obj.name.includes("skyBox"))) {
       if (gameTray.controller.isActuator(obj.name)) {
         gameTray.controller.selectActuator(obj.name);
@@ -290,14 +312,17 @@ function selectOnClick() {
         gameTray.controller.selectObject(obj.name);
         gameTray.controller.showSelectedObjectActuators();
       }
-    } else if (obj.name.includes("Tray")) {
+    } else if (obj.name.includes("Tray")) { // effet de caméra remise à défaut
       gameTray.controller.defaultCamera();
-    } else {
+    } else { // désélectionné tout
       gameTray.controller.unselectAll();
     }
   }
 }
 
+/**
+ * Boucle qui rafraîchie le rendu de la scène.
+ */
 function animate() {
 
   renderOutlineSelection();
