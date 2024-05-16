@@ -32,7 +32,6 @@ export default class CheckersClient extends SupportController {
     team: string | undefined;
     canPlay: boolean = false;
     timer: number = 0;
-    timerID: NodeJS.Timeout | undefined;
 
     constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
         super(scene, cameraRef, orbitControlsRef, ws);
@@ -57,24 +56,27 @@ export default class CheckersClient extends SupportController {
 
         // configuration de la partie selon le serveur
         this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean, timer: number}, callback) => {
-
-            this.timer = gameInfo.timer
-
-            this.timerID = setInterval(() => {
-                if (this.timer > 0) {
-                    this.timer--;
-
-                    const minutes: number = Math.floor(this.timer/60);
-                    const secondes: number = this.timer - minutes * 60;
-
-                    (document.querySelector('.timer p') as HTMLElement).innerText = "" + (minutes < 10 ? '0' + minutes : minutes) + ':' + (secondes < 10 ? '0' + secondes : secondes)
-                }
-            }, 1000)
+            
+            this.timer = gameInfo.timer;
 
             await this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
 
             if (loaderFiller) setTimeout(() => loaderFiller.value = false, 2500);
             callback(undefined, {loaded: true});
+        })
+
+        this.ws.on('start', (gameInfo: {team: string; canPlay: boolean, timer: number}) => {
+            this.timer = gameInfo.timer;
+            this.team = gameInfo.team;
+            this.canPlay = gameInfo.canPlay;
+        })
+
+        this.ws.on('timer', (timer: number) => {
+            this.timer = timer
+            const minutes: number = Math.floor(this.timer / 60);
+            const secondes: number = this.timer - minutes * 60;
+
+            (document.querySelector('.timer p') as HTMLElement).innerText = "" + (minutes < 10 ? '0' + minutes : minutes) + ':' + (secondes < 10 ? '0' + secondes : secondes)
         })
 
         // en cas de désynchronisation
@@ -91,10 +93,13 @@ export default class CheckersClient extends SupportController {
         this.ws.on("pawn action", (actions: Action[], gameInfo: {team: string, canPlay: boolean, timer: number}) => {
 
             this.timer = gameInfo.timer;
+            const _toRefreshSelection: string | undefined = this.selectedObject?.name;
 
             if (actions.length == 0) {
                 this.team = gameInfo.team;
                 this.canPlay = gameInfo.canPlay;
+            } else {
+                this.unselectAll();
             }
 
             /*
@@ -107,6 +112,7 @@ export default class CheckersClient extends SupportController {
             const toKill: any[] = []; // liste des pions à tuer
             actions.forEach((action) => {
                 const pawn: Pawn | undefined = this.getObject(action.pawn) as Pawn;
+
                 if (pawn) {
 
                     if (action.pawnKilled) {
@@ -126,10 +132,15 @@ export default class CheckersClient extends SupportController {
                             toKill.forEach((kill) => kill());
 
                             if (gameInfo) {
-                                if (this.selectedObject) this.selectObject(this.selectedObject?.name) // on actualise la sélection
+
                                 this.team = gameInfo.team;
                                 this.canPlay = gameInfo.canPlay;
                             }
+
+                            if (_toRefreshSelection) {
+                                this.selectObject(_toRefreshSelection);
+                                this.showSelectedObjectActuators();
+                            } // on actualise la sélection
                         });
 
 
@@ -141,7 +152,6 @@ export default class CheckersClient extends SupportController {
 
             // évènement de fin de partie
             this.ws.on('end game', (whoWin) => {
-                clearInterval(this.timerID)
                 setTimeout(() => this.ws.disconnect(), 30000)
             })
         })
