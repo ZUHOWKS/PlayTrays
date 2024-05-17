@@ -139,7 +139,6 @@ function loginForm() {
 
 <style scoped>
 header {
-  height: 10vh;
   position: relative;
   margin : 1% 5%;
   display : flex;
@@ -147,12 +146,16 @@ header {
 }
 
 h1 {
-  font-size : 2.62vw;
+  font-size : 5vw;
+}
+
+h2 {
+  font-size: 3.5vw;
 }
 
 .logo {
-
-  height: 5vh;
+  height: 5.5vw;
+  margin: 0 0.5%;
   transition: transform 0.6s ease-in-out;
 }
 
@@ -185,7 +188,7 @@ main {
   border-radius: 20px;
   align-items: center;
   width: 60%;
-  height: 70%;
+  height: 30vw;
   box-shadow: 0px 8px 20px rgba(0,0,0, 0.15);
   overflow: hidden;
 }
@@ -211,8 +214,8 @@ form>.inputs {
 
 .inputs>input {
   width: 95%;
-  height: 4vh;
-  font-size: 2vh;
+  height: 2vw;
+  font-size: 1vw;
   margin: 2.5% 2.5%;
   padding: 0.25% 1%;
   background: rgba(var(--link-color), 0.25);
@@ -224,7 +227,7 @@ form>.inputs {
   background: linear-gradient(120deg, rgb(var(--primary-color)) -175%, rgb(var(--secondary-color)) 100%);
   width: 30%;
   left: 50%;
-  height: 70%;
+  height: 30vw;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -238,10 +241,12 @@ form>.inputs {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
+  height: 30%;
   position: absolute;
   transition: transform 1s ease-in-out;
 }
+
 
 .sign-up-mode {
   transform: translateX(-200%);
