@@ -123,11 +123,12 @@ function init(): void {
 
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
-    addEventListener('touchmove', (e) => onTouchMove(e));
+
     addEventListener('click', () => {
       if (!showGMenu.value) selectOnClick()
     });
-    addEventListener('touchstart', () => {
+    addEventListener('touchstart', (e) => {
+      onTouchMove(e)
       if (!showGMenu.value) selectOnClick()
     });
     addEventListener('keydown', (e) => showGMenuOnPress(e))
