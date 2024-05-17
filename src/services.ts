@@ -1,11 +1,11 @@
 import axios from "axios";
 import AccountServices from "@/services/account_services";
 import {useRouter} from "vue-router";
+import {ADONIS_URL} from "@/config/serverConfig";
 
 
 const Axios = axios.create({
-    baseURL: "http://localhost:3333/api/v1",
-
+    baseURL: ADONIS_URL + "/api/v1",
 });
 
 Axios.defaults.headers['Access-Control-Allow-Origin'] = '*'

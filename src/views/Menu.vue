@@ -15,6 +15,7 @@ import Notification from "@/components/utils/Notification.vue";
 import type {UserInterface, FriendInterface} from "@/modules/utils/UserInterface";
 import type {GroupInterface} from "@/modules/utils/GroupInterface";
 import LoaderFiller from "@/components/utils/LoaderFiller.vue";
+import {ADONIS_URL} from "@/config/serverConfig";
 
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -99,7 +100,7 @@ function init() {
     user.value.updatedAt = response.data.updatedAt;
     user.value.createdAt = response.data.createdAt;
 
-    ws = io("http://localhost:3333", {
+    ws = io(ADONIS_URL, {
       auth: {
         user: user.value.id,
         token: AccountServices.getToken(),
