@@ -123,6 +123,7 @@ function init(): void {
 
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
+    addEventListener('touchmove', (e) => onTouchMove(e));
     addEventListener('click', () => {
       if (!showGMenu.value) selectOnClick()
     });
@@ -270,6 +271,16 @@ function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
 function onPointerMove(event: MouseEvent) {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+
+/**
+ * Actualise la position du pointeur.
+ *
+ * @param event
+ */
+function onTouchMove(event: TouchEvent) {
+  pointer.x = ( event.touches[0].clientX / window.innerWidth ) * 2 - 1;
+  pointer.y = - ( event.touches[0].clientY / window.innerHeight ) * 2 + 1;
 }
 
 /**
