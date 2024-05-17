@@ -238,7 +238,7 @@ function establishConnectionWithGameServer(uuid: string, game: string,  url: str
  */
 function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
 
-  const textureSkyPath: string = "/src/assets/textures/sky/";
+  const textureSkyPath: string = "/src/scene_assets/textures/sky/";
 
   // chargement des textures
   const textures: THREE.Texture[] = [

@@ -69,7 +69,7 @@ export default abstract class SupportController {
     async loadGLTFSceneModel(loader: GLTFLoader, model: string): Promise<Object3D> {
         return new Promise((resolve, reject) => {
             loader.load(
-                new URL("/src/assets/models/" + model, import.meta.url).href,
+                new URL("/src/scene_assets/models/" + model, import.meta.url).href,
                 function (gltf: GLTF): void {
                     resolve(gltf.scene);
                 },
