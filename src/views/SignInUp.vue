@@ -12,14 +12,22 @@ import {onMounted, type Ref, ref} from "vue";
   const loginMode: Ref<HTMLElement | null> = ref(null)
   const signFiller: Ref<HTMLElement | null> = ref(null)
 
-  const email = ref('');
-  const password = ref('');
+  const registerFormContainer: Ref<HTMLElement | null> = ref(null)
+  const loginFormContainer: Ref<HTMLElement | null> = ref(null)
 
-  function loginForm() {
+  const loginEmail = ref('');
+  const loginPassword = ref('');
+  const registerEmail = ref("");
+  const registerUsername = ref("");
+  const registerPassword = ref("");
+  const registerConfirmPassword = ref("");
+
+
+function loginForm() {
 
     const formData: FormData = new FormData();
-    formData.append('email', email.value);
-    formData.append('password', password.value);
+    formData.append('email', loginEmail.value);
+    formData.append('password', loginPassword.value);
 
     AccountServices.login(formData).then((response) => {
       AccountServices.registerToken(response.data.token);
@@ -32,17 +40,60 @@ import {onMounted, type Ref, ref} from "vue";
   }
 
   function switchSignMode() {
-    if (signUpMode.value && loginMode.value && signFiller.value) {
+    if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
       isLoginMode.value = !isLoginMode.value
       if (!isLoginMode.value) {
         signUpMode.value.style.transform = "translateX(0)"
+        registerFormContainer.value.style.transform = "translateX(0)"
+
         loginMode.value.style.transform = "translateX(200%)"
+        loginFormContainer.value.style.transform = "translateX(-200%)"
+
+        signFiller.value.style.left = "20%"
+
       } else {
         signUpMode.value.style.transform = "translateX(-200%)"
+        registerFormContainer.value.style.transform = "translateX(200%)"
+
         loginMode.value.style.transform = "translateX(0)"
+        loginFormContainer.value.style.transform = "translateX(0)"
+
+        signFiller.value.style.left = "50%"
       }
     }
   }
+
+  function registerForm() {
+    const formData = new FormData();
+    formData.append("email", registerEmail.value);
+    formData.append("username", registerUsername.value);
+    formData.append("password", registerPassword.value);
+    formData.append("passwordConfirmed", registerConfirmPassword.value);
+
+    AccountServices.register(formData)
+        .then((response) => {
+          formData.delete("username");
+          formData.delete("passwordConfirmed");
+
+          AccountServices.login(formData)
+              .then((response) => {
+                AccountServices.registerToken(response.data.token);
+                router.push("/app");
+              })
+              .catch((error) => {
+                router.push("/login");
+              });
+        })
+        .catch((error) => {
+          //TODO: Gestion d'erreur
+        });
+  }
+
+  onMounted(() => {
+    if (router.currentRoute.value.path === '/register') {
+      switchSignMode()
+    }
+  })
 </script>
 
 <template>
@@ -54,22 +105,23 @@ import {onMounted, type Ref, ref} from "vue";
   </header>
   <main>
     <div class="row forms">
-      <form @submit.prevent="loginForm" class="test">
+      <form @submit.prevent="loginForm" class="login-form" ref="loginFormContainer">
         <h2>Login</h2>
         <div class="inputs">
-          <input type="email" v-model="email" id="email" name="email" required placeholder="Email">
-          <input type="password" v-model="password" id="password" name="password" required placeholder="Password">
+          <input type="email" v-model="loginEmail" id="email" name="email" required placeholder="Email">
+          <input type="password" v-model="loginPassword" id="password" name="password" required placeholder="Password">
         </div>
-        <button type="submit" class="login-button">Login</button>
+        <button type="submit" class="login-button">Let's Play</button>
       </form>
-      <form @submit.prevent="loginForm" class="test">
-        <div>
-          <input type="email" v-model="email" id="email" name="email" required>
+      <form @submit.prevent="registerForm" class="register-form" ref="registerFormContainer">
+        <h2>Register</h2>
+        <div class="inputs">
+          <input type="email" v-model="registerEmail" id="email" name="email" required placeholder="Email">
+          <input type="text" v-model="registerUsername" id="username" name="username" required placeholder="Username">
+          <input type="password" v-model="registerPassword" id="password" name="password" required placeholder="Password">
+          <input type="password" v-model="registerConfirmPassword" id="confirmPassword" name="confirmPassword" required placeholder="Confirm Password">
         </div>
-        <div>
-          <input type="password" v-model="password" id="password" name="password" required>
-        </div>
-        <button type="submit" class="login-button">Login</button>
+        <button type="submit" class="login-button">Enter in the App</button>
       </form>
     </div>
     <div class="sign-mode-filler" ref="signFiller">
@@ -78,8 +130,8 @@ import {onMounted, type Ref, ref} from "vue";
         <button @click="switchSignMode" class="switch-button">You are not register ?</button>
       </div>
       <div class="sign-up-mode sign-mode-content" ref="signUpMode">
-        <h2>Welcome !</h2>
-        <button @click="switchSignMode" class="switch-button">You have an account ?</button>
+        <h2>Join PlayTrays !</h2>
+        <button @click="switchSignMode" class="switch-button">You got an account ?</button>
       </div>
     </div>
   </main>
@@ -133,8 +185,9 @@ main {
   border-radius: 20px;
   align-items: center;
   width: 60%;
-  height: 40vw;
+  height: 70%;
   box-shadow: 0px 8px 20px rgba(0,0,0, 0.15);
+  overflow: hidden;
 }
 
 .forms>form {
@@ -144,6 +197,7 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  transition: transform 1s ease-in-out;
 }
 
 form>.inputs {
@@ -170,7 +224,7 @@ form>.inputs {
   background: linear-gradient(120deg, rgb(var(--primary-color)) -175%, rgb(var(--secondary-color)) 100%);
   width: 30%;
   left: 50%;
-  height: 40vw;
+  height: 70%;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -186,11 +240,15 @@ form>.inputs {
   align-items: center;
   justify-content: center;
   position: absolute;
-  transition: transform 1s 0.5s ease-in-out;
+  transition: transform 1s ease-in-out;
 }
 
 .sign-up-mode {
   transform: translateX(-200%);
+}
+
+.register-form {
+  transform: translateX(200%);
 }
 
 </style>
