@@ -81,7 +81,7 @@ export default class PTServer {
         this.io.listen(25525);
 
         // Manifester la présence du serveur jeu auprès de l'app
-        Axios.post('/server/manifest').then();
+        Axios.post('/server/manifest').then(() => console.log('Manifest successful !'));
     }
 
     /**
@@ -125,7 +125,9 @@ export default class PTServer {
     private async isServerAuthentificationValid(auth: any): Promise<boolean> {
         try {
             const authServerData: AuthServerData = auth as AuthServerData;
+            console.log('Try Server Authentification...')
             if (authServerData.identifier == process.env.SERVER_IDENTIFIER && authServerData.token == process.env.SERVER_TOKEN) {
+                console.log('Server Authentification successfully !')
                 return true;
             }
         } catch (e) {
@@ -145,15 +147,15 @@ export default class PTServer {
     private async isUserAuthentificationValid(auth: any): Promise<boolean> {
         try {
             const authUserData: AuthUserData = auth as AuthUserData;
-
+            console.log('Try User Authentification...')
             if (authUserData.user && authUserData.token && authUserData.lobbyUUID && this.lobbies.get(authUserData.lobbyUUID) && this.lobbies.get(authUserData.lobbyUUID)?.getStatus() != 'finished') {
                 const formData = new FormData();
                 formData.append('userID', authUserData.user+"");
                 formData.append('userToken', authUserData.token);
                 formData.append('lobbyUUID', authUserData.lobbyUUID);
                 const response = (await Axios.post('/server/legit-user', formData));
-
-                return response.status == 200;
+                console.log((response?.status) == 200 ? 'User is Authenticated !' : 'Authentification Error: Unauthorized !')
+                return (response?.status) == 200;
             }
         } catch (e) {
             console.error(e);
