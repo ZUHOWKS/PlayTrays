@@ -126,6 +126,9 @@ function init(): void {
     addEventListener('click', () => {
       if (!showGMenu.value) selectOnClick()
     });
+    addEventListener('touchstart', () => {
+      if (!showGMenu.value) selectOnClick()
+    });
     addEventListener('keydown', (e) => showGMenuOnPress(e))
   });
 
