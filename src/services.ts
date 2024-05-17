@@ -1,8 +1,9 @@
 import axios from "axios";
+import {ADONIS_URL} from "./config/serverConfig";
 
 
 const Axios = axios.create({
-    baseURL: "http://localhost:3333/api/v1"
+    baseURL: ADONIS_URL + "/api/v1"
 });
 
 /**
