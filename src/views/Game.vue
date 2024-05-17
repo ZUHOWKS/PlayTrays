@@ -123,7 +123,7 @@ function init(): void {
 
     // event listener
     addEventListener('mousemove', (e) => onPointerMove(e));
-    addEventListener('dblclick', () => {
+    addEventListener('click', () => {
       if (!showGMenu.value) selectOnClick()
     });
     addEventListener('keydown', (e) => showGMenuOnPress(e))
