@@ -20,7 +20,8 @@ app.ready(async () => {
     AdonisWS.boot()
     AdonisWS.initSocketEvents()
 
-    if (!(await PTServer.findBy({url: env.get('GS_1_HOST')}))) await PTServer.create({id: 1, url: env.get('GS_1_HOST'), name: 'gs1-local-test', capacity: 1, statut: 'offline'})
+    await PTServer.updateOrCreate({id:1}, {id: 1, url: env.get('GS_1_HOST'), name: 'gs1-local-test', capacity: 1, statut: 'offline'})
+
 
     if (!(await Games.findBy({game: 'checkers'}))) Games.create({
       game: 'checkers',
