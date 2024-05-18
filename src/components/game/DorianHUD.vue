@@ -72,20 +72,25 @@
         </div>
 
         <div class="desc row">
-          <p>Si un joueur possède TOUS les terrains d'une même couleur, la valeur de ceux-ci est doublée</p>
+          <p class="user-card">Aucune personne ne possède cette carte actuellement</p>
         </div>
 
         <div class="info row">
           <div class="column">
             <p>Prix des maisons</p>
             <p>Prix d'un hotel</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>Valeur hypothécaire: </p>
           </div>
 
           <div class="column">
             <p class="price-maison"></p>
             <p class="price-hotel"></p>
-            <p></p>
+            <p>&nbsp;</p>
+            <p class="hyp"></p>
           </div>
+
         </div>
       </div>
 
@@ -141,7 +146,7 @@
             </div>
 
             <div class="desc row">
-              <p>Si un joueur possède TOUS les terrains d'une même couleur, la valeur de ceux-ci est doublée</p>
+              <p>Aucune personne ne possède cette carte actuellement</p>
             </div>
 
             <div class="info row">
@@ -166,6 +171,30 @@
     </div>
 
   </div>
+
+
+
+  <div class="card-chance">
+
+    <div class="caseCardChance card">
+      <div class="container column">
+        <div class="title column">
+          <h3 class="name">Chance</h3>
+        </div>
+        <div class="content">
+          <p class="chance-texte">Erreur de la banque:<br><br> Vous recevez £10 000 </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="Ok">Ok</button>
+    </div>
+
+  </div>
+
+
+
 
 </template>
 
@@ -249,6 +278,20 @@
   bacground-color: black;
   width: 100%;
   height: 100%;
+}
+
+.card-chance {
+  position: fixed;
+  top: 12.5vh;
+  left: 30%;
+  width: 75vh;
+  background: transparent;
+  height: 75vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  visibility: hidden;
+  justify-content: space-evenly;
 }
 
 .card-action {
