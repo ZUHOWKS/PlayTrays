@@ -12,25 +12,44 @@ export interface Players{
     exitPrison: number;
     money: number;
     caseNb: number;
+    id: number
+    playerName: string;
+}
+
+export interface chance{
+    message: string,
+    cout: number
 }
 
 export default class DorianGame extends PTLobby {
 
+    hasDice: boolean = true;
+    cards: Map<number, Card>; // caseNb, Card
     players: Map<number, Players>;
     theOnePlaying: number = 1;
-    hasDice = true;
+    chances: Array<chance>;
+    idOfPlayers: Array<number>;
 
-    cards: Map<number, Card>; // caseNb, Card
 
     constructor(uuid: string, game: string, visibility: "public" | "private", server: PTServer) {
         super(uuid, game, visibility, server);
         this.players = new Map();
         this.cards = new Map();
-
+        this.chances = new Array<chance>({message: "test 10 000", cout: 10000}, {message: "test -10 000", cout: -10000});
+        this.idOfPlayers = new Array<number>();
         this.setupGame();
 
     }
 
+    protected finTour(): void{this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;}
+
+    protected getPlayerByName(name: string): Players | undefined{
+        let playerreturn: Players | undefined = undefined;
+        this.players.forEach((player) => {if (player.playerName == name) {
+            playerreturn = player;
+        }});
+        return playerreturn;
+    }
 
     protected setupGame(): void {
 
@@ -57,51 +76,104 @@ export default class DorianGame extends PTLobby {
     registerNewSocket(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void {
         this.sockets.set(socket.data.user, socket);
         if (!(this.players.get(socket.data.user))) {
+            this.idOfPlayers.push(socket.data.user);
             this.players.set(socket.data.user, {
                 name: "User" + socket.data.user,
                 city: [],
                 exitPrison: 0,
-                money: 550000,
-                caseNb: 0
+                money: 150000,
+                caseNb: 0,
+                id: this.idOfPlayers.indexOf(socket.data.user)+1,
+                playerName: "User" + (this.idOfPlayers.indexOf(socket.data.user)+1),
             });
+
         }
 
         socket.join(this.uuid);
-        console.log(socket.data.user);
+
         for (let i = 1; i <= this.players.size; i++) {
-            this.server.io.to(this.uuid).emit("PlayerJoin", this.players.get(i), i);
+            this.server.io.to(this.uuid).emit("PlayerJoin", this.players.get(i));
         }
-        if (this.players.size >= 2) {
-            this.server.io.to(this.uuid).emit("SetupGame");
-        }
+
+        socket.emit("UpdateHUD", this.players.get(this.idOfPlayers.indexOf(socket.data.user))?.money);
+
         socket.on("Lancede", (callBack) => {
 
             let r = (this.hasDice) ? Math.floor(Math.random() * 11 + 1) : Math.floor(Math.random() * 5 + 1);
 
-            if (socket.data.user == this.theOnePlaying && this.players.get(this.theOnePlaying)) {
+            if (this.idOfPlayers.indexOf(socket.data.user)+1 == this.theOnePlaying && this.players.get(this.theOnePlaying)) {
                 const player = this.players.get(this.theOnePlaying);
 
                 if (player != undefined) {
                     player.caseNb += r;
-                    this.players.set(this.theOnePlaying, player);
 
-                    if (player.caseNb > 40) {
+                    if (player.caseNb >= 40) {
                         player.caseNb -= 40;
                         player.money += 20000;
+                        socket.emit("Passage case départ", player.money);
                     }
+                    this.players.set(this.theOnePlaying, player);
 
-                    callBack(undefined, {
-                        random: r,
-                        player: player,
-                        id: this.theOnePlaying,
-                        caseInfo: this.cards.get(player.caseNb)
-                    });
+                    console.log("La carte: ", player.caseNb, "\nLe joueur: ", player.playerName, player.money);
+                    let caseInfo = this.cards.get(player.caseNb)
+                    if (caseInfo) {
 
-                    this.emitWithout(socket, "pawnMove", this.theOnePlaying, r, this.cards.get(player.caseNb));
+                            this.server.io.to(this.uuid).emit("pawnMove", this.theOnePlaying, r);
 
-                }
+                            if (caseInfo.type == "chances"){
+                                const chanceValue = this.chances[(Math.floor(Math.random()*this.chances.length))];
+                                player.money += chanceValue.cout;
+                                this.players.set(this.theOnePlaying, player);
+                                socket.emit("Carte chance", chanceValue, player)
+                                }
+                            else if (caseInfo.type == "war") this.finTour();
+                            else if (caseInfo.type == "bank") this.finTour();
+                            else if (caseInfo.type == "start") this.finTour();
+                            else if (caseInfo.type == "bataille") this.finTour();
+                            else if (caseInfo.type == "prison") this.finTour();
+                            else if (caseInfo instanceof TownCard) {
+                                if (caseInfo.user == undefined) {
+                                    socket.emit("CasePossible", caseInfo, player, (player.money >= caseInfo.info.prix), this.theOnePlaying);
+                                }
+                                else if (caseInfo.user == player.name) {
+                                    this.finTour();
+                                }
+                                else{
+                                    //Ajouter un emit pour animation de retirer l'argent
+
+                                    let playerPaid: undefined | Players = this.getPlayerByName(caseInfo.user);
+                                    const prix = caseInfo.getPassagePrice();
+
+                                    if(playerPaid != undefined){
+
+                                        if (player.money >= prix && caseInfo.user != undefined && playerPaid) {
+                                            player.money -= prix;
+                                            playerPaid.money += prix;
+                                            this.players.set(this.theOnePlaying, player);
+                                            this.players.set(playerPaid.id, playerPaid);
+                                            this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;
+                                            socket.emit("Paiement", prix, player);
+                                        }
+                                        else{
+                                        }
+                                        console.log("prix: ", prix, player.money);
+                                    }
+                                }
+
+                                    }
+                                }
+                            }
             }
         })
+
+        socket.on("Update", (callBack) => {
+            callBack(undefined, {
+                playersUpdate: Array.from(this.players.entries()),
+                cardsUpdate: Array.from(this.cards.entries()),
+                player: this.players.get(this.theOnePlaying)
+            });
+        })
+
         socket.on("FinTour", () => {
             this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;
         })
@@ -111,8 +183,8 @@ export default class DorianGame extends PTLobby {
             if (player != undefined) {
                 const cardToSell = this.cards.get(player.caseNb);
                 if (cardToSell != undefined && cardToSell instanceof TownCard){
-                if (player.money > cardToSell.info.m0 && cardToSell.user == undefined) {
-                    player.money -= cardToSell.info.m0
+                if (player.money > cardToSell.info.prix && cardToSell.user == undefined) {
+                    player.money -= cardToSell.info.prix
                     player.city.push(cardToSell.name);
                     cardToSell.user = player.name;
                     this.players.set(this.theOnePlaying, player);
@@ -121,7 +193,13 @@ export default class DorianGame extends PTLobby {
                 }
                 }
             }
-            console.log(this.players);
+            // @ts-ignore
+            console.log("Le joueur suivant viens d'acheter: ",player.name, player.city);
+            this.finTour();
+        })
+        socket.on("Faillite", () => {
+            console.log("Faillite");
+
         })
     }
 }
