@@ -34,7 +34,8 @@ interface Players{
     money: number;
     caseNb: number;
     id: number;
-    playerName: string
+    playerName: string;
+    pawnName: string;
 }
 
 
@@ -113,7 +114,7 @@ export default class DorianGame extends SupportController{
             this.updateVariables();
         })
 
-        this.ws.on("Carte chance", (chanceCard: {message: string, cout: number}, player) => {
+        this.ws.on("Carte chance argent", (chanceCard: {message: string, aideReal: number}, player) => {
             (document.getElementsByClassName("chance-texte")[0] as HTMLElement).innerText = ""+chanceCard.message;
             (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "visible";
             (document.querySelector('#Ok') as HTMLElement).onclick = () => {
@@ -122,6 +123,45 @@ export default class DorianGame extends SupportController{
                 this.ws.emit("FinTour");
             }
             this.updateVariables();
+        })
+
+        this.ws.on("Carte chance deplacement", (chanceCard: {message: string, aideReal: {nbCase: number, caseX: number, caseY: number, depart: boolean, prison: boolean}}, player) => {
+            (document.getElementsByClassName("chance-texte")[0] as HTMLElement).innerText = ""+chanceCard.message;
+            (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "visible";
+            (document.querySelector('#Ok') as HTMLElement).onclick = () => {
+                (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "hidden";
+                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + (player.money);
+
+                const tempPion : playerPawn | undefined = (this.getObject("pion" + player.id) as playerPawn | undefined);
+                const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+                if (tempPion){
+                    tempPion.moveTo(chanceCard.aideReal.caseX, chanceCard.aideReal.caseY);
+                }
+                if (tempPrison && chanceCard.aideReal.prison) {
+                    tempPrison.down();
+                }
+                this.ws.emit("FinTour");
+            }
+            this.updateVariables();
+        })
+
+        this.ws.on("joueur en prison", (player) => {
+            const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+            const tempPion : playerPawn | undefined = (this.getObject("pion" + player.id) as playerPawn | undefined);
+            if (tempPion){
+                tempPion.moveTo(10, 0);
+            }
+            if (tempPrison) {
+                tempPrison.down();
+            }
+
+        })
+
+        this.ws.on("retirer prison", () => {
+            const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+            if (tempPrison) {
+                tempPrison.up();
+            }
         })
 
         this.ws.on("UpdateHUD", (money) => {(document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + money;})
@@ -248,9 +288,9 @@ export default class DorianGame extends SupportController{
     }
 
     private setupPawn(loader: GLTFLoader, player: Players) {
-        this.loadGLTFSceneModel(loader, "DorianGame/pion" + player.id + ".glb").then((obj) => {
-            this.registerObject(new playerPawn("pion" + player.id, obj, player.name, player.money));
-            const tempObject = this.getObject("pion" + player.id) as playerPawn | undefined;
+        this.loadGLTFSceneModel(loader, "DorianGame/" + player.pawnName + ".glb").then((obj) => {
+            this.registerObject(new playerPawn(player.pawnName, obj, player.name, player.money));
+            const tempObject = this.getObject(player.pawnName) as playerPawn | undefined;
             this.players.set(player.id, player);
             if (tempObject) for (let i = 0; i < player.caseNb; i++) {
                 tempObject.moveCase(false);
@@ -292,7 +332,7 @@ export default class DorianGame extends SupportController{
     }
 
     selectObject(name: string) {
-
+        //console.log("Debug horrible: ", this.players, (this.selectedObject instanceof de))
         //Abaisse la carte d'information si l'objet cliqué est la même carte que celle deja en mémoire
         if (this.getObject(name) instanceof CaseSelector && name === this.previousObjectSelected?.getName()) {(document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(60vh)";}
         //Sinon on effectue le code classique
@@ -334,8 +374,9 @@ export default class DorianGame extends SupportController{
                 this.players = new Map(response.playersUpdate);
                 this.cards = new Map(response.cardsUpdate);
                 for (let i = 1; i <= this.players.size; i++) {
-                    const tempPion : playerPawn | undefined = (this.getObject("pion" + i) as playerPawn | undefined);
+                    let tempPion: any;
                     const playerEnCours = this.players.get(i) as Players | undefined
+                    if (playerEnCours) {const tempPion : playerPawn | undefined = (this.getObject(playerEnCours.pawnName) as playerPawn | undefined);}
 
                     if (tempPion != undefined && playerEnCours != undefined){
                         tempPion.money = playerEnCours.money;
@@ -347,11 +388,11 @@ export default class DorianGame extends SupportController{
 
     lancerDe() : void {
         this.ws.emit("Lancede", (error : any, response : any) => {
+            console.log("response lancerDe(): ", response);
             this.updateVariables();
             if (error) throw error;
             else{
-                console.log("response lancerDe(): ", response);
-                const tempPion : playerPawn | undefined = (this.getObject("pion" + response.id) as playerPawn | undefined);
+                const tempPion : playerPawn | undefined = (this.getObject(response.player.pawnName) as playerPawn | undefined);
 
                 if (tempPion){
                     for (let i: number = 0; i < response.random; i++) {
