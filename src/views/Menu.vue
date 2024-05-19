@@ -220,8 +220,6 @@ function getGroupInfo() {
       objectRegistry.delete('user'+i);
     }
 
-    console.log('cc', response);
-
     if (response) {
       menuInfo.group = {
         group: response.group,
