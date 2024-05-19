@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
+
+/*
+    Cette feuille de style sera utilisé dans le but de définir des styles normalisées, par défaut,
+    pour des élèments primaires tels que les titres, les paragraphe, les couleurs primaires,
+    secondaires, etc...
+ */
+
+/* Variable de base */
+:root {
+    --primary-color: 255, 229, 99; /* #FFE563FF in decimal RGB */
+    --secondary-color: 200, 107, 250; /* #C77DFFFF in decimal RGB */
+    --selector-color: 250, 250, 255; /* #FAFAFFFF in decimal RGB */
+    --background-color: 249, 255, 249; /* #F9FFF9FF in decimal RGB */
+
+    --text-color: 30, 30, 30; /* #1E1E1E in decimal RGB */
+    --link-color: 107, 103, 117; /* #6B6775 in decimal RGB */
+
+}
+
+/* Reset */
+body, h1, h2, h3, p, a {
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    /* Position et taille par défaut du body */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    overflow-x: hidden; /* tout ce qui dépasse la largeur est cachée => empêche le scroll horizontal */
+
+    /* Définie la police et sa taille par défaut */
+    font-family: Manrope, sans-serif;
+    font-size: 16px;
+
+    /* couleur de l'arrière-plan par défaut */
+    background: rgb(var(--background-color));
+    max-width: 100vw;
+}
+
+/* Définie la police et sa taille */
+h1, .h1 {
+    font-size: 8.5vw;
+}
+
+h2, .h2 {
+    font-size: 3.75vw
+}
+
+h3, .h3 {
+    font-size: 1.6vw;
+}
+
+p, .p {
+    font-size: 1.04vw;
+}
+
+a {
+    font-size: 1.04vw;
+    color: rgb(var(--link-color));
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* Classe par défaut */
+.row {
+    /* définie l'affichage des élèments enfants avec un alignement en ligne */
+    display: flex;
+    flex-direction: row;
+}
+
+.column {
+    /* définie l'affichage des élèments enfants avec un alignement en colonne */
+    display: flex;
+    flex-direction: column;
+}
+
+.user-unselect-any {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
