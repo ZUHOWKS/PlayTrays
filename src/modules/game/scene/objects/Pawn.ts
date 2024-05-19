@@ -1,6 +1,6 @@
 import PTObject from "@/modules/game/scene/objects/PTObject";
 import {BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3} from "three";
-import {AnimationQueue, type AnimationQueueInterface} from "@/modules/utils/AnimationQueue";
+import {AnimationQueue, type AnimationQueueInterface} from "@/modules/utils/scene/AnimationQueue";
 
 
 export default class Pawn extends PTObject implements AnimationQueueInterface {
