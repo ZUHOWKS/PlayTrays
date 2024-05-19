@@ -156,7 +156,8 @@ function init(): void {
  * Mettre à jour le renderer
  */
 function updateRenderer(): void {
-  renderer.value.setSize(width.value, height.value); //
+  renderer.value.setSize(width.value, height.value);
+  renderer.value.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   composer.setSize(width.value, height.value);
 }
 
@@ -328,7 +329,11 @@ function animate() {
   if (!showGMenu.value) renderOutlineSelection();
 
   controls.value.update(); // met à jour le contrôle
+
+  updateCamera(); // mise à jour de la caméra
+  updateRenderer(); // mise à jour du renderer
   updateRender(); // mise à jour du rendu
+
   requestAnimationFrame(animate); // permet de relancer la fonction à la frame suivante
 }
 
