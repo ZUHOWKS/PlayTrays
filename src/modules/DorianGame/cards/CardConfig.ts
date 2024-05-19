@@ -3,7 +3,7 @@ export const cardConfig = {
     chances: [4, 7, 12, 17, 28, 22, 33, 36],
     batailles: [2, 5, 15, 25, 35, 38],
     start: 0,
-    prison: 0,
+    prison: 10,
     bank: 20,
     war: 30,
     villes: [
@@ -14,7 +14,7 @@ export const cardConfig = {
         {caseNb: 8,  user: undefined, nameCity: "Munich", infoCard: {m0 : 600, m1 : 3000, m2 : 9000, m3 : 27000, m4 : 40000, m5 : 55000, m6 : 5000, maison : 5000, prix : 10000, color: "#6ecce1"}},
         {caseNb: 9,  user: undefined, nameCity: "Hambourg", infoCard: {m0 : 800, m1 : 4000, m2 : 10000, m3 : 30000, m4 : 45000, m5 : 60000, m6 : 6000, maison : 5000, prix : 12000, color: "#6ecce1"}},
 
-        {caseNb: 11,  user: undefined, nameCity: "Hambourg", infoCard: {m0 : 1000, m1 : 5000, m2 : 15000, m3 : 45000, m4 : 62500, m5 : 75000, m6 : 7000, maison : 10000, prix : 14000, color: "#9215a7"}},
+        {caseNb: 11,  user: undefined, nameCity: "Londres", infoCard: {m0 : 1000, m1 : 5000, m2 : 15000, m3 : 45000, m4 : 62500, m5 : 75000, m6 : 7000, maison : 10000, prix : 14000, color: "#9215a7"}},
         {caseNb: 13,  user: undefined, nameCity: "Liverpool", infoCard: {m0 : 1000, m1 : 5000, m2 : 15000, m3 : 45000, m4 : 62500, m5 : 75000, m6 : 7000, maison : 10000, prix : 14000, color: "#9215a7"}},
         {caseNb: 14,  user: undefined, nameCity: "Birmingham", infoCard: {m0 : 1200, m1 : 6000, m2 : 18000, m3 : 50000, m4 : 70000, m5 : 90000, m6 : 8000, maison : 10000, prix : 16000, color: "#9215a7"}},
 

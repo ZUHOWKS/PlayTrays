@@ -10,15 +10,18 @@ export interface Players{
     name: string;
     city: string[];
     exitPrison: number;
+    tourInprison: number;
     money: number;
     caseNb: number;
     id: number
     playerName: string;
+    pawnName: string;
 }
 
 export interface chance{
     message: string,
-    cout: number
+    type: string,
+    aideReal: any
 }
 
 export default class DorianGame extends PTLobby {
@@ -29,19 +32,23 @@ export default class DorianGame extends PTLobby {
     theOnePlaying: number = 1;
     chances: Array<chance>;
     idOfPlayers: Array<number>;
+    register: number = 1;
 
 
     constructor(uuid: string, game: string, visibility: "public" | "private", server: PTServer) {
         super(uuid, game, visibility, server);
         this.players = new Map();
         this.cards = new Map();
-        this.chances = new Array<chance>({message: "test 10 000", cout: 10000}, {message: "test -10 000", cout: -10000});
+        this.chances = new Array<chance>(
+            //{message: "test 10 000",type: "argent", aideReal: 10000},
+            //{message: "test -10 000", type: "argent", aideReal: -10000},
+            {message: "Vous avez commis une fraude fiscale d'un grande ampleur avec un certain Franck Verdonck, \nvous allez en prison sans toucher les £20 000 de la case départ.", type: "deplacement", aideReal: {nbCase: 10, caseX: 10, caseY: 0, depart: false, prison: true}});
         this.idOfPlayers = new Array<number>();
         this.setupGame();
 
     }
 
-    protected finTour(): void{this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;}
+    protected finTour(): void{this.theOnePlaying = (this.theOnePlaying >= this.players.size) ? 1 : this.theOnePlaying + 1;}
 
     protected getPlayerByName(name: string): Players | undefined{
         let playerreturn: Players | undefined = undefined;
@@ -75,52 +82,76 @@ export default class DorianGame extends PTLobby {
 
     registerNewSocket(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void {
         this.sockets.set(socket.data.user, socket);
-        if (!(this.players.get(socket.data.user))) {
-            this.idOfPlayers.push(socket.data.user);
-            this.players.set(socket.data.user, {
+
+        if(!(this.idOfPlayers.includes(socket.data.user))) this.idOfPlayers.push(socket.data.user);
+
+        if (!(this.players.get(this.idOfPlayers.indexOf(socket.data.user)+1))) {
+
+            console.log(this.idOfPlayers, socket.data.user);
+            this.players.set((this.register), {
                 name: "User" + socket.data.user,
                 city: [],
                 exitPrison: 0,
+                tourInprison: 0,
                 money: 150000,
                 caseNb: 0,
                 id: this.idOfPlayers.indexOf(socket.data.user)+1,
                 playerName: "User" + (this.idOfPlayers.indexOf(socket.data.user)+1),
+                pawnName: "pion" + (this.idOfPlayers.indexOf(socket.data.user)+1)
             });
+            this.register += 1;
+
 
         }
 
         socket.join(this.uuid);
-
+        //console.log("debug: ", this.players, socket.data.user +"\n");
         for (let i = 1; i <= this.players.size; i++) {
             this.server.io.to(this.uuid).emit("PlayerJoin", this.players.get(i));
+
         }
 
         socket.emit("UpdateHUD", this.players.get(this.idOfPlayers.indexOf(socket.data.user))?.money);
 
         socket.on("Lancede", (callBack) => {
 
-            let r = (this.hasDice) ? Math.floor(Math.random() * 11 + 1) : Math.floor(Math.random() * 5 + 1);
-
-            if (this.idOfPlayers.indexOf(socket.data.user)+1 == this.theOnePlaying && this.players.get(this.theOnePlaying)) {
+            if ((this.idOfPlayers.indexOf(socket.data.user) + 1) == this.theOnePlaying && this.players.get(this.theOnePlaying)) {
+                console.log("aaaaaaaaaaaaaaah")
                 const player = this.players.get(this.theOnePlaying);
 
+                let de1 = Math.floor(Math.random() * 5 + 1);
+                let de2 = Math.floor(Math.random() * 5 + 1);
+                let r = (this.hasDice) ? de1 + de2 : de1;
+
+
+
                 if (player != undefined) {
-                    player.caseNb += r;
 
-                    this.verifStart(player, socket);
+                    if(de1 == de2 && player.tourInprison>0) {
+                        this.server.io.to(this.uuid).emit("retirer prison");
+                        player.tourInprison = 0;
+                    }
 
-                    this.players.set(this.theOnePlaying, player);
+                    console.log("Joueur, dés", player.name, player.tourInprison, de1, de2);
 
-                    console.log("La carte: ", player.caseNb, "\nLe joueur: ", player.playerName, player.money);
-                    let caseInfo = this.cards.get(player.caseNb)
-                    if (caseInfo) {
+                    if (de1 == de2 || player.tourInprison == 0){
+
+
+                        player.caseNb += r;
+
+                        this.verifStart(player, socket);
+
+                        this.players.set(this.theOnePlaying, player);
+
+                        console.log("La carte: ", player.caseNb, "\nLe joueur: ", player.playerName, player.money);
+                        let caseInfo = this.cards.get(player.caseNb)
+                        if (caseInfo) {
 
                             this.server.io.to(this.uuid).emit("pawnMove", this.theOnePlaying, r);
 
-                            if (caseInfo.type == "chances"){
+                            if (caseInfo.type == "chances") {
                                 this.caseChance(caseInfo, player, socket);
-                                }
-                            else if (caseInfo.type == "war") this.finTour();
+                            } else if (caseInfo.type == "war") this.finTour();
                             else if (caseInfo.type == "bank") this.finTour();
                             else if (caseInfo.type == "start") this.finTour();
                             else if (caseInfo.type == "bataille") this.finTour();
@@ -128,10 +159,19 @@ export default class DorianGame extends PTLobby {
                             else if (caseInfo instanceof TownCard) {
                                 this.caseTown(caseInfo, player, socket);
 
-                                    }
-                                }
                             }
+                        }
+                    }
+                    else if (de1 != de2 && player.tourInprison > 0){
+
+                        console.log("Il vous reste ", player.tourInprison-1, " tours en prison")
+                        player.tourInprison -=1;
+                        if (player.tourInprison == 0){this.server.io.to(this.uuid).emit("retirer prison");}
+                        this.finTour()
+                    }
+                }
             }
+
         })
 
         socket.on("Update", (callBack) => {
@@ -145,6 +185,7 @@ export default class DorianGame extends PTLobby {
         socket.on("FinTour", () => {
             this.finTour()
         })
+
         socket.on("Achat", () => {
             const player = this.players.get(this.theOnePlaying);
 
@@ -169,9 +210,22 @@ export default class DorianGame extends PTLobby {
 
     protected caseChance(caseInfo: Card, player: Players, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
         const chanceValue = this.chances[(Math.floor(Math.random()*this.chances.length))];
-        player.money += chanceValue.cout;
-        this.players.set(this.theOnePlaying, player);
-        socket.emit("Carte chance", chanceValue, player)
+        if (chanceValue.type == "argent") {
+            player.money += chanceValue.aideReal;
+            this.players.set(this.theOnePlaying, player);
+            socket.emit("Carte chance argent", chanceValue, player)
+        }
+        else if(chanceValue.type == "deplacement") {
+            if (player.caseNb >= chanceValue.aideReal.nbCase && chanceValue.aideReal.depart) {
+                player.money += 20000;
+            }
+            if (chanceValue.aideReal.prison) player.tourInprison = 3;
+            player.caseNb = chanceValue.aideReal.nbCase;
+            this.players.set(this.theOnePlaying, player);
+            socket.emit("Carte chance deplacement", chanceValue, player);
+            this.emitWithout(socket, "joueur en prison", player);
+        }
+
     }
 
     private achat(player: Players) {
