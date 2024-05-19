@@ -359,6 +359,7 @@ init(); //lancer l'initialisation de la scène Three
 
 <template>
   <LoaderFiller :show-loader="showLoader"/>
+  <svg @click="() => showGMenu = true" xmlns="http://www.w3.org/2000/svg" class="gmenu-button b " viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="38" d="M80 160h352M80 256h352M80 352h352"/></svg>
   <GMenu ref="gMenu" v-if="showGMenu" :leave-party="leaveParty" :show-g-menu-on-press="showGMenuOnPress"/>
   <div class="game">
     <canvas ref="experience"/>
@@ -393,6 +394,17 @@ init(); //lancer l'initialisation de la scène Three
   position: fixed;
   overflow: hidden;
   z-index: 1;
+}
+
+.gmenu-button {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 7vh;
+  height: 7vh;
+  margin: 0 0.5%;
+  color: rgba(0,0,0,0.65);
+  cursor: pointer;
 }
 
 </style>
