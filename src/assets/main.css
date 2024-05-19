@@ -12,7 +12,7 @@ button {
     color: rgb(var(--text-color));
     background: rgb(var(--primary-color));
     cursor: pointer;
-    transition: all .25s;
+    transition: all .25s, width 0s, height 0s, font-size 0s;
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.115);
 }
 
@@ -28,4 +28,12 @@ a {
 
 a:hover {
     color: rgb(var(--text-color));
+}
+
+svg.b {
+    transition: transform .2s ease-in-out, color .2s ease-in-out;
+}
+svg.b:hover {
+    transform: scale(1.05);
+    color: rgb(var(--selector-color));
 }
