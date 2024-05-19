@@ -1,6 +1,5 @@
 import SupportController from "@/modules/game/scene/SupportController";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import Tray from "@/modules/game/scene/objects/Tray";
 import {
     BoxGeometry,
@@ -17,6 +16,8 @@ import type {Socket} from "socket.io-client";
 import Pawn from "@/modules/game/scene/objects/Pawn";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import ActuatorObject from "@/modules/game/scene/objects/ActuatorObject";
+import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
+
 
 interface Action {
     pawn: string;
@@ -41,18 +42,16 @@ export default class CheckersClient extends SupportController {
      * Permet d'initialiser tous les évènements liés à la partie
      */
     setup(loaderFiller?: Ref<boolean>): void {
-        // loader
-        const loader = new GLTFLoader();
 
         // on génére par défaut le plateau de jeu
-        this.loadGLTFSceneModel(loader, "checkers/checkers_tray.glb").then((obj) => {
+        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "checkers/checkers_tray.glb").then((obj) => {
             obj.name = "checkersTray";
             this.registerObject(new Tray(obj.name, obj));
         });
 
         // on précharge les modèles des pions
-        const modelWhitePawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_white.glb")
-        const modelBlackPawn: Promise<Object3D> = this.loadGLTFSceneModel(loader, "checkers/pawn_black.glb");
+        const modelWhitePawn: Promise<Object3D> = ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "checkers/pawn_white.glb")
+        const modelBlackPawn: Promise<Object3D> = ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "checkers/pawn_black.glb");
 
         // configuration de la partie selon le serveur
         this.ws.on("setup game", async (pawns: { name: string; x: number; y: number; z: number; dead: boolean; queen: boolean }[], gameInfo: {team: string; canPlay: boolean, timer: number}, callback) => {
