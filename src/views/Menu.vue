@@ -19,7 +19,6 @@ import {ADONIS_URL} from "@/config/serverConfig";
 import * as THREE from "three";
 import {useWindowSize} from "@vueuse/core";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
-import type {Object3D} from "three";
 
 const router: Router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -436,7 +435,7 @@ function showMatchmakingBanner() {
 function showSocialWidget() {
   if (wsocial.value) {
     if (menuInfo.showSocialWidget) {
-      wsocial.value.style.transform = "translateX(16vw)";
+      wsocial.value.style.transform = "translateX(300px)";
     } else {
       getFriendList()
       wsocial.value.style.transform = "translateX(0)"
@@ -547,7 +546,7 @@ init();
 
       <!-- Affiche de manière conditionnel un des composants -->
       <MainMenu v-if="menuInfo.page == 'main'" :menu-info="menuInfo" :start-matchmaking="startMatchmaking">
-        <img src="@/scene_assets/textures/sky/casa/casa_default_sky.jpg" alt="casa default background">
+        <img src="@/assets/image/casa/casa_default_sky.jpg" alt="casa default background">
       </MainMenu>
     </section>
   </main>
@@ -657,12 +656,12 @@ init();
     scrollbar-width: thin;
 
     height: 100vh;
-    width: 15vw;
+    width: 300px;
     position: fixed;
     z-index: 3;
     top: 0;
     right: 0;
-    transform: translateX(16vw);
+    transform: translateX(300px);
     background-color: rgb(var(--primary-color));
     transition: transform .2s ease-in-out;
     box-shadow: 0 0 15px rgba(0,0,0, 0.2);

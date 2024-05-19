@@ -104,16 +104,16 @@ async function getAllFriendInvitations(): Promise<void> {
   }
 
   .close-button {
-    height: 8vh;
+    height: 75px;
     cursor: pointer;
     position: absolute;
-    right: .5vw;
+    right: 10px;
   }
 
   .friend-card {
     margin: 2px;
     height: 10vh;
-    width: 15vw;
+    width: 100%;
     border-top: solid 3px;
     border-bottom: solid 3px;
     border-color: rgba(var(--background-color), 0.65);
@@ -182,7 +182,7 @@ async function getAllFriendInvitations(): Promise<void> {
   }
 
   .social-nav-bar>.nav-icon {
-    height: 2.5vw;
+    height: 45px;
     padding: 4%;
     width: 100%;
     cursor: pointer;
