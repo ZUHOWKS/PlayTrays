@@ -62,7 +62,7 @@ function updateRender(): void {
 /**
  * Boucle qui rafraîchie le rendu de la scène.
  */
-function animate(time) {
+function animate(time: number) {
   for (let i = 1; i <= 4; i++) {
     const userObj: THREE.Object3D | undefined = objectRegistry.get('user'+i);
     if (userObj) {
@@ -266,7 +266,7 @@ function init() {
     setupLights();
 
     // Lancer la boucle
-    animate();
+    animate(0);
 
     generateCasa().then(() => {
       AccountServices.getUserInfos().then((response) => {

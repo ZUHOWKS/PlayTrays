@@ -9,13 +9,18 @@ const selectedModeBanner: Ref<HTMLImageElement | null> = ref(null)
 const showModeSelection: Ref<boolean> = ref(false)
 
 function setBannerMode(path_src: any) {
-  selectedModeBanner.value.src = path_src;
-  selectedModeBanner.value.style.visibility = 'visible'
+  if (selectedModeBanner.value) {
+    selectedModeBanner.value.src = path_src;
+    selectedModeBanner.value.style.visibility = 'visible'
+  }
 }
 
 onMounted(() => {
-  selectedModeBanner.value.src = '';
-  selectedModeBanner.value.style.visibility = 'hidden'
+  if (selectedModeBanner.value) {
+    selectedModeBanner.value.src = '';
+    selectedModeBanner.value.style.visibility = 'hidden'
+  }
+
 })
 
 </script>
