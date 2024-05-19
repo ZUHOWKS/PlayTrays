@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type {PopupObject} from "@/modules/utils/Popup";
 
 const props = defineProps(['popup'])
 
@@ -55,7 +54,7 @@ function closePopup() {
 
 .container::after {
   content: '';
-  transform-origin: -2.5% 0%;
+  transform-origin: -2.5% 0;
   transform: scaleX(0);
   position: absolute;
   bottom: 0;

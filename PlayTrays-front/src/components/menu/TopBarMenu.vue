@@ -104,7 +104,7 @@ const router = useRouter();
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.075);
+    box-shadow: 0 0 10px rgba(0,0,0,0.075);
     background-color: rgb(var(--primary-color));
     cursor: pointer;
   }

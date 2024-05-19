@@ -1,7 +1,6 @@
-import {Object3D, PerspectiveCamera, Scene} from "three";
+import {PerspectiveCamera, Scene} from "three";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import type {Ref} from "vue";
-import {type GLTF, GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
 import type {Socket} from "socket.io-client";

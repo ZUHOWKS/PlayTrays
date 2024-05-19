@@ -151,6 +151,7 @@ export default class CheckersClient extends SupportController {
 
             // évènement de fin de partie
             this.ws.on('end game', (whoWin) => {
+                //TODO: Écran de fin de partie
                 setTimeout(() => this.ws.disconnect(), 30000)
             })
         })
@@ -163,7 +164,7 @@ export default class CheckersClient extends SupportController {
      * @param pawns liste des pions
      * @param modelWhitePawn modèle des pions blanc
      * @param modelBlackPawn modèles des pions noire
-     * @param team équipe du joueur
+     * @param gameInfo informations de parties
      * @private
      */
     private async setupGame(pawns: {

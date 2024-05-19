@@ -189,7 +189,7 @@ main {
   align-items: center;
   width: 60%;
   height: 30vw;
-  box-shadow: 0px 8px 20px rgba(0,0,0, 0.15);
+  box-shadow: 0 8px 20px rgba(0,0,0, 0.15);
   overflow: hidden;
 }
 

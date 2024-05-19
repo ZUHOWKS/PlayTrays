@@ -4,19 +4,19 @@ import {computed, onMounted, type Ref, ref} from "vue";
 import {useWindowSize} from "@vueuse/core";
 import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
-import TrayGame from "@/modules/game/TrayGame";
+import TrayGame from "../modules/game/TrayGame";
 import {io, type Socket} from "socket.io-client";
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
 import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
 import {OutlinePass} from "three/examples/jsm/postprocessing/OutlinePass.js";
 import type {UserInterface} from "@/modules/utils/UserInterface";
 import {useRouter} from "vue-router";
-import AccountServices from "@/services/account_services";
-import type PTObject from "@/modules/game/scene/objects/PTObject";
+import AccountServices from "../services/account_services";
+import type PTObject from "../modules/game/scene/objects/PTObject";
 import type {LobbyInterface} from "@/modules/utils/LobbyInterface";
-import LoaderFiller from "@/components/utils/LoaderFiller.vue";
-import CheckersHUD from "@/components/game/CheckersHUD.vue";
-import GMenu from "@/components/game/GMenu.vue";
+import LoaderFiller from "../components/utils/LoaderFiller.vue";
+import CheckersHUD from "../components/game/CheckersHUD.vue";
+import GMenu from "../components/game/GMenu.vue";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
 
 const router = useRouter();
@@ -135,10 +135,10 @@ function init(): void {
     addEventListener('keydown', (e) => showGMenuOnPress(e))
   });
 
-  AccountServices.getLobby().then((responseLobby) => {
+  AccountServices.getLobby().then((responseLobby: any) => {
     const lData: LobbyInterface = responseLobby.data as LobbyInterface;
     console.log(lData);
-    AccountServices.getUserInfos().then((responseUser) => {
+    AccountServices.getUserInfos().then((responseUser: any) => {
       const uData: UserInterface = responseUser.data as UserInterface;
       user.value.id = uData.id;
       user.value.username = uData.username;

@@ -45,7 +45,7 @@
   padding: 2% 3vw;
   z-index: 3;
   background: rgb(var(--background-color));
-  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.35);
 
   display: flex;
   flex-direction: column;
