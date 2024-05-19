@@ -71,16 +71,22 @@ export default class DorianGame extends SupportController{
     // Permet d'initialiser le jeu DorianGame lors du lancement de la page
     setup(): void {
         const loader = new GLTFLoader();
-        this.ws.on("PlayerJoin", (player : Players) : void => {
-            this.loadGLTFSceneModel(loader, "DorianGame/pion" + player.id + ".glb").then((obj) => {
-                this.registerObject(new playerPawn("pion" + player.id, obj, player.name, player.money));
-                const tempObject = this.getObject("pion" + player.id) as playerPawn | undefined;
-                this.players.set(player.id, player);
-                if (tempObject) for (let i = 0; i < player.caseNb; i++){
-                     tempObject.moveCase(false);
-                }
 
-            });
+        this.setupCard();
+
+        //Ajout d'un plateau
+        this.setupTray(loader);
+
+        //Ajout de la prison
+        this.setupPrison(loader);
+
+        // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
+        this.setupPlanes();
+
+        this.setupDe();
+
+        this.ws.on("PlayerJoin", (player : Players) : void => {
+            this.setupPawn(loader, player);
             this.updateVariables();
         })
 
@@ -121,17 +127,9 @@ export default class DorianGame extends SupportController{
         this.ws.on("UpdateHUD", (money) => {(document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + money;})
 
         this.ws.on("CasePossible", (caseInfo: any, player: Players, achat: boolean, id: number) => {
-            (document.getElementsByClassName("name")[1] as HTMLElement).innerText = ""+caseInfo.name;
-            (document.getElementsByClassName("title")[1] as HTMLElement).style.backgroundColor = ""+caseInfo.info.color;
-            (document.getElementsByClassName("price-default")[1] as HTMLElement).innerText = "£"+caseInfo.info.m0;
-            (document.getElementsByClassName("price-1")[1] as HTMLElement).innerText = "£"+caseInfo.info.m1;
-            (document.getElementsByClassName("price-2")[1] as HTMLElement).innerText = "£"+caseInfo.info.m2;
-            (document.getElementsByClassName("price-3")[1] as HTMLElement).innerText = "£"+caseInfo.info.m3;
-            (document.getElementsByClassName("price-4")[1] as HTMLElement).innerText = "£"+caseInfo.info.m4;
-            (document.getElementsByClassName("price-5")[1] as HTMLElement).innerText = "£"+caseInfo.info.m5;
-            (document.getElementsByClassName("price-hotel")[1] as HTMLElement).innerText = "£"+caseInfo.info.maison + "\nplus 4 maisons";
-            (document.getElementsByClassName("price-maison")[1] as HTMLElement).innerText = "£"+caseInfo.info.maison;
-            (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "visible";
+
+            this.displayCardtoChoose(caseInfo);
+
             (document.querySelector('#Buy') as HTMLElement).onclick = () => {
                 console.log("debug achat: ", achat, caseInfo.info.prix, player.money);
                 if (achat){
@@ -156,6 +154,81 @@ export default class DorianGame extends SupportController{
             }
         })
 
+
+
+        this.updateVariables();
+    }
+
+    private displayCardtoChoose(caseInfo: Card){
+        (document.getElementsByClassName("name")[1] as HTMLElement).innerText = ""+caseInfo.name;
+        (document.getElementsByClassName("title")[1] as HTMLElement).style.backgroundColor = ""+caseInfo.info.color;
+        (document.getElementsByClassName("price-default")[1] as HTMLElement).innerText = "£"+caseInfo.info.m0;
+        (document.getElementsByClassName("price-1")[1] as HTMLElement).innerText = "£"+caseInfo.info.m1;
+        (document.getElementsByClassName("price-2")[1] as HTMLElement).innerText = "£"+caseInfo.info.m2;
+        (document.getElementsByClassName("price-3")[1] as HTMLElement).innerText = "£"+caseInfo.info.m3;
+        (document.getElementsByClassName("price-4")[1] as HTMLElement).innerText = "£"+caseInfo.info.m4;
+        (document.getElementsByClassName("price-5")[1] as HTMLElement).innerText = "£"+caseInfo.info.m5;
+        (document.getElementsByClassName("price-hotel")[1] as HTMLElement).innerText = "£"+caseInfo.info.maison + "\nplus 4 maisons";
+        (document.getElementsByClassName("price-maison")[1] as HTMLElement).innerText = "£"+caseInfo.info.maison;
+        (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "visible";
+    }
+
+    private setupDe() {
+        const geometry = new BoxGeometry(2, 2, 2);
+        const material = new MeshBasicMaterial({color: 0x000000});
+        const cube = new Mesh(geometry, material);
+        this.registerObject(new de("dé", cube));
+    }
+
+    private setupPlanes() {
+        //Ajout des plans des coins
+        this.addPlaneOnTray(2.9, 2.9, 9.48458, 9.53537, "StartCard", 0);
+        this.addPlaneOnTray(2.92, 2.92, -9.48716, 9.529, "PrisonCard", 10);
+        this.addPlaneOnTray(2.92, 2.92, -9.48716, -9.529, "BankCard", 20);
+        this.addPlaneOnTray(2.92, 2.92, 9.48716, -9.529, "WarCard", 30);
+
+        //Boucle pour setup les plans restants
+        for (let i: number = 0; i < 9; ++i) {
+            this.addPlaneOnTray(1.71969, 2.88127, 7.10946 - 1.7767 * i, 9.54623, "card_" + (i + 1), i + 1);
+            this.addPlaneOnTray(2.89, 1.74, -9.49878, 7.0904 - 1.7788 * i, "card_" + (i + 11), i + 11);
+            this.addPlaneOnTray(1.71969, 2.88127, -7.10946 + 1.7767 * i, -9.49983, "card_" + (i + 21), i + 21);
+            this.addPlaneOnTray(2.89, 1.74, 9.4985, -7.14 + 1.7788 * i, "card_" + (i + 31), i + 31);
+        }
+    }
+
+    private setupPrison(loader: GLTFLoader) {
+        this.loadGLTFSceneModel(loader, "DorianGame/prison.glb").then((obj) => {
+            this.registerObject(new prison("Prison", obj))
+        });
+    }
+
+    private setupTray(loader: GLTFLoader) {
+        this.loadGLTFSceneModel(loader, "DorianGame/dorianTray.glb").then((obj) => {
+            const tray = new Tray("DorianTray", obj);
+
+            //Rend le plateau inselectable
+            tray.selectable = false;
+            this.registerObject(tray)
+        });
+    }
+
+    private displayTownInformation(tempCard: Card){
+        (tempCard.user != undefined)? (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "La carte appartient actuellement à "+tempCard.user : (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "Aucune personne ne possède cette carte actuellement";
+        (document.getElementsByClassName("name")[0] as HTMLElement).innerText = ""+tempCard.name;
+        (document.getElementsByClassName("title")[0] as HTMLElement).style.backgroundColor = tempCard.info.color;
+        (document.getElementsByClassName("price-default")[0] as HTMLElement).innerText = "£"+tempCard.info.m0;
+        (document.getElementsByClassName("price-1")[0] as HTMLElement).innerText = "£"+tempCard.info.m1;
+        (document.getElementsByClassName("price-2")[0] as HTMLElement).innerText = "£"+tempCard.info.m2;
+        (document.getElementsByClassName("price-3")[0] as HTMLElement).innerText = "£"+tempCard.info.m3;
+        (document.getElementsByClassName("price-4")[0] as HTMLElement).innerText = "£"+tempCard.info.m4;
+        (document.getElementsByClassName("price-5")[0] as HTMLElement).innerText = "£"+tempCard.info.m5;
+        (document.getElementsByClassName("hyp")[0] as HTMLElement).innerText = "£"+tempCard.info.m6;
+        (document.getElementsByClassName("price-hotel")[0] as HTMLElement).innerText = "£"+tempCard.info.maison + "\nplus 4 maisons";
+        (document.getElementsByClassName("price-maison")[0] as HTMLElement).innerText = "£"+tempCard.info.maison;
+        (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(0vh)";
+    }
+
+    private setupCard() {
         this.cards.set(cardConfig.start, new Card(cardConfig.start, "start"))
         this.cards.set(cardConfig.prison, new Card(cardConfig.prison, "prison"))
         this.cards.set(cardConfig.bank, new Card(cardConfig.bank, "bank"))
@@ -172,44 +245,21 @@ export default class DorianGame extends SupportController{
         cardConfig.villes.forEach((town) => {
             this.cards.set(town.caseNb, new TownCard(town.caseNb, town.nameCity, town.infoCard))
         })
-
-        //Ajout d'un plateau
-        this.loadGLTFSceneModel(loader, "DorianGame/dorianTray.glb").then((obj) => {
-            const tray = new Tray("DorianTray", obj);
-
-            //Rend le plateau inselectable
-            tray.selectable = false;
-            this.registerObject(tray)
-        });
-
-        //Ajout de la prison
-        this.loadGLTFSceneModel(loader, "DorianGame/prison.glb").then((obj) => {
-            this.registerObject(new prison("Prison", obj))
-        });
-
-        // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
-        //Ajout des plans des coins
-        this.addPlaneOnTray(2.9, 2.9, 9.48458, 9.53537, "StartCard", 0);
-        this.addPlaneOnTray(2.92, 2.92, -9.48716, 9.529, "PrisonCard", 10);
-        this.addPlaneOnTray(2.92, 2.92, -9.48716, -9.529, "BankCard", 20);
-        this.addPlaneOnTray(2.92, 2.92, 9.48716, -9.529, "WarCard", 30);
-
-        //Boucle pour setup les plans restants
-        for (let i : number = 0; i < 9; ++i) {
-            this.addPlaneOnTray(1.71969, 2.88127, 7.10946 - 1.7767 * i, 9.54623, "card_" + (i+1), i+1);
-            this.addPlaneOnTray(2.89, 1.74, -9.49878, 7.0904 - 1.7788 * i, "card_" + (i+11), i+11);
-            this.addPlaneOnTray(1.71969, 2.88127, -7.10946 + 1.7767*i, -9.49983, "card_" + (i+21), i+21);
-            this.addPlaneOnTray(2.89, 1.74, 9.4985, -7.14 +1.7788 * i, "card_" + (i+31), i+31);
-        }
-        const geometry = new BoxGeometry(2,2,2);
-        const material = new MeshBasicMaterial( { color: 0x000000 } );
-        const cube = new Mesh( geometry, material );
-        this.registerObject(new de("dé", cube));
-
-        this.updateVariables();
     }
 
-    //Cree un plan et le register
+    private setupPawn(loader: GLTFLoader, player: Players) {
+        this.loadGLTFSceneModel(loader, "DorianGame/pion" + player.id + ".glb").then((obj) => {
+            this.registerObject(new playerPawn("pion" + player.id, obj, player.name, player.money));
+            const tempObject = this.getObject("pion" + player.id) as playerPawn | undefined;
+            this.players.set(player.id, player);
+            if (tempObject) for (let i = 0; i < player.caseNb; i++) {
+                tempObject.moveCase(false);
+            }
+
+        });
+    }
+
+//Cree un plan et le register
     addPlaneOnTray(width : number, height : number, posx : number, posz : number, objectName : string, nbCase : number) : void {
         const geometry = new PlaneGeometry(width, height);
         const material = new MeshBasicMaterial( { color: 0x000000 } );
@@ -264,23 +314,10 @@ export default class DorianGame extends SupportController{
                 } else if (tempCard.type == "chance") {
                 } else if (tempCard.type == "bataille") {
                 } else if (tempCard.type == "ville"){
+                    //Convertir
                     //Ajoute les parametres propres aux villes dans la carte d'information
-                    (tempCard.user != undefined)? (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "La carte appartient actuellement à "+tempCard.user : (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "Aucune personne ne possède cette carte actuellement";
-                    (document.getElementsByClassName("name")[0] as HTMLElement).innerText = ""+tempCard.name;
-                    (document.getElementsByClassName("title")[0] as HTMLElement).style.backgroundColor = tempCard.info.color;
-                    (document.getElementsByClassName("price-default")[0] as HTMLElement).innerText = "£"+tempCard.info.m0;
-                    (document.getElementsByClassName("price-1")[0] as HTMLElement).innerText = "£"+tempCard.info.m1;
-                    (document.getElementsByClassName("price-2")[0] as HTMLElement).innerText = "£"+tempCard.info.m2;
-                    (document.getElementsByClassName("price-3")[0] as HTMLElement).innerText = "£"+tempCard.info.m3;
-                    (document.getElementsByClassName("price-4")[0] as HTMLElement).innerText = "£"+tempCard.info.m4;
-                    (document.getElementsByClassName("price-5")[0] as HTMLElement).innerText = "£"+tempCard.info.m5;
-                    (document.getElementsByClassName("hyp")[0] as HTMLElement).innerText = "£"+tempCard.info.m6;
-                    (document.getElementsByClassName("price-hotel")[0] as HTMLElement).innerText = "£"+tempCard.info.maison + "\nplus 4 maisons";
-                    (document.getElementsByClassName("price-maison")[0] as HTMLElement).innerText = "£"+tempCard.info.maison;
 
-
-
-                    (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(0vh)";
+                    this.displayTownInformation(tempCard);
                 }
         }
         }
