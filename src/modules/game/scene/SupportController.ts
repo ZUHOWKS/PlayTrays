@@ -62,27 +62,6 @@ export default abstract class SupportController {
     }
 
     /**
-     * Charger la scène 3D du modèle.
-     * @param loader Loader utilisé pour charger les modèles .glb/.gltf
-     * @param model chemin d'accès au modèle depuis le dossier "models/"
-     */
-    async loadGLTFSceneModel(loader: GLTFLoader, model: string): Promise<Object3D> {
-        return new Promise((resolve, reject) => {
-            loader.load(
-                new URL("/src/scene_assets/models/" + model, import.meta.url).href,
-                function (gltf: GLTF): void {
-                    resolve(gltf.scene);
-                },
-                undefined,
-                function (error: any): void {
-                    console.error(error);
-                    reject(error);
-                }
-            );
-        });
-    };
-
-    /**
      * Obtenir un objet enregistré avec son name comme identifiant
      *
      * @param name identifiant de l'objet

@@ -17,6 +17,7 @@ import type {LobbyInterface} from "@/modules/utils/LobbyInterface";
 import LoaderFiller from "@/components/utils/LoaderFiller.vue";
 import CheckersHUD from "@/components/game/CheckersHUD.vue";
 import GMenu from "@/components/game/GMenu.vue";
+import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -157,7 +158,6 @@ function init(): void {
 function updateRenderer(): void {
   renderer.value.setSize(width.value, height.value); //
   composer.setSize(width.value, height.value);
-
 }
 
 /**
@@ -207,7 +207,7 @@ function setupLight(): void {
 function setupModels(): void {
   const skyBox: THREE.Mesh = new THREE.Mesh(
       new THREE.BoxGeometry( 900, 900, 900),
-      getSkyMeshMaterial("anime")
+      ModelLoader.getSkyMeshMaterial("anime")
   )
   skyBox.name = "skyBox";
   scene.add(skyBox); // ajout de la SkyBox
@@ -235,33 +235,6 @@ function establishConnectionWithGameServer(uuid: string, game: string,  url: str
 
   gameTray = new TrayGame(game, "waiting", user, ws, game, scene, camera, controls);
   gameTray.setup(showLoader);
-}
-
-/**
- * Permet d'obtenir le matériel texturé de la SkyBox
- * @param skyTextureName Nom du pack de la texture pour la skyBox
- */
-function getSkyMeshMaterial(skyTextureName: string): THREE.MeshBasicMaterial[] {
-
-  const textureSkyPath: string = "/src/scene_assets/textures/sky/";
-
-  // chargement des textures
-  const textures: THREE.Texture[] = [
-      new THREE.TextureLoader().load(new URL(textureSkyPath + skyTextureName + "/" + skyTextureName + "_ft.jpg", import.meta.url).href),
-      new THREE.TextureLoader().load(new URL(textureSkyPath + skyTextureName + "/" + skyTextureName + "_bk.jpg", import.meta.url).href),
-      new THREE.TextureLoader().load(new URL(textureSkyPath + skyTextureName + "/" + skyTextureName + "_up.jpg", import.meta.url).href),
-      new THREE.TextureLoader().load(new URL(textureSkyPath + skyTextureName + "/" + skyTextureName + "_dn.jpg", import.meta.url).href),
-      new THREE.TextureLoader().load(new URL(textureSkyPath + skyTextureName + "/" + skyTextureName + "_rt.jpg", import.meta.url).href),
-      new THREE.TextureLoader().load(new URL(textureSkyPath + skyTextureName + "/" + skyTextureName + "_lf.jpg", import.meta.url).href),
-  ]
-
-  // matériel texturé pour l'intérieur des faces de la SkyBox
-  let meshMaterials: THREE.MeshBasicMaterial[] = []
-  textures.forEach((texture: THREE.Texture) => {
-    meshMaterials.push(new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide}))
-  })
-
-  return meshMaterials;
 }
 
 /**
@@ -397,6 +370,11 @@ init(); //lancer l'initialisation de la scène Three
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+.game>canvas {
+  width: 100vw;
+  height: 100vh;
 }
 
 .game canvas {
