@@ -91,7 +91,7 @@ async function getAllFriendInvitations(): Promise<void> {
 
 <style scoped>
   .title {
-    height: 12.5vh;
+    height: max(100px, 12.5vh);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -112,13 +112,18 @@ async function getAllFriendInvitations(): Promise<void> {
 
   .friend-card {
     margin: 2px;
-    height: 10vh;
+    height: max(90px,10vh);
     width: 100%;
     border-top: solid 3px;
     border-bottom: solid 3px;
     border-color: rgba(var(--background-color), 0.65);
     cursor: pointer;
     transition: border-color .125s ease-in-out, border-radius .125s ease-in-out;
+
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
   }
 
   .friend-card:hover {
@@ -127,7 +132,6 @@ async function getAllFriendInvitations(): Promise<void> {
   }
 
   .friend-card>div:nth-child(1) {
-    height: 5vh;
     transition: transform .125s ease-in-out;
     align-items: center;
     align-content: start;
@@ -161,11 +165,12 @@ async function getAllFriendInvitations(): Promise<void> {
     margin: 0 3%;
     font-weight: 500;
     font-size: 22px;
+    transform: translateX(-5px);
     transition: transform .125s ease-in-out;
   }
 
   .friend-card:hover>p {
-    transform: translateX(5px);
+    transform: translateX(0px);
   }
 
   .social-nav-bar {
