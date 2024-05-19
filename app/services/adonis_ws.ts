@@ -243,21 +243,20 @@ class AdonisWS {
     let intervalID: any
     let check: number = 0
 
-    const disco = () => {
-      this.io?.to('u' + user.id).emit('ping', (error: any, response: any) => {
-        if (error || response.length == 0) {
+    const disco = async () => {
+      const _rSockets = await this.io?.in('u'+user.id).fetchSockets()
+        if (_rSockets?.length != 1) {
           if (check == 6) {
             if (disconnect) {
               socket.disconnect()
             }
-            user.leaveGroup();
+            await user.leaveGroup();
           } else {
             check++
           }
         } else {
           clearInterval(intervalID)
         }
-      })
     }
 
     if (_l?.statut == "waiting" && !(await _l?.isReady())) {
@@ -439,7 +438,6 @@ class AdonisWS {
       if (users.length > 1) {
 
         const _rSockets = await this.io?.in('g'+group?.id).fetchSockets()
-        console.log(_rSockets?.length);
         if (!(_rSockets?.length == users.length)) {
           return this.io?.to('g' + group?.id).emit('matchmaking_error', {
             message: 'An user has not leaved his party or is offline !',
