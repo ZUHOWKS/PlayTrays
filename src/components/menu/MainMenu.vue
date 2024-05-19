@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import {ref, type Ref} from "vue";
+import {onMounted, ref, type Ref} from "vue";
+import checkersBanner from '@/assets/image/checkers_game_view.png';
 
 const props = defineProps(['menuInfo', 'startMatchmaking']);
 const modeChoose: Ref<string> = ref('Choose')
+const selectedModeBanner: Ref<HTMLImageElement | null> = ref(null)
 
 const showModeSelection: Ref<boolean> = ref(false)
+
+function setBannerMode(path_src: any) {
+  selectedModeBanner.value.src = path_src;
+  selectedModeBanner.value.style.visibility = 'visible'
+}
+
+onMounted(() => {
+  selectedModeBanner.value.src = '';
+  selectedModeBanner.value.style.visibility = 'hidden'
+})
 
 </script>
 
@@ -20,16 +32,17 @@ const showModeSelection: Ref<boolean> = ref(false)
     <h2>Mode Selection</h2>
     <svg @click="() => {showModeSelection = !showModeSelection}" xmlns="http://www.w3.org/2000/svg" class="close-button b" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M368 368L144 144M368 144L144 368"/></svg>
     <div class="row">
-      <div class="mode-card" @click="() => {modeChoose = 'Checkers'; showModeSelection = false;}">
+      <div class="mode-card" @click="() => {modeChoose = 'Checkers'; showModeSelection = false; setBannerMode(checkersBanner);}">
         <h3>Checkers</h3>
+        <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
       </div>
     </div>
   </div>
 
   <div class="play-container column">
     <div class="mode-select" @click="() => {showModeSelection = !showModeSelection; }">
-      <h2 class="title-selected">Checkers</h2>
-      <img src="@/assets/image/checkers_game_view.png" alt="checkers game view">
+      <h2 class="title-selected">{{modeChoose.length > 10 ? modeChoose.substring(0, 7) + "..." : modeChoose}}</h2>
+      <img src="" alt="PlayTrays mode selected banner" ref="selectedModeBanner">
     </div>
     <button class="play-button" @click="props.startMatchmaking(modeChoose.toLowerCase())" :disabled="modeChoose.toLowerCase() ==='choose' || !props.menuInfo.matchmaking.canStart">
       Play : {{modeChoose.length > 10 ? modeChoose.substring(0, 7) + "..." : modeChoose}}
@@ -91,25 +104,39 @@ const showModeSelection: Ref<boolean> = ref(false)
     justify-content: center;
   }
 
-  .game-modes>.row>.mode-card {
+  .mode-card {
     height: 42.5vh;
     width: 30vh;
     margin: 0 2.5%;
-    background: white;
+    background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%);
     border: solid 2px rgb(var(--primary-color));
     border-radius: 10px;
-    transition: all .15s;
+    transition: border-color .15s, transform .15s;
     cursor: pointer;
     text-align: center;
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
   }
 
   .mode-card:hover {
+    background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%) !important;
     border-color: rgb(var(--secondary-color));
-    scale: 1.025;
+    transform: scale(1.025);
   }
 
   .mode-card>h3 {
-    font-size: max(34px, 3vw);
+    position: absolute;
+    font-size: max(34px, 2.5vw);
+  }
+
+  .mode-card>img {
+    height: 100%;
+    z-index: -1;
   }
 
   .play-container {
@@ -126,7 +153,7 @@ const showModeSelection: Ref<boolean> = ref(false)
     height: 15vw;
     width: 100%;
     min-height: 125px;
-    background: linear-gradient(0deg, rgba(255,255,255, 0.75) 0%, rgba(0,0,0,0) 20%);
+    background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%);
     margin: 5% 0;
     border-radius: 15px;
     overflow: hidden;

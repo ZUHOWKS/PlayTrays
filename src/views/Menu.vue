@@ -217,7 +217,8 @@ async function getFriendList() {
 function getGroupInfo() {
   ws.emit('group_info',async (error: any, response: any) => {
     for (let i=2; i <= 4; i++) {
-      objectRegistry.get('user'+i)?.removeFromParent()
+      objectRegistry.get('user'+i)?.removeFromParent();
+      objectRegistry.delete('user'+i);
     }
 
     console.log('cc', response);
@@ -348,9 +349,6 @@ function init() {
         });
 
         ws.on('group_update', () => {
-          for (let i=2; i <= 4; i++) {
-            objectRegistry.get('user'+i)?.removeFromParent()
-          }
           getGroupInfo();
         });
 
@@ -500,10 +498,6 @@ function inviteInGroup(userId: number) {
       notification.action = null;
       notification.showNotification = true;
       closeNotification();
-
-      ws.emit('group_info', (error: any, response: any) => {
-        menuInfo.group = response;
-      })
     }
   })
 }
@@ -562,9 +556,9 @@ init();
 <style scoped>
 
   .top-section {
-    height: 13vh;
+    height: 14vh;
     width: 100vw;
-    background: linear-gradient(180deg, rgba(var(--background-color), 0.85) 0%, rgba(var(--background-color), 0) 95%);
+    background: linear-gradient(180deg, rgba(var(--background-color), 0.75) 0%, rgba(var(--background-color), 0.6) 40%, rgba(var(--background-color), 0) 100%);
     position: fixed;
     z-index: 2;
   }
