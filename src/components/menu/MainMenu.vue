@@ -116,7 +116,7 @@ onMounted(() => {
     background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%);
     border: solid 2px rgb(var(--primary-color));
     border-radius: 10px;
-    transition: border-color .15s, transform .15s;
+    transition: border-color .2s ease-in-out;
     cursor: pointer;
     text-align: center;
 
@@ -129,34 +129,46 @@ onMounted(() => {
   }
 
   .mode-card:hover {
-    background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%) !important;
     border-color: rgb(var(--secondary-color));
-    transform: scale(1.025);
   }
 
   .mode-card>h3 {
     position: absolute;
-    font-size: max(34px, 2.5vw);
+    font-size: max(18px, 5vh);
+    transition: color .2s ease-in-out;
+    text-shadow: 0 0 5px rgba(0,0,0, 0.25);
+  }
+
+  .mode-card:hover>h3 {
+    color: rgb(var(--selector-color));
   }
 
   .mode-card>img {
     height: 100%;
     z-index: -1;
+    transition: transform .2s ease-in-out;
+  }
+
+  .mode-card:hover>img {
+    transform: scale(1.05);
   }
 
   .play-container {
     position: fixed;
     right: 2.5%;
     bottom: 2.5vh;
-    width: 25vw;
+    width: 23vw;
     min-width: 225px;
-    overflow: hidden;
+
+    align-items: center;
+    justify-content: center;
+
   }
 
   .play-container>.mode-select {
     cursor: pointer;
-    height: 15vw;
-    width: 100%;
+    height: 10vw;
+    width: 22vw;
     min-height: 125px;
     background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%);
     margin: 5% 0;
@@ -171,17 +183,30 @@ onMounted(() => {
 
   .mode-select>.title-selected {
     font-size: 3vw;
+    position: absolute;
+    z-index: 1;
+    transition: color .2s ease-in-out;
+    text-shadow: 0 0 5px rgba(0,0,0, 0.25);
+  }
+
+  .mode-select:hover>.title-selected {
+    color: rgb(var(--selector-color));
   }
 
   .mode-select>img {
     z-index: -1;
-    position: absolute;
     width: 100%;
     border-radius: 15px;
+    transform: scale(1.075);
+    transition: transform .2s ease-in-out;
+  }
+
+  .mode-select:hover>img {
+    transform: scale(1);
   }
 
   .play-button {
-
+    width: 100%;
     font-size: 2.5vw;
     font-weight: 600;
   }
