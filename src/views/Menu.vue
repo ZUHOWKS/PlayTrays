@@ -232,9 +232,13 @@ function getGroupInfo() {
       let n = 2;
 
       for (const member of menuInfo.group.players) {
-        if (user.value.id != member.id) {
-          await generateUserMember(n)
-          n++
+        if (n < 5) {
+          if (user.value.id != member.id) {
+            await generateUserMember(n)
+            n++
+          }
+        } else {
+          return
         }
       }
     } else {
