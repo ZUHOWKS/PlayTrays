@@ -175,6 +175,7 @@ header {
   margin : 1% 5%;
   display : flex;
   justify-content: center;
+  z-index: 1;
 }
 
 h1 {
@@ -259,7 +260,7 @@ form>.inputs {
   background: linear-gradient(120deg, rgb(var(--primary-color)) -175%, rgb(var(--secondary-color)) 100%);
   width: 30%;
   left: 50%;
-  top : none;
+  top : unset;
   height: 30vw;
   border-radius: 1.5vw;
   display: flex;
@@ -289,7 +290,6 @@ form>.inputs {
 }
 
 @media screen and (max-width: 800px) {
-
   .logo {
     height: 8vw;
     margin: 3% 0.5%;
