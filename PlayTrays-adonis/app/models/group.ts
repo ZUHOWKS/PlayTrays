@@ -135,7 +135,7 @@ export default class Group extends BaseModel {
       .count('user_id as total')
       .first()
 
-    return 1 + res.total
+    return 1 + Number(res.total)
   }
 
 }
