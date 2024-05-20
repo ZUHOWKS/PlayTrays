@@ -166,9 +166,33 @@ export default class DorianGame extends SupportController{
 
         this.ws.on("UpdateHUD", (money) => {(document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + money;})
 
+        this.ws.on("MaisonPossible", (maxHouse: number, caseInfo: TownCard)=>{
+
+            console.log("Query test: ", (document.querySelector('#quit-house') as HTMLElement));
+
+            this.displayCard(caseInfo, 2);
+            (document.getElementsByClassName("card-action-maison")[0] as HTMLElement).style.visibility = "visible";
+            (document.querySelector('#one') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 1);}
+
+            (document.querySelector('#two') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 2);}
+
+            (document.querySelector('#three') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 3);}
+
+            (document.querySelector('#four') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 4);}
+
+            (document.querySelector('#five') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 5);}
+
+            (document.querySelector('#quit-house') as HTMLElement).onclick = () => {
+                this.ws.emit("FinTour");
+                (document.getElementsByClassName("card-action-maison")[0] as HTMLElement).style.visibility = "hidden";
+            }
+
+        })
+
         this.ws.on("CasePossible", (caseInfo: any, player: Players, achat: boolean, id: number) => {
 
-            this.displayCardtoChoose(caseInfo);
+            this.displayCard(caseInfo, 1);
+            (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "visible";
 
             (document.querySelector('#Buy') as HTMLElement).onclick = () => {
                 console.log("debug achat: ", achat, caseInfo.info.prix, player.money);
@@ -199,18 +223,24 @@ export default class DorianGame extends SupportController{
         this.updateVariables();
     }
 
-    private displayCardtoChoose(caseInfo: Card){
-        (document.getElementsByClassName("name")[1] as HTMLElement).innerText = ""+caseInfo.name;
-        (document.getElementsByClassName("title")[1] as HTMLElement).style.backgroundColor = ""+caseInfo.info.color;
-        (document.getElementsByClassName("price-default")[1] as HTMLElement).innerText = "£"+caseInfo.info.m0;
-        (document.getElementsByClassName("price-1")[1] as HTMLElement).innerText = "£"+caseInfo.info.m1;
-        (document.getElementsByClassName("price-2")[1] as HTMLElement).innerText = "£"+caseInfo.info.m2;
-        (document.getElementsByClassName("price-3")[1] as HTMLElement).innerText = "£"+caseInfo.info.m3;
-        (document.getElementsByClassName("price-4")[1] as HTMLElement).innerText = "£"+caseInfo.info.m4;
-        (document.getElementsByClassName("price-5")[1] as HTMLElement).innerText = "£"+caseInfo.info.m5;
-        (document.getElementsByClassName("price-hotel")[1] as HTMLElement).innerText = "£"+caseInfo.info.maison + "\nplus 4 maisons";
-        (document.getElementsByClassName("price-maison")[1] as HTMLElement).innerText = "£"+caseInfo.info.maison;
-        (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "visible";
+    private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number) {
+        if (maxHouse <= nbMaison && caseInfo.nbMaison + nbMaison <= 5) {
+            this.ws.emit("achatMaison", nbMaison);
+            (document.getElementsByClassName("card-action-maison")[0] as HTMLElement).style.visibility = "hidden";
+        }
+    }
+
+    private displayCard(caseInfo: TownCard, index: number): void {
+        (document.getElementsByClassName("name")[index] as HTMLElement).innerText = ""+caseInfo.name;
+        (document.getElementsByClassName("title")[index] as HTMLElement).style.backgroundColor = ""+caseInfo.info.color;
+        (document.getElementsByClassName("price-default")[index] as HTMLElement).innerText = "£"+caseInfo.info.m0;
+        (document.getElementsByClassName("price-1")[index] as HTMLElement).innerText = "£"+caseInfo.info.m1;
+        (document.getElementsByClassName("price-2")[index] as HTMLElement).innerText = "£"+caseInfo.info.m2;
+        (document.getElementsByClassName("price-3")[index] as HTMLElement).innerText = "£"+caseInfo.info.m3;
+        (document.getElementsByClassName("price-4")[index] as HTMLElement).innerText = "£"+caseInfo.info.m4;
+        (document.getElementsByClassName("price-5")[index] as HTMLElement).innerText = "£"+caseInfo.info.m5;
+        (document.getElementsByClassName("price-hotel")[index] as HTMLElement).innerText = "£"+caseInfo.info.maison + "\nplus 4 maisons";
+        (document.getElementsByClassName("price-maison")[index] as HTMLElement).innerText = "£"+caseInfo.info.maison;
     }
 
     private setupDe() {
@@ -250,22 +280,6 @@ export default class DorianGame extends SupportController{
             tray.selectable = false;
             this.registerObject(tray)
         });
-    }
-
-    private displayTownInformation(tempCard: Card){
-        (tempCard.user != undefined)? (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "La carte appartient actuellement à "+tempCard.user : (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "Aucune personne ne possède cette carte actuellement";
-        (document.getElementsByClassName("name")[0] as HTMLElement).innerText = ""+tempCard.name;
-        (document.getElementsByClassName("title")[0] as HTMLElement).style.backgroundColor = tempCard.info.color;
-        (document.getElementsByClassName("price-default")[0] as HTMLElement).innerText = "£"+tempCard.info.m0;
-        (document.getElementsByClassName("price-1")[0] as HTMLElement).innerText = "£"+tempCard.info.m1;
-        (document.getElementsByClassName("price-2")[0] as HTMLElement).innerText = "£"+tempCard.info.m2;
-        (document.getElementsByClassName("price-3")[0] as HTMLElement).innerText = "£"+tempCard.info.m3;
-        (document.getElementsByClassName("price-4")[0] as HTMLElement).innerText = "£"+tempCard.info.m4;
-        (document.getElementsByClassName("price-5")[0] as HTMLElement).innerText = "£"+tempCard.info.m5;
-        (document.getElementsByClassName("hyp")[0] as HTMLElement).innerText = "£"+tempCard.info.m6;
-        (document.getElementsByClassName("price-hotel")[0] as HTMLElement).innerText = "£"+tempCard.info.maison + "\nplus 4 maisons";
-        (document.getElementsByClassName("price-maison")[0] as HTMLElement).innerText = "£"+tempCard.info.maison;
-        (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(0vh)";
     }
 
     private setupCard() {
@@ -357,7 +371,9 @@ export default class DorianGame extends SupportController{
                     //Convertir
                     //Ajoute les parametres propres aux villes dans la carte d'information
 
-                    this.displayTownInformation(tempCard);
+                    (tempCard.user != undefined)? (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "La carte appartient actuellement à "+tempCard.user : (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "Aucune personne ne possède cette carte actuellement";
+                    (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(0vh)";
+                    this.displayCard(tempCard as TownCard, 0);
                 }
         }
         }
