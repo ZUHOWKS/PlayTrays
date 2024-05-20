@@ -169,9 +169,85 @@
       <button class="action" id="Buy">Buy</button>
       <button class="action" id="Quit">Quit</button>
     </div>
-
   </div>
 
+  <div class="card-action-maison">
+
+    <div class="caseCardAction card">
+      <div class="container column">
+        <div class="title column">
+          <p class="sub-title">titre de propriété</p>
+          <h3 class="name">rue de la paix</h3>
+        </div>
+        <div class="content">
+          <div class="details row">
+
+            <div class="column">
+              <p>Loyer</p>
+              <p>  <<</p>
+              <p>  <<</p>
+              <p>  <<</p>
+              <p>  <<</p>
+              <p>  <<</p>
+            </div>
+
+            <div class="column .terrain">
+              <p>- Terrain</p>
+              <p>- Avec &nbsp;1</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5</p>
+            </div>
+            <div class="column">
+              <p>nu</p>
+              <p>maison</p>
+              <p><<</p>
+              <p><<</p>
+              <p><<</p>
+              <p> hotel</p>
+            </div>
+            <div class="column">
+              <p class="price-default"></p>
+              <p class="price-1"></p>
+              <p class="price-2"></p>
+              <p class="price-3"></p>
+              <p class="price-4"></p>
+              <p class="price-5"></p>
+            </div>
+
+          </div>
+
+          <div class="desc row">
+            <p>Vous possedez cette carte</p>
+          </div>
+
+          <div class="info row">
+            <div class="column">
+              <p>Prix des maisons</p>
+              <p>Prix d'un hotel</p>
+            </div>
+
+            <div class="column">
+              <p class="price-maison"></p>
+              <p class="price-hotel"></p>
+              <p></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="one">Buy 1</button>
+      <button class="action" id="two">Buy 2</button>
+      <button class="action" id="three">Buy 3</button>
+      <button class="action" id="four">Buy 4</button>
+      <button class="action" id="five">Buy 5</button>
+      <button class="action" id="quit-house">Quit</button>
+    </div>
+
+  </div>
 
 
   <div class="card-chance">
@@ -292,6 +368,32 @@
   align-items: center;
   visibility: hidden;
   justify-content: space-evenly;
+}
+
+.card-action-maison {
+  position: fixed;
+  top: 12.5vh;
+  left: 30%;
+  width: 75vh;
+  background: transparent;
+  height: 75vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  visibility: hidden;
+  justify-content: space-evenly;
+}
+
+.card-action-maison>.actions {
+  width: 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-action-maison>.actions>.action {
+  width: 35%;
+  margin: 0 2.5%;
 }
 
 .card-action {
