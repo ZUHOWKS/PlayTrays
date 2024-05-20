@@ -25,6 +25,8 @@ import type {cardTypeInterface} from "@/modules/game/scene/objects/DorianGameObj
 import {TownCard} from "@/modules/game/scene/objects/DorianGameObjects/cards/TownCard";
 import {cardConfig} from "@/modules/game/scene/objects/DorianGameObjects/cards/CardConfig";
 import {Card} from "@/modules/game/scene/objects/DorianGameObjects/cards/Card";
+import {maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
+import { instance } from "three/examples/jsm/nodes/Nodes.js";
 
 
 interface Players{
@@ -83,6 +85,8 @@ export default class DorianGame extends SupportController{
 
         // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
         this.setupPlanes();
+
+        this.setupHouses();
 
         this.setupDe();
 
@@ -225,7 +229,10 @@ export default class DorianGame extends SupportController{
 
     private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number) {
         if (maxHouse <= nbMaison && caseInfo.nbMaison + nbMaison <= 5) {
+
             this.ws.emit("achatMaison", nbMaison);
+            caseInfo.nbMaison = nbMaison;
+            this.cards.set(caseInfo.caseNb, caseInfo);
             (document.getElementsByClassName("card-action-maison")[0] as HTMLElement).style.visibility = "hidden";
         }
     }
@@ -250,6 +257,16 @@ export default class DorianGame extends SupportController{
         this.registerObject(new de("dé", cube));
     }
 
+    private setupHouses(){
+        const loader = new GLTFLoader();
+        for (let i: number = 0; i < 9; ++i) {
+            this.addHousesOfCard(loader, 7.1 - 1.7767 * i, 8.32, i + 1, false);
+            this.addHousesOfCard(loader, -8.25  , 7.1 - 1.7767 * i, i + 11, true);
+            this.addHousesOfCard(loader, -7.1 + 1.7767 * i  , -8.3, i + 21, false);
+            this.addHousesOfCard(loader, 8.25  , -7.1 + 1.7767 * i, i + 31, true);
+        }
+    }
+
     private setupPlanes() {
         //Ajout des plans des coins
         this.addPlaneOnTray(2.9, 2.9, 9.48458, 9.53537, "StartCard", 0);
@@ -259,6 +276,9 @@ export default class DorianGame extends SupportController{
 
         //Boucle pour setup les plans restants
         for (let i: number = 0; i < 9; ++i) {
+
+
+
             this.addPlaneOnTray(1.71969, 2.88127, 7.10946 - 1.7767 * i, 9.54623, "card_" + (i + 1), i + 1);
             this.addPlaneOnTray(2.89, 1.74, -9.49878, 7.0904 - 1.7788 * i, "card_" + (i + 11), i + 11);
             this.addPlaneOnTray(1.71969, 2.88127, -7.10946 + 1.7767 * i, -9.49983, "card_" + (i + 21), i + 21);
@@ -313,8 +333,31 @@ export default class DorianGame extends SupportController{
         });
     }
 
+    protected addHousesOfCard(loader: GLTFLoader, posx : number, posz : number, nbCase : number, rotate: boolean){
+
+        let tempCard = this.cards.get(nbCase)
+        if (tempCard instanceof TownCard){
+
+            for(let i = 1; i<=5; i++){
+                this.loadGLTFSceneModel(loader, "DorianGame/maison"+ i +".glb").then((obj) => {
+
+                console.log("Help: ", tempCard, tempCard.nbMaison, i);
+                obj.visible = (tempCard.nbMaison == i);
+
+                obj.translateZ(posz);
+                obj.translateX(posx);
+
+                if (rotate) obj.rotateY(1.5708);
+
+                //maison1-9
+                this.registerObject(new maison("maison" + i + "-" + nbCase, obj, nbCase))
+                });
+            }
+        }
+    }
+
 //Cree un plan et le register
-    addPlaneOnTray(width : number, height : number, posx : number, posz : number, objectName : string, nbCase : number) : void {
+    protected addPlaneOnTray(width : number, height : number, posx : number, posz : number, objectName : string, nbCase : number) : void {
         const geometry = new PlaneGeometry(width, height);
         const material = new MeshBasicMaterial( { color: 0x000000 } );
 
