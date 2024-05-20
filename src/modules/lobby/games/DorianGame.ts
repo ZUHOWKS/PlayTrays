@@ -40,9 +40,10 @@ export default class DorianGame extends PTLobby {
         this.players = new Map();
         this.cards = new Map();
         this.chances = new Array<chance>(
-            //{message: "test 10 000",type: "argent", aideReal: 10000},
+            {message: "test 10 000",type: "argent", aideReal: 10000},
             //{message: "test -10 000", type: "argent", aideReal: -10000},
-            {message: "Vous avez commis une fraude fiscale d'un grande ampleur avec un certain Franck Verdonck, \nvous allez en prison sans toucher les £20 000 de la case départ.", type: "deplacement", aideReal: {nbCase: 10, caseX: 10, caseY: 0, depart: false, prison: true}});
+            //{message: "Vous avez commis une fraude fiscale d'un grande ampleur avec un certain Franck Verdonck, \nvous allez en prison sans toucher les £20 000 de la case départ.", type: "deplacement", aideReal: {nbCase: 10, caseX: 10, caseY: 0, depart: false, prison: true}}
+            );
         this.idOfPlayers = new Array<number>();
         this.setupGame();
 
@@ -50,12 +51,14 @@ export default class DorianGame extends PTLobby {
 
     protected finTour(): void{this.theOnePlaying = (this.theOnePlaying >= this.players.size) ? 1 : this.theOnePlaying + 1;}
 
-    protected getPlayerByName(name: string): Players | undefined{
-        let playerreturn: Players | undefined = undefined;
-        this.players.forEach((player) => {if (player.playerName == name) {
-            playerreturn = player;
-        }});
-        return playerreturn;
+    protected getPlayerByName(name: string): Players | undefined {
+        let result: Players | undefined = undefined;
+        this.players.forEach(player => {
+            if (player.name === name) {
+                result = player;
+            }
+        });
+        return result;
     }
 
     protected setupGame(): void {
@@ -87,13 +90,13 @@ export default class DorianGame extends PTLobby {
 
         if (!(this.players.get(this.idOfPlayers.indexOf(socket.data.user)+1))) {
 
-            console.log(this.idOfPlayers, socket.data.user);
+            console.log("La liste des id socket des joueurs: ", this.idOfPlayers, "\nL'id du joueur venant de se connecter: ", socket.data.user);
             this.players.set((this.register), {
                 name: "User" + socket.data.user,
                 city: [],
                 exitPrison: 0,
                 tourInprison: 0,
-                money: 150000,
+                money: 1000000,
                 caseNb: 0,
                 id: this.idOfPlayers.indexOf(socket.data.user)+1,
                 playerName: "User" + (this.idOfPlayers.indexOf(socket.data.user)+1),
@@ -113,10 +116,29 @@ export default class DorianGame extends PTLobby {
 
         socket.emit("UpdateHUD", this.players.get(this.idOfPlayers.indexOf(socket.data.user))?.money);
 
+        socket.on("achatMaison", (nbMaison: number) => {
+            const player = this.players.get(this.theOnePlaying)
+            if (player) {
+                const cardEnCours = this.cards.get(player.caseNb)
+                if (cardEnCours && cardEnCours instanceof TownCard) {
+
+                    if (this.hasAllProperty(player, cardEnCours)){
+                        if (player.money >= cardEnCours.info.maison*nbMaison && cardEnCours.nbMaison + nbMaison <= 5){
+                            player.money -= cardEnCours.info.maison*nbMaison
+                            cardEnCours.nbMaison += nbMaison;
+                            this.players.set(this.theOnePlaying, player);
+                            this.cards.set(player.caseNb, cardEnCours);
+                            console.log("la carte ", cardEnCours.name," a recu ", nbMaison, " maison, elle coute maintenant ", cardEnCours.getPassagePrice());
+                        }
+                    }
+                    this.finTour();
+                    }
+                }
+            })
+
         socket.on("Lancede", (callBack) => {
 
             if ((this.idOfPlayers.indexOf(socket.data.user) + 1) == this.theOnePlaying && this.players.get(this.theOnePlaying)) {
-                console.log("aaaaaaaaaaaaaaah")
                 const player = this.players.get(this.theOnePlaying);
 
                 let de1 = Math.floor(Math.random() * 5 + 1);
@@ -132,7 +154,7 @@ export default class DorianGame extends PTLobby {
                         player.tourInprison = 0;
                     }
 
-                    console.log("Joueur, dés", player.name, player.tourInprison, de1, de2);
+                    console.log("Le joueur ", player.name, " a ", player.tourInprison, "tours en prisons et les dés sont: ", de1, de2);
 
                     if (de1 == de2 || player.tourInprison == 0){
 
@@ -143,7 +165,7 @@ export default class DorianGame extends PTLobby {
 
                         this.players.set(this.theOnePlaying, player);
 
-                        console.log("La carte: ", player.caseNb, "\nLe joueur: ", player.playerName, player.money);
+                        console.log("Le joueur ", player.playerName, " est sur la case ", player.caseNb, " avec £ ",player.money);
                         let caseInfo = this.cards.get(player.caseNb)
                         if (caseInfo) {
 
@@ -247,29 +269,54 @@ export default class DorianGame extends PTLobby {
             socket.emit("CasePossible", caseInfo, player, (player.money >= caseInfo.info.prix), this.theOnePlaying);
         }
         else if (caseInfo.user == player.name) {
-            this.finTour();
+
+            let maxHouse: number = 0
+
+            for (let i = 1; i < 6; i++) {
+                if (caseInfo.info.maison*i <= player.money) maxHouse += 1;
+            }
+
+            if (this.hasAllProperty(player, caseInfo)) socket.emit("MaisonPossible", maxHouse, caseInfo);
+
+            else this.finTour();
         }
         else{
             //Ajouter un emit pour animation de retirer l'argent
-
             let playerPaid: undefined | Players = this.getPlayerByName(caseInfo.user);
             const prix = caseInfo.getPassagePrice();
 
             if(playerPaid != undefined){
 
-                if (player.money >= prix && caseInfo.user != undefined && playerPaid) {
+                if (player.money >= prix && caseInfo.user != undefined && playerPaid != undefined) {
                     player.money -= prix;
                     playerPaid.money += prix;
                     this.players.set(this.theOnePlaying, player);
                     this.players.set(playerPaid.id, playerPaid);
-                    this.theOnePlaying = (this.theOnePlaying == this.players.size) ? 1 : this.theOnePlaying + 1;
                     socket.emit("Paiement", prix, player);
+                    console.log("Le joueur ", player.playerName, " (£ ", player.money,"a payé £ ", prix, " à ", playerPaid.playerName, " (£ ", playerPaid.money,").");
+                    this.finTour();
                 }
                 else{
                 }
                 console.log("prix: ", prix, player.money);
             }
         }
+    }
+
+    protected hasAllProperty(playerToCheck: Players, cardToCheck: TownCard): boolean {
+        let cardSameType: Array<string> = [];
+        let nbCardSame: number = 0;
+
+        this.cards.forEach(card => {
+            if (card instanceof TownCard && card.info.color == cardToCheck.info.color) {
+                cardSameType.push(card.name);
+            }
+        })
+        playerToCheck.city.forEach(city => {
+            if (cardSameType.includes(city)) nbCardSame += 1;
+        })
+
+        return (nbCardSame == cardSameType.length);
     }
 
 }
