@@ -22,11 +22,8 @@ app.ready(async () => {
 
     await PTServer.updateOrCreate({id:1}, {id: 1, url: env.get('GS_1_HOST'), name: 'gs1-local-test', capacity: 1, statut: 'offline'})
 
-
-    if (!(await Games.findBy({game: 'checkers'}))) Games.create({
-      game: 'checkers',
-      max_player: 2
-    }).then(() => console.log('Checkers has been added !'))
+    registerGamesInDB('checkers', 2)
+    registerGamesInDB('dorianGame', 2)
 
     // set les serveurs jeu par défaut en offline + tentative de connection
     PTServer.all().then((servers) => {
@@ -42,3 +39,10 @@ app.ready(async () => {
   }
 
 })
+
+function registerGamesInDB(game: string, max_players: number) {
+  Games.updateOrCreate({game: game},{
+    game: game,
+    max_player: max_players
+  }).then(() => console.log(game + ' updated !'));
+}
