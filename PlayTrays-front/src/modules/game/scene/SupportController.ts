@@ -4,6 +4,7 @@ import type {Ref} from "vue";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
 import type {Socket} from "socket.io-client";
+import type {UserInterface} from "@/modules/utils/UserInterface";
 
 export default abstract class SupportController {
     scene: Scene;
@@ -14,6 +15,7 @@ export default abstract class SupportController {
     selectedObject: PTObject | undefined;
     selectedActuator: Actuator | undefined;
     ws: Socket
+    player: UserInterface
 
     /**
      * Cette classe permet d'ajouter un contrôleur sur le support de la partie
@@ -27,13 +29,14 @@ export default abstract class SupportController {
      * @param ws Socket connecté au serveur jeu
      * @protected
      */
-    protected constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
+    protected constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket, player: UserInterface) {
         this.scene = scene;
         this.cameraRef = cameraRef;
         this.orbitControlsRef = orbitControlsRef;
         this.objectRegistry = new Map<string, PTObject>();
         this.actuatorRegistry = new Map<string, Actuator>();
         this.ws = ws;
+        this.player = player
         
     }
 

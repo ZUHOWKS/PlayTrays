@@ -19,18 +19,20 @@ import {de} from "@/modules/game/scene/objects/DorianGameObjects/De";
 import {TownCard} from "@/modules/game/scene/objects/DorianGameObjects/cards/TownCard";
 import {cardConfig} from "@/modules/game/scene/objects/DorianGameObjects/cards/CardConfig";
 import {Card} from "@/modules/game/scene/objects/DorianGameObjects/cards/Card";
-import {maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
-import type {prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
+import {Maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
+import type {Prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
+import type {UserInterface} from "@/modules/utils/UserInterface";
 
 
-interface Players{
+interface Player {
     name: string;
     city: string[];
     exitPrison: number;
     money: number;
     caseNb: number;
     id: number;
+    realUserId: number;
     playerName: string;
     pawnName: string;
 }
@@ -39,11 +41,11 @@ interface Players{
 export default class DorianGame extends SupportController{
 
     previousObjectSelected: PTObject | undefined;
-    players: Map<number, Players>;
+    players: Map<number, Player>;
     cards: Map<number, Card>;
 
-    constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
-        super(scene, cameraRef, orbitControlsRef, ws);
+    constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket, player: UserInterface) {
+        super(scene, cameraRef, orbitControlsRef, ws, player);
         this.players = new Map();
         this.cards = new Map();
     }
@@ -67,7 +69,16 @@ export default class DorianGame extends SupportController{
     }
 
     // Permet d'initialiser le jeu DorianGame lors du lancement de la page
-    setup(): void {
+    setup(loaderFiller?: Ref<boolean>): void {
+
+        const controls: OrbitControls = this.getOrbitControls();
+
+        controls.minDistance = 5;
+        controls.maxTargetRadius = 25;
+        controls.rotateSpeed = 0.5;
+        controls.maxDistance = 85;
+
+        controls.saveState();
 
         this.setupCard();
 
@@ -84,9 +95,30 @@ export default class DorianGame extends SupportController{
 
         this.updateVariables();
 
-        this.ws.on("PlayerJoin", (player : Players) : void => {
+        this.ws.on("PlayerJoin", (player : Player) : void => {
             this.setupPawn(player);
             this.updateVariables();
+            if (player.realUserId == this.player.id) {
+                setTimeout(() => {
+                    let i = 0;
+                    (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+i;
+                    const interval = setInterval(() => {
+                        try {
+                            if (i < player.money) {
+                                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+i;
+                                i+=1981;
+                            } else {
+                                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+player.money;
+                                clearInterval(interval);
+                            }
+                        } catch (e) {
+                            clearInterval(interval)
+                        }
+
+                    },10)
+
+                }, 3000);
+            }
         })
 
         //Gere l hud lorsque le joueur tombe sur la case d'un autre
@@ -104,6 +136,10 @@ export default class DorianGame extends SupportController{
         })
 
         this.ws.on("Update", ()=>{this.updateVariables()})
+
+        this.ws.on("start", () => {
+            if (loaderFiller) setTimeout(() => loaderFiller.value = false, 1000);
+        })
 
         //Fait avancer le pion du joueur possedant l'id donnée en parametre
         this.ws.on("pawnMove", (id, r) => {
@@ -135,7 +171,7 @@ export default class DorianGame extends SupportController{
         //Deplace les pions vers la case definie par la carte chance
         this.ws.on("Carte chance deplacement all", (chanceCard: {message: string, aideReal: {nbCase: number, caseX: number, caseY: number, depart: boolean, prison: boolean}}, player) => {
             const tempPion : playerPawn | undefined = (this.getObject("pion" + player.id) as playerPawn | undefined);
-            const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+            const tempPrison: Prison | undefined = (this.getObject("Prison") as Prison | undefined);
             if (tempPion){
                 tempPion.moveTo(chanceCard.aideReal.caseX, chanceCard.aideReal.caseY);
             }
@@ -155,7 +191,7 @@ export default class DorianGame extends SupportController{
                 (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + (player.money);
 
                 const tempPion : playerPawn | undefined = (this.getObject("pion" + player.id) as playerPawn | undefined);
-                const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+                const tempPrison: Prison | undefined = (this.getObject("Prison") as Prison | undefined);
                 if (tempPion){
                     tempPion.moveTo(chanceCard.aideReal.caseX, chanceCard.aideReal.caseY);
                 }
@@ -169,7 +205,7 @@ export default class DorianGame extends SupportController{
         })
 
         this.ws.on("joueur en prison", (player) => {
-            const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+            const tempPrison: Prison | undefined = (this.getObject("Prison") as Prison | undefined);
             if (tempPrison) {
                 tempPrison.down();
             }
@@ -177,7 +213,7 @@ export default class DorianGame extends SupportController{
         })
 
         this.ws.on("retirer prison", () => {
-            const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+            const tempPrison: Prison | undefined = (this.getObject("Prison") as Prison | undefined);
             if (tempPrison) {
                 tempPrison.up();
             }
@@ -186,7 +222,7 @@ export default class DorianGame extends SupportController{
         this.ws.on("UpdateHUD", (money) => {(document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + money;})
 
         //Si on peut ajouter une maison
-        this.ws.on("MaisonPossible", (maxHouse: number, caseInfo: TownCard, player: Players)=>{
+        this.ws.on("MaisonPossible", (maxHouse: number, caseInfo: TownCard, player: Player)=>{
 
 
             this.displayCard(caseInfo, 2);
@@ -212,7 +248,7 @@ export default class DorianGame extends SupportController{
         })
 
         //Gere la situation ou la carte sur laquelle est le joueur est achetable
-        this.ws.on("CasePossible", (caseInfo: any, player: Players, achat: boolean, id: number) => {
+        this.ws.on("CasePossible", (caseInfo: any, player: Player, achat: boolean, id: number) => {
 
 
             this.displayCard(caseInfo, 1);
@@ -255,7 +291,7 @@ export default class DorianGame extends SupportController{
         this.updateVariables();
     }
 
-    private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number, player: Players) {
+    private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number, player: Player) {
         console.log("max house: ", maxHouse, nbMaison, caseInfo.nbMaison + nbMaison)
 
         //On effectue les verifiactions pour savoir si le joueur a le droit (les verifications sont refaites coté serveur pour éviter les erreurs)
@@ -291,10 +327,10 @@ export default class DorianGame extends SupportController{
     }
 
     private setupDe() {
-        const geometry = new BoxGeometry(2, 2, 2);
-        const material = new MeshBasicMaterial({color: 0x000000});
-        const cube = new Mesh(geometry, material);
-        this.registerObject(new de("dé", cube));
+        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, '/DorianGame/de_party.glb').then((cube) => {
+            cube.scale.set(0.5,0.5, 0.5);
+            this.registerObject(new de("dé", cube));
+        })
     }
 
     private setupHouses(cards: Map<number, Card>){
@@ -329,7 +365,7 @@ export default class DorianGame extends SupportController{
     private setupPrison() {
         ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/prison.glb").then((obj) => {
             //@ts-ignore
-            this.registerObject(new prison("Prison", obj))
+            this.registerObject(new Prison("Prison", obj))
         });
     }
 
@@ -362,7 +398,7 @@ export default class DorianGame extends SupportController{
         })
     }
 
-    private setupPawn(player: Players) {
+    private setupPawn(player: Player) {
         ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/" + player.pawnName + ".glb").then((obj) => {
             this.registerObject(new playerPawn(player.pawnName, obj, player.name, player.money));
             const tempObject = this.getObject(player.pawnName) as playerPawn | undefined;
@@ -376,7 +412,7 @@ export default class DorianGame extends SupportController{
 
     protected updateHouses(nbHouses: number, nbCase: number){
         for(let i = 1; i<6;i++){
-            const maison = this.getObject("maison" + nbHouses + "-" + nbCase) as maison | undefined;
+            const maison = this.getObject("maison" + nbHouses + "-" + nbCase) as Maison | undefined;
             if (maison != undefined){
                 if (i == nbHouses) {
 
@@ -412,7 +448,7 @@ export default class DorianGame extends SupportController{
                         obj.updateMatrix();
 
                         //Exemple pour la maison unique à la case 9: maison1-9
-                        const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
+                        const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
                         this.registerObject(m)
                         m.object3D.visible = true;
                     })
@@ -421,7 +457,7 @@ export default class DorianGame extends SupportController{
                 else{
                     ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
 
-                        const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
+                        const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
                         m.object3D.visible = false;
                         this.registerObject(m)
 
@@ -456,8 +492,8 @@ export default class DorianGame extends SupportController{
         this.unselectObject();
     }
 
-    getPlayerByName(name: string): Players | undefined{
-        let playerreturn: Players | undefined = undefined;
+    getPlayerByName(name: string): Player | undefined{
+        let playerreturn: Player | undefined = undefined;
         this.players.forEach((player) => {if (player.name == name) {
             playerreturn = player;
         }});
@@ -510,12 +546,10 @@ export default class DorianGame extends SupportController{
                 this.players = new Map(response.playersUpdate);
                 this.cards = new Map(response.cardsUpdate);
                 for (let i = 1; i <= this.players.size; i++) {
-                    let tempPion: any;
-                    const playerEnCours = this.players.get(i) as Players | undefined
-                    if (playerEnCours) {const tempPion : playerPawn | undefined = (this.getObject(playerEnCours.pawnName) as playerPawn | undefined);}
-
-                    if (tempPion != undefined && playerEnCours != undefined){
-                        tempPion.money = playerEnCours.money;
+                    const playerEnCours = this.players.get(i) as Player | undefined
+                    if (playerEnCours) {
+                        const tempPion: playerPawn | undefined = (this.getObject(playerEnCours.pawnName) as playerPawn | undefined);
+                        if (tempPion) tempPion.money = playerEnCours.money;
                     }
                 }
                 this.setupHouses(this.cards);

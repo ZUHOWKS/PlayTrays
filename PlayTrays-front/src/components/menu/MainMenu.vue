@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, type Ref} from "vue";
 import checkersBanner from '@/assets/image/checkers_game_view.png';
+import dorianGameBanner from '@/assets/image/dorian_game_view.png';
 
 const props = defineProps(['menuInfo', 'startMatchmaking']);
 const modeChoose: Ref<string> = ref('Choose')
@@ -39,11 +40,16 @@ onMounted(() => {
     <div class="row">
       <div class="mode-card" @click="() => {modeChoose = 'Checkers'; showModeSelection = false; setBannerMode(checkersBanner);}">
         <h3>Checkers</h3>
-        <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
+        <div>
+          <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
+        </div>
+
       </div>
-      <div class="mode-card" @click="() => {modeChoose = 'Dorian Game'; showModeSelection = false; setBannerMode(checkersBanner);}">
+      <div class="mode-card" @click="() => {modeChoose = 'Dorian Game'; showModeSelection = false; setBannerMode(dorianGameBanner);}">
         <h3>Dorian Game</h3>
-        <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
+        <div>
+          <img src="@/assets/image/dorian_game_view.png" alt="PlayTrays Dorian Game">
+        </div>
       </div>
     </div>
   </div>
@@ -111,12 +117,13 @@ onMounted(() => {
     overflow-y: scroll;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .mode-card {
     height: 42.5vh;
     width: 30vh;
-    margin: 0 2.5%;
+    margin: 2% 2.5%;
     background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%);
     border: solid 2px rgb(var(--primary-color));
     border-radius: 10px;
@@ -130,6 +137,8 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: end;
+
+    position: relative;
   }
 
   .mode-card:hover {
@@ -137,8 +146,9 @@ onMounted(() => {
   }
 
   .mode-card>h3 {
-    position: absolute;
-    font-size: max(18px, 5vh);
+    z-index: 1;
+    font-size: max(18px, 4.5vh);
+    margin: 0.5% 1%;
     transition: color .2s ease-in-out;
     text-shadow: 0 0 5px rgba(0,0,0, 0.25);
   }
@@ -146,9 +156,15 @@ onMounted(() => {
   .mode-card:hover>h3 {
     color: rgb(var(--selector-color));
   }
-
-  .mode-card>img {
+  .mode-card>div {
+    height: 42.5vh;
+    width: 30vh;
+    position: absolute;
+    z-index: -1;
+  }
+  .mode-card>div>img {
     height: 100%;
+    transform: translateX(-25%);
     z-index: -1;
     transition: transform .2s ease-in-out;
   }
@@ -172,7 +188,7 @@ onMounted(() => {
   .play-container>.mode-select {
     cursor: pointer;
     height: 10vw;
-    width: 22vw;
+    width: 100%;
     min-height: 125px;
     background: linear-gradient(0deg, rgba(var(--background-color), 0.75) 5%, rgba(var(--background-color),0) 40%);
     margin: 5% 0;

@@ -129,8 +129,8 @@ function loginForm() {
 </script>
 
 <template>
-  <header @click="() => router.push('/')">
-    <div class="header-content">
+  <header>
+    <div class="header-content" @click="() => router.push('/')">
       <img src="@/assets/image/logoPT(1).png" alt="PlayTrays Logo" class="logo">
       <h1>PlayTrays</h1>
     </div>
@@ -199,7 +199,6 @@ h2 {
   align-items: center;
   justify-content: center;
   width: max-content;
-  margin: 0 50%;
 }
 
 .header-content:hover>.logo {
@@ -298,10 +297,6 @@ form>.inputs {
   h1{
     font-size: 8vw;
   }
-  
-  /* .sign-mode-filler {
-    visibility : hidden;
-  } */
 
   main {
     flex-direction: column;
@@ -340,53 +335,20 @@ form>.inputs {
 
   .sign-up-mode {
     transform: translateY(-200%);
-}
+  }
 
   .register-form {
     transform: translateY(200%);
-}
+  }
 
   .sign-up-mode {
     transform: translateY(-250%);
-}
-
-  /* .logo {
-    height: 8vw;
-    margin: 3% 0.5%;
-  }
-  
-  h1{
-    font-size: 8vw;
   }
 
-  main {
-    height: 70vh;
+  button {
+    font-size: 2.7vw;
+    margin: 2% 0;
   }
-  
-  .forms {
-    height: 20vh;
-    width: 80vw;
-  }
-
-  form>h2{
-    font-size: 5.5vw;
-  }
-
-  .inputs>input {
-    height: 2.7vw;
-    font-size: 1.5vw;
-    margin: 3.5% 3.5%;
-  }
-
-  .sign-mode-filler {
-    height: 20vh;
-    width: 40vw;
-  }
-
-  .sign-mode-content>h2 {
-    font-size: 4.5vw;
-    margin : 5% 0%;
-  }*/
 
 }
 

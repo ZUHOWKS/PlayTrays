@@ -4,14 +4,14 @@
 
 <template>
   <div class="timer">
-    <p>01:30</p>
+    <p>00:00</p>
   </div>
 </template>
 
 <style scoped>
   .timer {
-    width: 8.5vw;
-    height: 2.25vw;
+    width: max(75px, 8.5vw);
+    height: max(20px, 2.25vw);
     position: fixed;
     top: 0;
     left: 45.75vw;
@@ -26,8 +26,14 @@
   }
 
   .timer>p {
-    font-size: 1.5vw;
+    font-size: max(1.5vh, 1.5vw);
     margin-bottom: 2.75%;
     color: rgba(var(--background-color));
+  }
+
+  @media screen and (max-width: 850px) {
+    .timer {
+      left: calc(50% - 35px);
+    }
   }
 </style>

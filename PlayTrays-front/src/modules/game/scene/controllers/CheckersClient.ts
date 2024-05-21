@@ -17,6 +17,7 @@ import Pawn from "@/modules/game/scene/objects/checkers/Pawn";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import ActuatorObject from "@/modules/game/scene/objects/ActuatorObject";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
+import type {UserInterface} from "@/modules/utils/UserInterface";
 
 
 interface Action {
@@ -34,8 +35,8 @@ export default class CheckersClient extends SupportController {
     canPlay: boolean = false;
     timer: number = 0;
 
-    constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket) {
-        super(scene, cameraRef, orbitControlsRef, ws);
+    constructor(scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>, ws: Socket, player: UserInterface) {
+        super(scene, cameraRef, orbitControlsRef, ws, player);
     }
 
     /**
@@ -59,15 +60,24 @@ export default class CheckersClient extends SupportController {
             this.timer = gameInfo.timer;
 
             await this.setupGame(pawns, modelWhitePawn, modelBlackPawn, gameInfo);
-
-            if (loaderFiller) setTimeout(() => loaderFiller.value = false, 2500);
             callback(undefined, {loaded: true});
         })
 
-        this.ws.on('start', (gameInfo: {team: string; canPlay: boolean, timer: number}) => {
+        this.ws.on('start', (gameInfo: {team: string; canPlay: boolean, timer: number}, users: string[]) => {
+            if (loaderFiller) setTimeout(() => {
+                loaderFiller.value = false;
+
+                setTimeout(() => {
+                    (document.querySelector('.starter-user#user1') as HTMLElement).innerText = users[0];
+                    (document.querySelector('.starter-user#user2') as HTMLElement).innerText = users[1];
+                }, 100)
+
+            }, 1000);
             this.timer = gameInfo.timer;
             this.team = gameInfo.team;
             this.canPlay = gameInfo.canPlay;
+
+
         })
 
         this.ws.on('timer', (timer: number) => {
@@ -149,11 +159,14 @@ export default class CheckersClient extends SupportController {
                 }
             });
 
-            // évènement de fin de partie
-            this.ws.on('end game', (whoWin) => {
-                //TODO: Écran de fin de partie
-                setTimeout(() => this.ws.disconnect(), 30000)
-            })
+
+        })
+
+        // évènement de fin de partie
+        this.ws.on('end game', (whoWin: string)  => {
+            (document.querySelector('.end-annonce') as HTMLElement).style.visibility = 'visible';
+            (document.querySelector('#userCongregated') as HTMLElement).innerText = whoWin;
+            setTimeout(() => this.ws.disconnect(), 30000)
         })
 
     }

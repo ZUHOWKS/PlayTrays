@@ -19,6 +19,7 @@ import CheckersHUD from "../components/game/CheckersHUD.vue";
 import GMenu from "../components/game/GMenu.vue";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
 import DorianHUD from "@/components/game/DorianHUD.vue";
+import MainHUD from "@/components/game/MainHUD.vue";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -127,12 +128,23 @@ function init(): void {
     addEventListener('mousemove', (e) => onPointerMove(e));
 
     addEventListener('click', () => {
+      if (!showGMenu.value) selectOnClick(true)
+    });
+
+    addEventListener('dblclick', () => {
       if (!showGMenu.value) selectOnClick()
     });
+
+
     addEventListener('touchstart', (e) => {
       onTouchMove(e)
-      if (!showGMenu.value) selectOnClick()
+      if (!showGMenu.value) selectOnClick(true)
     });
+
+    addEventListener('touchmove', (e) => {
+      onTouchMove(e)
+    })
+
     addEventListener('keydown', (e) => showGMenuOnPress(e))
   });
 
@@ -235,7 +247,7 @@ function establishConnectionWithGameServer(uuid: string, game: string,  url: str
   ws.on('connect_error', () => router.push('/app'))
   ws.on('disconnect', () => router.push('/app'))
 
-  gameTray = new TrayGame(game, "waiting", user, ws, game, scene, camera, controls);
+  gameTray = new TrayGame(game, "waiting", user.value, ws, game, scene, camera, controls);
   gameTray.setup(showLoader);
 }
 
@@ -289,7 +301,7 @@ function renderOutlineSelection() {
 /**
  * Permet de sélectionné un objet de la scène lorsqu'il est clické.
  */
-function selectOnClick() {
+function selectOnClick(disableRestCamera?: boolean) {
 
   // liste les objets potentiellement sélectionné par la souris (index 0, l'objet au premier plan, ect...)
   const intersects = raycaster.intersectObject( scene, true );
@@ -314,7 +326,7 @@ function selectOnClick() {
         gameTray.controller.selectObject(obj.name);
         gameTray.controller.showSelectedObjectActuators();
       }
-    } else if (obj.name.includes("Tray")) { // effet de caméra remise à défaut
+    } else if (obj.name.includes("Tray") && !disableRestCamera) { // effet de caméra remise à défaut
       gameTray.controller.defaultCamera();
     } else { // désélectionné tout
       gameTray.controller.unselectAll();
@@ -367,6 +379,7 @@ init(); //lancer l'initialisation de la scène Three
   </div>
 
   <div class="hud user-unselect-any">
+    <MainHUD v-if="!(showLoader)"></MainHUD>
     <CheckersHUD v-if="gameTray && gameTray.game == 'checkers'"></CheckersHUD>
     <DorianHUD v-if="gameTray && gameTray.game == 'dorian_game'"></DorianHUD>
   </div>
@@ -407,6 +420,7 @@ init(); //lancer l'initialisation de la scène Three
   margin: 0 0.5%;
   color: rgba(0,0,0,0.65);
   cursor: pointer;
+  z-index: 3;
 }
 
 </style>
