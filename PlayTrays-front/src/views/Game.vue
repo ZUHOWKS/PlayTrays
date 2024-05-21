@@ -420,6 +420,7 @@ init(); //lancer l'initialisation de la scène Three
   margin: 0 0.5%;
   color: rgba(0,0,0,0.65);
   cursor: pointer;
+  z-index: 3;
 }
 
 </style>

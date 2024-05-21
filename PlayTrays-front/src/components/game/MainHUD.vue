@@ -3,19 +3,22 @@
 </script>
 
 <template>
-<div class="starter-annonce">
-  <h2 class="starter-user" id="user1">_</h2>
-  <h2 class="starter-user" id="user2">_</h2>
-</div>
-
-  <div class="end-annonce">
-    <h2 id="user1">User1</h2>
-    <h2>Congratulation!</h2>
+  <div class="starter-annonce annonce">
+    <h2 class="starter-user" id="user1">_</h2>
+    <h2 class="starter-user" id="user2">_</h2>
+  </div>
+  <div class="end-annonce annonce">
+    <h2 id="userCongregated">_</h2>
+    <h2>Win!</h2>
   </div>
 </template>
 
 <style scoped>
-.starter-annonce {
+h2 {
+  text-transform: capitalize;
+}
+
+.annonce {
   width: 100vw;
   height: 100vh;
   position: fixed;
@@ -29,7 +32,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
 
+.starter-annonce {
   animation: starterAnim 5s ease-in-out both;
 }
 
@@ -59,18 +64,18 @@
   }
 }
 
-.starter-annonce>h2 {
+.annonce>h2 {
   color: white;
   font-size: max(10vh, 7.5vw);
   position: relative;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
 }
 
-.starter-annonce>h2:nth-child(2n+1) {
+.annonce>h2:nth-child(2n+1) {
   animation: wishUserTextAnimation1 1s 1s both ease-in-out;
 }
 
-.starter-annonce>h2:nth-child(2n) {
+.annonce>h2:nth-child(2n) {
   animation: wishUserTextAnimation2 1s 1s both ease-in-out;
 }
 
@@ -92,7 +97,7 @@
   }
 }
 
-.starter-annonce>h2::after {
+.annonce>h2::after {
   content: '';
   transform-origin: -2.5% 0;
   transform: scaleX(0);
@@ -105,12 +110,12 @@
   opacity: 0.95;
 }
 
-.starter-annonce>h2:nth-child(2n+1)::after {
+.annonce>h2:nth-child(2n+1)::after {
   background: rgb(var(--secondary-color));
   animation: wishUserAnimation 3.5s ease-in-out infinite;
 }
 
-.starter-annonce>h2:nth-child(2n)::after {
+.annonce>h2:nth-child(2n)::after {
   background: rgb(var(--primary-color));
   animation: wishUserAnimation2 3.5s ease-in-out infinite;
 }
@@ -226,4 +231,5 @@
 .end-annonce {
   visibility: hidden;
 }
+
 </style>

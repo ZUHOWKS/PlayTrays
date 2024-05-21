@@ -159,11 +159,14 @@ export default class CheckersClient extends SupportController {
                 }
             });
 
-            // évènement de fin de partie
-            this.ws.on('end game', (whoWin) => {
-                //TODO: Écran de fin de partie
-                setTimeout(() => this.ws.disconnect(), 30000)
-            })
+
+        })
+
+        // évènement de fin de partie
+        this.ws.on('end game', (whoWin: string)  => {
+            (document.querySelector('.end-annonce') as HTMLElement).style.visibility = 'visible';
+            (document.querySelector('#userCongregated') as HTMLElement).innerText = whoWin;
+            setTimeout(() => this.ws.disconnect(), 30000)
         })
 
     }
