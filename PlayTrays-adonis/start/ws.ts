@@ -23,7 +23,7 @@ app.ready(async () => {
     await PTServer.updateOrCreate({id:1}, {id: 1, url: env.get('GS_1_HOST'), name: 'gs1-local-test', capacity: 1, statut: 'offline'})
 
     registerGamesInDB('checkers', 2)
-    registerGamesInDB('dorianGame', 2)
+    registerGamesInDB('dorian_game', 2)
 
     // set les serveurs jeu par défaut en offline + tentative de connection
     PTServer.all().then((servers) => {
