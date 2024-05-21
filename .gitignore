@@ -18,6 +18,7 @@ coverage
 /cypress/screenshots/
 
 # Editor directories and files
+.fleet
 .vscode
 .idea
 *.suo
@@ -45,7 +46,3 @@ public/assets
 # Build tools specific
 npm-debug.log
 yarn-error.log
-
-# Editors specific
-.fleet
-.vscode
