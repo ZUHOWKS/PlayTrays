@@ -33,6 +33,8 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
           0  B  B  B  B  B  B  B  B  B  B  B
              0  1  2  3  4  5  6  7  8  9  10
 
+        Avec chacunes de ces cases ayant un nbCase (commence à 0 et augemente dans le sens des aiguilles d'un montre sur la plateau)
+
          */
         this.case = {casePawnX : 0 ,casePawnY : 0}
     }
@@ -51,7 +53,7 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
     rotate(x: number, y: number, z: number): void {
     }
 
-    //Juste pour les tests (modifié plus tard)
+    //Affiche le hud du user contenu dans le pion
     select(): void {
         const userElem = (document.querySelector('#other-user') as HTMLElement);
         userElem.style.transform = 'translateX(0)';
@@ -93,6 +95,7 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
         this.positionTest.y = vectArrivee.y;
         this.positionTest.z = vectArrivee.z;
 
+        //Si on souhaite afficher le pion bouger
         if (anim){
         this.animationQueue.push({
             duration: 100,
