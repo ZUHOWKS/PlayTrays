@@ -41,6 +41,10 @@ onMounted(() => {
         <h3>Checkers</h3>
         <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
       </div>
+      <div class="mode-card" @click="() => {modeChoose = 'Dorian Game'; showModeSelection = false; setBannerMode(checkersBanner);}">
+        <h3>Dorian Game</h3>
+        <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
+      </div>
     </div>
   </div>
 
@@ -49,7 +53,7 @@ onMounted(() => {
       <h2 class="title-selected">{{modeChoose.length > 10 ? modeChoose.substring(0, 7) + "..." : modeChoose}}</h2>
       <img src="" alt="PlayTrays mode selected banner" ref="selectedModeBanner">
     </div>
-    <button class="play-button" @click="props.startMatchmaking(modeChoose.toLowerCase())" :disabled="modeChoose.toLowerCase() ==='choose' || !props.menuInfo.matchmaking.canStart">
+    <button class="play-button" @click="props.startMatchmaking(modeChoose.toLowerCase().replace(' ', '_'))" :disabled="modeChoose.toLowerCase() ==='choose' || !props.menuInfo.matchmaking.canStart">
       Play : {{modeChoose.length > 10 ? modeChoose.substring(0, 7) + "..." : modeChoose}}
     </button>
   </div>

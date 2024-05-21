@@ -11,9 +11,7 @@ import {
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import type {Socket} from "socket.io-client";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import Tray from "@/modules/game/scene/objects/Tray";
-import {prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import {playerPawn} from "@/modules/game/scene/objects/DorianGameObjects/PlayerPawn";
 import {CaseSelector} from "@/modules/game/scene/objects/DorianGameObjects/CaseSelector";
@@ -22,6 +20,8 @@ import {TownCard} from "@/modules/game/scene/objects/DorianGameObjects/cards/Tow
 import {cardConfig} from "@/modules/game/scene/objects/DorianGameObjects/cards/CardConfig";
 import {Card} from "@/modules/game/scene/objects/DorianGameObjects/cards/Card";
 import {maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
+import type {prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
+import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
 
 
 interface Players{
@@ -54,8 +54,8 @@ export default class DorianGame extends SupportController{
         //this.displayCardHUD();
     }
 
-    getSelectedActuator(): Actuator | null {
-        return null;
+    getSelectedActuator(): Actuator | undefined {
+        return undefined;
     }
 
     selectActuator(name: string): void {
@@ -68,17 +68,14 @@ export default class DorianGame extends SupportController{
 
     // Permet d'initialiser le jeu DorianGame lors du lancement de la page
     setup(): void {
-        const loader = new GLTFLoader();
-
-
 
         this.setupCard();
 
         //Ajout d'un plateau
-        this.setupTray(loader);
+        this.setupTray();
 
         //Ajout de la prison
-        this.setupPrison(loader);
+        this.setupPrison();
 
         // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
         this.setupPlanes();
@@ -88,7 +85,7 @@ export default class DorianGame extends SupportController{
         this.updateVariables();
 
         this.ws.on("PlayerJoin", (player : Players) : void => {
-            this.setupPawn(loader, player);
+            this.setupPawn(player);
             this.updateVariables();
         })
 
@@ -301,13 +298,12 @@ export default class DorianGame extends SupportController{
     }
 
     private setupHouses(cards: Map<number, Card>){
-        const loader = new GLTFLoader();
         //Boucle pour setup les maisons et les affilier à un nom.
         for (let i: number = 0; i < 9; ++i) {
-            this.addHousesOfCard(loader, 7.1 - 1.7767 * i, 8.32, i + 1, false, cards.get(i+1));
-            this.addHousesOfCard(loader, -8.25  , 7.1 - 1.7767 * i, i + 11, true, cards.get(i+11));
-            this.addHousesOfCard(loader, -7.1 + 1.7767 * i  , -8.3, i + 21, false, cards.get(i+21));
-            this.addHousesOfCard(loader, 8.25  , -7.1 + 1.7767 * i, i + 31, true, cards.get(i+31));
+            this.addHousesOfCard(7.1 - 1.7767 * i, 8.32, i + 1, false, cards.get(i+1));
+            this.addHousesOfCard(-8.25  , 7.1 - 1.7767 * i, i + 11, true, cards.get(i+11));
+            this.addHousesOfCard(-7.1 + 1.7767 * i  , -8.3, i + 21, false, cards.get(i+21));
+            this.addHousesOfCard(8.25  , -7.1 + 1.7767 * i, i + 31, true, cards.get(i+31));
         }
     }
 
@@ -330,15 +326,15 @@ export default class DorianGame extends SupportController{
         }
     }
 
-    private setupPrison(loader: GLTFLoader) {
-        this.loadGLTFSceneModel(loader, "DorianGame/prison.glb").then((obj) => {
+    private setupPrison() {
+        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/prison.glb").then((obj) => {
             //@ts-ignore
             this.registerObject(new prison("Prison", obj))
         });
     }
 
-    private setupTray(loader: GLTFLoader) {
-        this.loadGLTFSceneModel(loader, "DorianGame/dorianTray.glb").then((obj) => {
+    private setupTray() {
+        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/dorianTray.glb").then((obj) => {
             const tray = new Tray("DorianTray", obj);
 
             //Rend le plateau inselectable
@@ -361,13 +357,13 @@ export default class DorianGame extends SupportController{
             this.cards.set(caseNb, new Card(caseNb, "chances"))
         })
 
-        cardConfig.villes.forEach((town) => {
+        cardConfig.villes.forEach((town: any) => {
             this.cards.set(town.caseNb, new TownCard(town.caseNb, town.nameCity, town.infoCard))
         })
     }
 
-    private setupPawn(loader: GLTFLoader, player: Players) {
-        this.loadGLTFSceneModel(loader, "DorianGame/" + player.pawnName + ".glb").then((obj) => {
+    private setupPawn(player: Players) {
+        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/" + player.pawnName + ".glb").then((obj) => {
             this.registerObject(new playerPawn(player.pawnName, obj, player.name, player.money));
             const tempObject = this.getObject(player.pawnName) as playerPawn | undefined;
             this.players.set(player.id, player);
@@ -397,7 +393,7 @@ export default class DorianGame extends SupportController{
     }
 
     //Ajoute les 5 types de maisons sur les cartes (seules les cartes qui on un nbMaison > 0 ont une maison visible)
-    addHousesOfCard(loader: GLTFLoader, posx : number, posz : number, nbCase : number, rotate: boolean, tempCard: Card | undefined){
+    addHousesOfCard(posx : number, posz : number, nbCase : number, rotate: boolean, tempCard: Card | undefined){
         if (tempCard?.type == "ville") {
             const tempCardHelp = tempCard as TownCard | undefined;
             if (tempCardHelp != undefined) {
@@ -405,7 +401,7 @@ export default class DorianGame extends SupportController{
 
                 //Si la maison est à afficher
                 if (tempCardHelp.nbMaison == i) {
-                    this.loadGLTFSceneModel(loader, "DorianGame/maison" + i + ".glb").then((obj) => {
+                    ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
 
 
                         obj.translateZ(posz);
@@ -423,7 +419,7 @@ export default class DorianGame extends SupportController{
                 }
                 //Si la maison n'est pas à afficher
                 else{
-                    this.loadGLTFSceneModel(loader, "DorianGame/maison" + i + ".glb").then((obj) => {
+                    ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
 
                         const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
                         m.object3D.visible = false;
