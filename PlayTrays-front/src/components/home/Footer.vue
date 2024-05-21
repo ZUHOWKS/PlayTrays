@@ -5,31 +5,29 @@
   <div class="footer" id="contact">
     <h2>CONTACT</h2> 
     <div class="contacts-container">
-      <div v-for="contact in contacts" :key="contact.id" class="contact">
-        <div>{{ contact.name }}</div>
-        <div>{{ contact.email }}</div>
-      </div>
+        <div class="contact-item">
+            <span class="contact-name">Mathilde VARAGNAT</span>
+            <a href="https://github.com/Mathvar" class="contact-github">@Mathvar</a>
+        </div>
+        <div class="contact-item">
+            <span class="contact-name">Joris VILARDELL</span>
+            <a href="https://zuhowks.github.io/" class="contact-github">@Zuhowks</a>
+        </div>
+        <div class="contact-item">
+            <span class="contact-name">Othmane GARTANI</span>
+            <a href="https://github.com/OthGart" class="contact-github">@OthGart</a>
+        </div>
+        <div class="contact-item">
+            <span class="contact-name">Mathias HELLAL</span>
+            <a href="https://github.com/Majurax" class="contact-github">@Majurax</a>
+        </div>
     </div>
     <div class="copyright">
       © 2024 Mathilde VARAGNAT, Joris VILARDELL, Othmane GARTANI, Mathias HELLAL. All Rights Reserved
     </div>
   </div>
 </template>
-  
-<script>
-export default {
-  data() {
-    return {
-      contacts: [
-        { id: 1, name: 'Mathilde VARAGNAT', email: 'mathilde.varagnat@etu.univ-savoie.fr' },
-        { id: 2, name: 'Joris VILARDELL', email: 'joris.vilardell@etu.univ-savoie.fr' },
-        { id: 3, name: 'Othmane GARTANI', email: 'othmane.gartani@etu.univ-savoie.fr' },
-        { id: 4, name: 'Mathias HELLAL', email: 'mathias.hellal@etu.univ-savoie.fr' }
-      ]
-    };
-  }
-}
-</script>
+
 
 <style scoped>
 .footer {
@@ -37,62 +35,66 @@ export default {
   flex-direction: column;
   align-items: center; 
   justify-content: center;
-  position: relative;
-  width: 100%;
-  background-color: #FFE66D;
-  padding: 20px 0;
-  box-sizing: border-box;
+  background-color: rgb(var(--primary-color));
+  padding: 2% 3%;
 }
 
-.footer h2 {
-  align-self: center;
-  font-size: 1.5rem;
-  margin-bottom: 20px; 
-  color: #333;
+h2 {
+  font-size: min(3.4vw, 3.4vh);
+  margin: 2% 0;
 }
 
 .contacts-container {
   display: flex;
-  justify-content: space-around;
+  flex-wrap: wrap;
   width: 100%;
+  justify-content: space-evenly;
+  align-content: center;
 }
 
-.footer .contact {
-  display: flex;
+.contact-item {
+  display:flex;
   flex-direction: column;
-  align-items: center;
-  flex-grow: 1;
+  justify-content: center;
+  align-content: center;
+  margin: 1.5%;
 }
 
-.footer .contact div:first-child {
-  font-weight: bold;
+.contact-name {
+  font-size: min(2.2vw, 2.2vh);
   text-align: center;
 }
 
-.footer .contact div:last-child {
+.contact-github {
   text-align: center;
-  font-size: 0.9rem;
+  font-size: min(1.8vw, 1.8vh);
 }
 
-.footer .copyright {
-  font-size: 0.8rem; 
-  color: #333;
-  margin-top: 20px;
-  align-self: center; 
+.copyright {
+  font-size: min(1.7vw, 1.7vh);
+  margin: 1.5% 0;
 }
 
 /* Requêtes média pour petits écrans */
-@media (max-width: 768px) {
-  .footer h2 {
-    font-size: 1.2rem;
+@media screen and (max-width: 800px) {
+  h2 {
+    font-size: min(4.5vw, 4.5vh);
   }
 
-  .footer .contact div:last-child {
-    font-size: 1rem;
+  .contacts-container {
+    margin: 1.5%;
   }
 
-  .footer .copyright {
-    font-size: 0.9rem; 
+  .contact-name {
+    font-size: min(3.3vw, 3.3vh);
+  }
+
+  .contact-github {
+    font-size: min(2.8vw, 2.8vh);
+  }
+
+  .copyright {
+    font-size: min(2vw, 2vh);
   }
 }
 </style>

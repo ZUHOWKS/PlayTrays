@@ -15,13 +15,13 @@
 
       <!-- div pour le logo -->
       <div class="row" id="logo">
-        <!-- TODO: Mettre le logo -->
+        <img src="@/assets/image/logoPT(1).png" alt="PlayTrays Logo" class="logo">
         <h3>PlayTrays</h3>
       </div>
 
       <!-- hypertextes -->
-      <a href="#about">About</a>
       <a href="#games">Games</a>
+      <a href="#about">About</a>
       <a href="#contact">Contact</a>
     </div>
 
@@ -29,12 +29,12 @@
     <div class="row">
 
       <!-- bouton pour aller au menu -->
-      <button class="play-button" @click="() => router.push('/login')">
+      <button class="play-button buttons" @click="() => router.push('/login')">
         Play on a Tray!
       </button>
 
       <!-- bouton pour se connecter ou s'enregistrer -->
-      <button class="sign-up-button" @click="() => router.push('/register')">
+      <button class="sign-up-button buttons" @click="() => router.push('/register')">
         Sign up
       </button>
     </div>
@@ -44,16 +44,14 @@
 <style scoped>
   .s-navbar {
     width: 100%;
-    height: 200px;
+    height: 15vh;
     align-items: center;
     justify-content: space-between;
   }
 
-
-
   /* style de la première rangé du logo et des hypertextes */
   .s-navbar>div:nth-child(1) {
-    margin-left: 6%;
+    margin-left: 4%;
     width: 47.5%;
     align-items: center;
     justify-items: center;
@@ -89,7 +87,15 @@
     /* style du logo */
   #logo {
     padding-bottom: 1%;
-    cursor: default;
+    cursor: pointer;
+  }
+
+    /* style de l'icone du logo */
+  .logo {
+    height: 3.5vw;
+    transition: transform 0.6s ease-in-out;
+    align-self: center;
+    padding-right: 2%;
   }
 
   /* style de la police du logo */
@@ -98,10 +104,15 @@
     font-weight: 800;
   }
 
+  /* mouvement de l'icone du logo lorsque le curseur est sur le logo */
+  #logo:hover>.logo {
+    transform: rotate(360deg);
+  }
+
   /* style de la seconde rangé  */
   .s-navbar>div:nth-child(2) {
     width: 30%;
-    margin-right: 6%;
+    margin-right: 4%;
     align-items: center;
     justify-items: center;
     justify-content: space-evenly;
@@ -125,7 +136,39 @@
 
   .sign-up-button:hover {
     border-color: rgb(var(--primary-color));
-    background-color: white;
+  }
+
+  @media screen and (max-width: 800px) {
+    
+    a {
+      position: absolute;
+      visibility: hidden;
+    }
+
+    .s-navbar {
+      margin: none;
+      height: 10vh;
+    }
+
+    .logo {
+      height: 7.5vw;
+    }
+
+    #logo>h3 {
+      font-size: 6vw;
+      font-weight: 800;
+    }
+
+    .s-navbar>div:nth-child(2) {
+      width: 50%;
+    }
+
+    .buttons{
+      width : 50%;
+      margin: 0 2%;
+      font-size: min(2.7vw, 1.9vh);
+    }
+
   }
 
 </style>

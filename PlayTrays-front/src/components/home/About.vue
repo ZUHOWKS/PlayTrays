@@ -5,7 +5,7 @@
 <template>
   <div class="about" id="about">
     <h1>ABOUT US</h1>
-    <p>We are a group of 4 students from the Polytech Annecy-Chambéry school, attached to the University of Savoie Mont-Blanc. As part of our school career, we created this video game website. This project aims to make us learn a computer language while also taking care of the project management part. To create this website, we used javascript with come framework Vue.js.</p>
+    <p>We are a group of four students from Polytech Annecy-Chambéry, affiliated with the University of Savoie Mont-Blanc. As part of our academic program, we created this video game website. This project aims to help us improve in the different areas of computer science needed for this project and to enhance our management skills. To develop this website, we used TypeScript, HTML and CSS along with the Vue.js framework.</p>
     <div class="logos">
       <img src="@/assets/image/logo-polytech-annecy-chambery-blanc.png" alt="Polytech Annecy-Chambéry Logo" class="image">
       <img src="@/assets/image/1200px-Logo_Université_Savoie_Mont_Blanc_2015.svg.png" alt="Université Savoie Mont Blanc Logo" class="image">
@@ -13,70 +13,57 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'AboutUs',
-  props: ['description'] 
-}
-</script>
-
 <style scoped>
 .about {
   display: flex;
   flex-direction: column;
-  background-color: #FFE66D;
-  padding: 2.5rem;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  color: #333;
-  min-height: 400px;
+  background-color: rgba(var(--secondary-color),0.80);
+  padding: 2% 3%;
 }
 
-.about h1 {
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
+h1 {
+  font-size: min(3.4vw, 3.4vh);
+  margin: 2% 0;
   text-align: left; 
 }
 
-.about p {
-  font-size: 1.5rem;
-  line-height: 1.8;
-  margin-bottom: 2rem; 
+p {
+  font-size: min(2vw, 2vh);
+  line-height: 1.6;
+  margin-bottom: min(3vw, 3vh); 
   text-align: justify; 
 }
 
 .logos {
   display: flex;
+  flex-wrap: wrap;
   justify-content:center; 
   width: 100%;
   align-items: center;
 }
 
 .image {
-  width: 100%;
-  max-width: 20%; /*taille max logo*/
+  width: 20%;
   height: auto;
-  margin-right: 200px;
+  margin: 2% 6%;
 }
 
-.image:last-child {
-  margin-right: 0;
-}
+@media screen and (max-width :800px) {
 
-/* Requêtes média pour petits écrans */
-@media (max-width: 768px) {
-  .about h1 {
-    font-size: 2rem; /*taille de police plus petite pour petits écran*/
+  h1 {
+    font-size: min(4.5vw, 4.5vh);
+    margin: 3% 2%;
   }
 
-  .about p {
-    font-size: 1.2rem; 
-    margin-bottom: 1rem; 
+  p {
+    font-size: min(4vw, 4vh);
+    line-height: 1.4;
+    margin: 2%;
   }
 
   .image {
-    max-width: 40%; /*augmente taille logos pour petits écrans*/
-    margin-right: 20px; 
+    width: 30%;
   }
 }
+
 </style>

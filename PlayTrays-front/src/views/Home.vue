@@ -9,10 +9,13 @@ import Games from "@/components/home/Games.vue";
 <template >
   <SNavbar></SNavbar>
   <main>
+  
     <Welcome></Welcome>
 
-    <About></About>
     <Games/>
+
+    <About></About>
+    
     <Footer></Footer>
 
   </main>

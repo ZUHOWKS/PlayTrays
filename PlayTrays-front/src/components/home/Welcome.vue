@@ -16,31 +16,34 @@
 
 <style scoped>
 .welcome-section {
-    padding: 5% 2.5% 15% 2.5%;
-    width: 95vw;
-    height: 50vh;
+  display : flex;
+  padding: 10% 2.5% 13% 2.5%;
+  width: 95vw;
+  height: 38.7vh;
 }
 
 .container {
+  align-self: center;
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
 
 .logo {
-    width: 30vw;
-    height: auto;
-    transition: transform 0.6s ease-in-out; 
+  width: 30vw;
+  height: auto;
+  transition: transform 0.6s ease-in-out;
 }
 
 .container:hover>.logo {
-    transform: rotate(360deg); 
+  transform: rotate(360deg); 
 }
 
-.welcome-text h1 {
-    color: rgb(var(--text-color));
-    text-align: left;
-    font-weight: bold;
+h1 {
+  color: rgb(var(--text-color));
+  text-align: left;
+  font-weight: bold;
+  font-size: 9vw;
 }
 
 .welcome-text>#name {
@@ -58,9 +61,8 @@
   left: 0;
   right: 0;
   height: 1.1em;
-  background: rgb(var(--secondary-color));
+  background: rgba(var(--secondary-color), 0.95);
   z-index: -1;
-  opacity: 0.95;
   animation: nameAfter .5s .5s both ease-in-out;
 }
 
@@ -70,22 +72,22 @@
   }
 
   100% {
-    transform: scaleX(0.8) rotate(-0.25deg);
+    transform: scaleX(0.8) rotate(-2deg);
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .welcome-section {
-    flex-direction: column;
+    height: 30vh;
+  }
+
+  h1 {
+    font-size: min(10vw, 10vh);
   }
 
   .logo {
-    margin-bottom: 20px; 
-    transition: transform 0.5s ease-in-out; /*ajuster animation pour mobile*/
+    width: min(33vw, 33vh);
   }
 
-  .welcome-text h1 {
-    font-size: 12vw;
-  }
 }
 </style>
