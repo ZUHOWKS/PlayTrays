@@ -326,10 +326,11 @@ export default class DorianGame extends SupportController{
         (document.getElementsByClassName("price-maison")[index] as HTMLElement).innerText = "£"+caseInfo.info.maison;
     }
 
-    private async setupDe() {
-        const cube = await ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, '/DorianGame/de_party.glb')
-        cube.scale.set(0.5,0.5, 0.5);
-        this.registerObject(new de("dé", cube));
+    private setupDe() {
+        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, '/DorianGame/de_party.glb').then((cube) => {
+            cube.scale.set(0.5,0.5, 0.5);
+            this.registerObject(new de("dé", cube));
+        })
     }
 
     private setupHouses(cards: Map<number, Card>){
