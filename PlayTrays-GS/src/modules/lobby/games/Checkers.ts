@@ -3,6 +3,7 @@ import {Socket} from "socket.io";
 import PTServer from "../../PTServer";
 import Pawn from "../../checkers/Pawn";
 import {Vec3, VecHelp} from "../../utils/Vectors";
+import {Axios} from "../../../services";
 
 interface Action {
     pawn: string;
@@ -18,7 +19,6 @@ export default class Checkers extends PTLobby {
     whitePlayer: string | undefined;
     blackPlayer: string | undefined;
     whoPlay: "black" | "white" = "black";
-
     actualTimer: number = 120;
 
     /**
@@ -33,6 +33,7 @@ export default class Checkers extends PTLobby {
         super(uuid, game, visibility, server);
         this.pawns = [];
         this.setupGame();
+        this.activeAntiEmptyLobby();
     }
 
     /**
@@ -69,13 +70,17 @@ export default class Checkers extends PTLobby {
             if (!error && response.loaded) {
                 if (this.status === 'waiting') {
                     if (this.whitePlayer && this.blackPlayer) {
-                        this.status = 'running';
-                        this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
+                        this.pushStatus('running');
+                        this.disableAntiEmptyLobby();
 
-                        Array.from(this.sockets.values()).forEach((_socket) => {
-                            const _userTeam = this.getTeam(_socket.data.user)
-                            _socket.emit('start', {team: _userTeam, canPlay: this.whoPlay == _userTeam, timer: this.actualTimer})
-                        })
+                        this.getUsernames().then((users) => {
+                            Array.from(this.sockets.values()).forEach((_socket) => {
+                                const _userTeam = this.getTeam(_socket.data.user)
+
+                                _socket.emit('start', {team: _userTeam, canPlay: this.whoPlay == _userTeam, timer: this.actualTimer}, users)
+                            })
+                        });
+
 
                         const intervalID = setInterval(() => {
                             if (this.status === 'finished') clearInterval(intervalID);
@@ -94,7 +99,7 @@ export default class Checkers extends PTLobby {
                         }, 1000)
                     }
                 } else if (this.status === 'running') {
-                    socket.emit('start', {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer})
+                    this.getUsernames().then((users) => socket.emit('start', {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer}, users))
                 }
             }
         });
@@ -134,6 +139,29 @@ export default class Checkers extends PTLobby {
         })
 
         console.log("The user " + socket.data.user + " join the lobby " + this.uuid + ".")
+    }
+
+    /**
+     *
+     * Get usernames of players.
+     *
+     * @private
+     */
+    private async getUsernames(): Promise<string[]> {
+        const form1 = new FormData();
+        const users: string[] = []
+
+        // @ts-ignore
+        form1.append('userID', parseInt(this.blackPlayer));
+        users.push((await Axios.post('/server/user-info', form1)).data.username);
+
+        const form2 = new FormData();
+
+        // @ts-ignore
+        form2.append('userID', parseInt(this.whitePlayer));
+        users.push((await Axios.post('/server/user-info', form2)).data.username)
+
+        return users
     }
 
     /**
@@ -526,8 +554,8 @@ export default class Checkers extends PTLobby {
      */
     private endGame(...args: any[]) {
         this.server.io.to(this.uuid).emit('end game', args);
-        this.status = 'finished';
-        this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
+        this.pushStatus('finished')
+        setTimeout(() => this.server.io.to(this.uuid).disconnectSockets(), 25000)
     }
 
 
