@@ -23,6 +23,8 @@
   top: 0;
   background: rgba(0,0,0, 0.5);
 
+  z-index: 2;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,8 +43,8 @@
 }
 
 .game-menu {
-  width: 20vw;
-  padding: 2% 3vw;
+  width: max(30vh, 30vw);
+  padding: 5% 3vw;
   z-index: 3;
   background: rgb(var(--background-color));
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.35);
@@ -69,12 +71,14 @@
 }
 
 .game-menu>h2 {
+  font-size: max(7vh, 7vw);
   margin-bottom: 5%;
 }
 
 .game-menu>button {
   width: 100%;
   margin: 2.5% 0;
+  font-size: max(2vh, 2vw);
 }
 
 button#leave-party {
