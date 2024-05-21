@@ -101,14 +101,15 @@ export default class DorianGame extends SupportController{
             if (player.realUserId == this.player.id) {
                 setTimeout(() => {
                     let i = 0;
-                    (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+i
+                    (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+i;
                     const interval = setInterval(() => {
                         try {
                             if (i < player.money) {
-                                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+i
+                                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+i;
                                 i+=1981;
                             } else {
-                                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+player.money
+                                (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = ""+player.money;
+                                clearInterval(interval);
                             }
                         } catch (e) {
                             clearInterval(interval)
@@ -325,10 +326,9 @@ export default class DorianGame extends SupportController{
         (document.getElementsByClassName("price-maison")[index] as HTMLElement).innerText = "£"+caseInfo.info.maison;
     }
 
-    private setupDe() {
-        const geometry = new BoxGeometry(2, 2, 2);
-        const material = new MeshBasicMaterial({color: 0x000000});
-        const cube = new Mesh(geometry, material);
+    private async setupDe() {
+        const cube = await ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, '/DorianGame/de_party.glb')
+        cube.scale.set(0.5,0.5, 0.5);
         this.registerObject(new de("dé", cube));
     }
 
