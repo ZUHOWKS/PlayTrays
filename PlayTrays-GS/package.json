@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "tsc src/server.ts && node src/server.js"
+    "build": "tsc src/server.ts",
+    "start": "node src/server.js"
   },
   "author": "ZUHOWKS",
   "license": "UNLICENSED",

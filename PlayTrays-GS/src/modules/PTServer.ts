@@ -2,6 +2,7 @@ import {Server, Socket} from "socket.io";
 import PTLobby from "./lobby/PTLobby";
 import Checkers from "./lobby/games/Checkers";
 import {Axios} from "../services";
+import DorianGame from "./lobby/games/DorianGame";
 
 /**
  * Permet de modéliser les données d'authentification serveur
@@ -54,6 +55,7 @@ export default class PTServer {
      */
     private initGames(): void {
         this.games.set("checkers", Checkers);
+        this.games.set("dorian_game", DorianGame);
     }
 
     /**
