@@ -5,12 +5,13 @@ import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import CheckersClient from "@/modules/game/scene/controllers/CheckersClient";
 import DorianGame from "@/modules/game/scene/controllers/DorianController";
+import type {UserInterface} from "@/modules/utils/UserInterface";
 
 
 export default class TrayGame {
     id: string;
     status: "waiting" | "running" | "finished";
-    player: any;
+    player: UserInterface;
     controller: SupportController | undefined;
     ws: Socket;
     game: string;
@@ -29,7 +30,7 @@ export default class TrayGame {
      * @param orbitControlsRef Contrôles orbitaux de la caméra (autour d'un point,
      * par défaut le point de coordonnée x=0;y=0;z=0)
      */
-    constructor(id: string, status: "waiting" | "running" | "finished", player: any, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>,) {
+    constructor(id: string, status: "waiting" | "running" | "finished", player: UserInterface, ws: Socket, game: string, scene: Scene, cameraRef: Ref<PerspectiveCamera>, orbitControlsRef: Ref<OrbitControls>,) {
         this.id = id;
         this.status = status;
         this.player = player; //TODO: remplacer any par la UserInterface class
@@ -37,10 +38,10 @@ export default class TrayGame {
         this.game = game;
 
         if (game == "checkers") {
-            this.controller = new CheckersClient(scene, cameraRef, orbitControlsRef, this.ws);
+            this.controller = new CheckersClient(scene, cameraRef, orbitControlsRef, this.ws, this.player);
         }
-        else if (game == "DorianGame"){
-            this.controller = new DorianGame(scene, cameraRef, orbitControlsRef, this.ws);
+        else if (game == "dorian_game"){
+            this.controller = new DorianGame(scene, cameraRef, orbitControlsRef, this.ws, this.player);
         }
 
     }
