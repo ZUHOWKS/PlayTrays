@@ -549,11 +549,12 @@ export default class Checkers extends PTLobby {
     /**
      * Mettre fin à la partie.
      *
-     * @param args
+     * @param whoWin équipe gagnante
      * @private
      */
-    private endGame(...args: any[]) {
-        this.server.io.to(this.uuid).emit('end game', args);
+    private endGame(whoWin: string) {
+        console.log(this.uuid +  ": party ended!")
+        this.server.io.to(this.uuid).emit('end game', whoWin);
         this.pushStatus('finished')
         setTimeout(() => this.server.io.to(this.uuid).disconnectSockets(), 25000)
     }
