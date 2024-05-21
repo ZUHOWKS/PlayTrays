@@ -1,0 +1,28 @@
+{
+  "name": "playtrays-game-server",
+  "description": "L'objectif est de développer une application de jeux sur plateau, ergonomique, moderne et ouverte à tout type \r de public.",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc src/server.ts",
+    "start": "node src/server.js"
+  },
+  "author": "ZUHOWKS",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@types/socket.io": "^3.0.2",
+    "@types/uuid": "^9.0.8",
+    "axios": "^1.6.8",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "dotenv": "^16.4.5",
+    "socket.io": "^4.7.5",
+    "ts-node": "^10.9.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@types/node": "^20.11.30",
+    "typescript": "~5.4.0"
+  }
+}
