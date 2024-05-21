@@ -3,7 +3,7 @@ import {BoxGeometry, Mesh, MeshBasicMaterial, type Object3D, Vector3} from "thre
 import {AnimationQueue, type AnimationQueueInterface} from "@/modules/utils/scene/AnimationQueue";
 
 
-export class prison extends PTObject implements AnimationQueueInterface{
+export class Prison extends PTObject implements AnimationQueueInterface{
     animationQueue: AnimationQueue;
     isUp : boolean = true;
     selectable : boolean = false;
