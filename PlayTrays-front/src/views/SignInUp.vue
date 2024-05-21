@@ -39,26 +39,58 @@ function loginForm() {
 
   }
 
+  addEventListener("resize", (event) => {
+    window.location.reload()
+  }) 
+
   function switchSignMode() {
-    if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
-      isLoginMode.value = !isLoginMode.value
-      if (!isLoginMode.value) {
-        signUpMode.value.style.transform = "translateX(0)"
-        registerFormContainer.value.style.transform = "translateX(0)"
 
-        loginMode.value.style.transform = "translateX(200%)"
-        loginFormContainer.value.style.transform = "translateX(-200%)"
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
-        signFiller.value.style.left = "20%"
+    if (width > 800) {
+      if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
+        isLoginMode.value = !isLoginMode.value
+        if (!isLoginMode.value) {
+          signUpMode.value.style.transform = "translateX(0)"
+          registerFormContainer.value.style.transform = "translateX(0)"
 
-      } else {
-        signUpMode.value.style.transform = "translateX(-200%)"
-        registerFormContainer.value.style.transform = "translateX(200%)"
+          loginMode.value.style.transform = "translateX(200%)"
+          loginFormContainer.value.style.transform = "translateX(-200%)"
 
-        loginMode.value.style.transform = "translateX(0)"
-        loginFormContainer.value.style.transform = "translateX(0)"
+          signFiller.value.style.left = "20%"
 
-        signFiller.value.style.left = "50%"
+        } else {
+          signUpMode.value.style.transform = "translateX(-200%)"
+          registerFormContainer.value.style.transform = "translateX(200%)"
+
+          loginMode.value.style.transform = "translateX(0)"
+          loginFormContainer.value.style.transform = "translateX(0)"
+
+          signFiller.value.style.left = "50%"
+        }
+      }
+    } else {
+      if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
+        isLoginMode.value = !isLoginMode.value
+        if (!isLoginMode.value) {
+          signUpMode.value.style.transform = "translateY(0)"
+          registerFormContainer.value.style.transform = "translateY(0)"
+
+          loginMode.value.style.transform = "translateY(300%)"
+          loginFormContainer.value.style.transform = "translateY(-200%)"
+
+          signFiller.value.style.top = "15%"
+
+        } else {
+          signUpMode.value.style.transform = "translateY(-300%)"
+          registerFormContainer.value.style.transform = "translateY(200%)"
+
+          loginMode.value.style.transform = "translateY(0)"
+          loginFormContainer.value.style.transform = "translateY(0)"
+
+          signFiller.value.style.top = "50%"
+        }
       }
     }
   }
@@ -143,6 +175,7 @@ header {
   margin : 1% 5%;
   display : flex;
   justify-content: center;
+  z-index: 1;
 }
 
 h1 {
@@ -179,13 +212,13 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: fixed;
+  position: absolute;
   top: 10vh;
   left: 0;
 }
 
 .forms {
-  border-radius: 20px;
+  border-radius: 1.5vw;
   align-items: center;
   width: 60%;
   height: 30vw;
@@ -227,8 +260,9 @@ form>.inputs {
   background: linear-gradient(120deg, rgb(var(--primary-color)) -175%, rgb(var(--secondary-color)) 100%);
   width: 30%;
   left: 50%;
+  top : unset;
   height: 30vw;
-  border-radius: 20px;
+  border-radius: 1.5vw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -247,13 +281,113 @@ form>.inputs {
   transition: transform 1s ease-in-out;
 }
 
-
 .sign-up-mode {
   transform: translateX(-200%);
 }
 
 .register-form {
   transform: translateX(200%);
+}
+
+@media screen and (max-width: 800px) {
+  .logo {
+    height: 8vw;
+    margin: 3% 0.5%;
+  }
+  
+  h1{
+    font-size: 8vw;
+  }
+  
+  /* .sign-mode-filler {
+    visibility : hidden;
+  } */
+
+  main {
+    flex-direction: column;
+    height: 100vh;
+    top:0;
+  }
+
+  .forms {
+    display: flex;
+    flex-direction: column;
+    width: 70%;
+    height: 70%;
+  }
+
+  .forms>form {
+    width: 75%;
+    height: 50%;
+  }
+  
+  h2{
+    font-size: max(2.5vh,5.5vw);
+  }
+
+  .inputs>input {
+    height: max(1.7vh,3vw);
+    font-size: max(1.3vh,2.5vw);
+  }
+  
+  .sign-mode-filler {
+    width: 70%;
+    height: 35%;
+    left: 15%;
+    top: 50%;
+    transition: top 1s ease-in-out;
+  }
+
+  .sign-up-mode {
+    transform: translateY(-200%);
+}
+
+  .register-form {
+    transform: translateY(200%);
+}
+
+  .sign-up-mode {
+    transform: translateY(-250%);
+}
+
+  /* .logo {
+    height: 8vw;
+    margin: 3% 0.5%;
+  }
+  
+  h1{
+    font-size: 8vw;
+  }
+
+  main {
+    height: 70vh;
+  }
+  
+  .forms {
+    height: 20vh;
+    width: 80vw;
+  }
+
+  form>h2{
+    font-size: 5.5vw;
+  }
+
+  .inputs>input {
+    height: 2.7vw;
+    font-size: 1.5vw;
+    margin: 3.5% 3.5%;
+  }
+
+  .sign-mode-filler {
+    height: 20vh;
+    width: 40vw;
+  }
+
+  .sign-mode-content>h2 {
+    font-size: 4.5vw;
+    margin : 5% 0%;
+  }*/
+
 }
 
 </style>

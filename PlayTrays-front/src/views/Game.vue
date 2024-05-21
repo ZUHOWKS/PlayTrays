@@ -18,6 +18,7 @@ import LoaderFiller from "../components/utils/LoaderFiller.vue";
 import CheckersHUD from "../components/game/CheckersHUD.vue";
 import GMenu from "../components/game/GMenu.vue";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
+import DorianHUD from "@/components/game/DorianHUD.vue";
 
 const router = useRouter();
 if (!AccountServices.isLogged()) AccountServices.logout(router);
@@ -367,6 +368,7 @@ init(); //lancer l'initialisation de la scène Three
 
   <div class="hud user-unselect-any">
     <CheckersHUD v-if="gameTray && gameTray.game == 'checkers'"></CheckersHUD>
+    <DorianHUD v-if="gameTray && gameTray.game == 'dorian_game'"></DorianHUD>
   </div>
 
 </template>

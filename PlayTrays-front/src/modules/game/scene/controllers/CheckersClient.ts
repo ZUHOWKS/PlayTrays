@@ -13,7 +13,7 @@ import {
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import type {Socket} from "socket.io-client";
-import Pawn from "@/modules/game/scene/objects/Pawn";
+import Pawn from "@/modules/game/scene/objects/checkers/Pawn";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import ActuatorObject from "@/modules/game/scene/objects/ActuatorObject";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
