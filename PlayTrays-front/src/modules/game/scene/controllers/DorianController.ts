@@ -1,13 +1,6 @@
 import SupportController from "@/modules/game/scene/SupportController";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
-import {
-    BoxGeometry,
-    Mesh,
-    MeshBasicMaterial,
-    PerspectiveCamera,
-    PlaneGeometry,
-    Scene,
-} from "three";
+import {Mesh, MeshBasicMaterial, PerspectiveCamera, PlaneGeometry, Scene,} from "three";
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import type {Socket} from "socket.io-client";
@@ -94,6 +87,8 @@ export default class DorianGame extends SupportController{
         this.setupDe();
 
         this.updateVariables();
+
+        if (loaderFiller) setTimeout(() => loaderFiller.value = false, 2500);
 
         this.ws.on("PlayerJoin", (player : Player) : void => {
             this.setupPawn(player);
