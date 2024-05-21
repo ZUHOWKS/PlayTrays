@@ -45,4 +45,23 @@ export default class ServerController {
 
     return response.abort('Error!')
   }
+
+  async userInfo({request, response}: HttpContext) {
+    const {userID} = request.only(['userID']);
+
+    if (userID) {
+
+      const _u: User | null = await User.find(userID)
+
+      if (_u) {
+        return {
+          id: _u.id,
+          username: _u.username,
+        }
+      }
+
+    }
+
+    return response.abort('Unauthorized')
+  }
 }

@@ -357,7 +357,7 @@ class AdonisWS {
               id: friend.id,
               username: friend.username,
               online: true,
-              status: "In " + _l.game.charAt(0).toUpperCase() + _l.game.slice(1) + " Party"
+              status: "In " + _l.game.charAt(0).toUpperCase() + _l.game.slice(1).replace('_', ' ') + " Party"
             } as FriendInterface);
 
             const _g: Group | null = await friend.getGroup();
