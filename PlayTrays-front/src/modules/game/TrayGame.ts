@@ -4,6 +4,7 @@ import {PerspectiveCamera, Scene} from "three";
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import CheckersClient from "@/modules/game/scene/controllers/CheckersClient";
+import DorianGame from "@/modules/game/scene/controllers/DorianController";
 
 
 export default class TrayGame {
@@ -38,6 +39,10 @@ export default class TrayGame {
         if (game == "checkers") {
             this.controller = new CheckersClient(scene, cameraRef, orbitControlsRef, this.ws);
         }
+        else if (game == "DorianGame"){
+            this.controller = new DorianGame(scene, cameraRef, orbitControlsRef, this.ws);
+        }
+
     }
 
     /**
