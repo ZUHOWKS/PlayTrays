@@ -9,7 +9,7 @@
     </div>
     <div class="content">
       <p class="username">You</p>
-      <p class="argent">Argent: <span>£</span><span class="user-money">550 000</span></p>
+      <p class="argent">Argent: <span>£</span><span class="user-money">0</span></p>
     </div>
   </div>
 
