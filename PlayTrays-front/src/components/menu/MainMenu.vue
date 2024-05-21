@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, type Ref} from "vue";
 import checkersBanner from '@/assets/image/checkers_game_view.png';
+import dorianGameBanner from '@/assets/image/dorian_game_view.png';
 
 const props = defineProps(['menuInfo', 'startMatchmaking']);
 const modeChoose: Ref<string> = ref('Choose')
@@ -41,9 +42,9 @@ onMounted(() => {
         <h3>Checkers</h3>
         <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
       </div>
-      <div class="mode-card" @click="() => {modeChoose = 'Dorian Game'; showModeSelection = false; setBannerMode(checkersBanner);}">
+      <div class="mode-card" @click="() => {modeChoose = 'Dorian Game'; showModeSelection = false; setBannerMode(dorianGameBanner);}">
         <h3>Dorian Game</h3>
-        <img src="@/assets/image/checkers_game_view.png" alt="PlayTrays Checkers Game">
+        <img src="@/assets/image/dorian_game_view.png" alt="PlayTrays Dorian Game">
       </div>
     </div>
   </div>
@@ -138,7 +139,7 @@ onMounted(() => {
 
   .mode-card>h3 {
     position: absolute;
-    font-size: max(18px, 5vh);
+    font-size: max(18px, 4.5vh);
     transition: color .2s ease-in-out;
     text-shadow: 0 0 5px rgba(0,0,0, 0.25);
   }
