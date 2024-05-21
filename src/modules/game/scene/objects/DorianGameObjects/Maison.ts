@@ -11,6 +11,10 @@ export class maison extends PTObject{
         this.nbCase = nbCase
     }
 
+    changeVisible(isVisible: boolean): void {
+        this.object3D.visible = isVisible;
+    }
+
     moveTo(x: number, y: number, z: number): void {
     }
 

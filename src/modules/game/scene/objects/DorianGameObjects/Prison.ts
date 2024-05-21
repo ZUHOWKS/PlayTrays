@@ -14,7 +14,7 @@ export class prison extends PTObject implements AnimationQueueInterface{
         this.animationQueue = new AnimationQueue();
         this.object3D.visible = false;
     }
-
+    //@ts-ignore
     moveTo(x: number, y: number, z: number, duration : number, finalCallback? : any): void {
         const vectDepart : Vector3 = this.object3D.position.clone();
         const vectArrivee : Vector3 = new Vector3(x, y, z);
@@ -42,9 +42,6 @@ export class prison extends PTObject implements AnimationQueueInterface{
 }
 
     rotate(x: number, y: number, z: number): void {
-        this.object3D.rotateX(x);
-        this.object3D.rotateY(y);
-        this.object3D.rotateZ(z);
     }
 
     select(): void{

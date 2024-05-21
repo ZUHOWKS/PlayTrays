@@ -2,13 +2,11 @@ import SupportController from "@/modules/game/scene/SupportController";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
 import {
     BoxGeometry,
-    DoubleSide,
     Mesh,
     MeshBasicMaterial,
     PerspectiveCamera,
     PlaneGeometry,
     Scene,
-    Vector3
 } from "three";
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
@@ -19,14 +17,11 @@ import {prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
 import type PTObject from "@/modules/game/scene/objects/PTObject";
 import {playerPawn} from "@/modules/game/scene/objects/DorianGameObjects/PlayerPawn";
 import {CaseSelector} from "@/modules/game/scene/objects/DorianGameObjects/CaseSelector";
-import Pawn from "@/modules/game/scene/objects/Pawn";
 import {de} from "@/modules/game/scene/objects/DorianGameObjects/De";
-import type {cardTypeInterface} from "@/modules/game/scene/objects/DorianGameObjects/CardHelper";
 import {TownCard} from "@/modules/game/scene/objects/DorianGameObjects/cards/TownCard";
 import {cardConfig} from "@/modules/game/scene/objects/DorianGameObjects/cards/CardConfig";
 import {Card} from "@/modules/game/scene/objects/DorianGameObjects/cards/Card";
 import {maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
-import { instance } from "three/examples/jsm/nodes/Nodes.js";
 
 
 interface Players{
@@ -75,6 +70,8 @@ export default class DorianGame extends SupportController{
     setup(): void {
         const loader = new GLTFLoader();
 
+
+
         this.setupCard();
 
         //Ajout d'un plateau
@@ -86,21 +83,24 @@ export default class DorianGame extends SupportController{
         // Ajout de plans PTObjects que l'on rend invisible pour permettre de rendre les cartes du plateau selectionnables
         this.setupPlanes();
 
-        this.setupHouses();
-
         this.setupDe();
+
+        this.updateVariables();
 
         this.ws.on("PlayerJoin", (player : Players) : void => {
             this.setupPawn(loader, player);
             this.updateVariables();
         })
 
+        //Gere l hud lorsque le joueur tombe sur la case d'un autre
         this.ws.on("Paiement", (prix, player) => {
             console.log("Vous avez payé: ", prix);
             (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + player.money;
+            if (player.money < 0) this.ws.emit("faillite", player)
             this.updateVariables();
         })
 
+        //Update l'hud si le jouuer passe sur la case départ
         this.ws.on("Passage case départ", (money) => {
             (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + money;
             console.log("passage à la case départ");
@@ -108,6 +108,7 @@ export default class DorianGame extends SupportController{
 
         this.ws.on("Update", ()=>{this.updateVariables()})
 
+        //Fait avancer le pion du joueur possedant l'id donnée en parametre
         this.ws.on("pawnMove", (id, r) => {
             const pawnToMove = (this.getObject("pion" + id) as playerPawn | undefined);
             if (pawnToMove) {
@@ -118,20 +119,40 @@ export default class DorianGame extends SupportController{
             this.updateVariables();
         })
 
+        //Gere le cas ou la carte chance change l'argent
         this.ws.on("Carte chance argent", (chanceCard: {message: string, aideReal: number}, player) => {
             (document.getElementsByClassName("chance-texte")[0] as HTMLElement).innerText = ""+chanceCard.message;
             (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "visible";
+
+            //Si le joueur a fini de lire il appuie sur Ok et voit son hud modifié avec son nouvel argent
             (document.querySelector('#Ok') as HTMLElement).onclick = () => {
                 (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "hidden";
                 (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + (player.money);
-                this.ws.emit("FinTour");
+                this.ws.emit("moveChance");
+                if (player.money < 0) this.ws.emit("faillite", player)
+                else this.ws.emit("FinTour");
             }
             this.updateVariables();
         })
 
+        //Deplace les pions vers la case definie par la carte chance
+        this.ws.on("Carte chance deplacement all", (chanceCard: {message: string, aideReal: {nbCase: number, caseX: number, caseY: number, depart: boolean, prison: boolean}}, player) => {
+            const tempPion : playerPawn | undefined = (this.getObject("pion" + player.id) as playerPawn | undefined);
+            const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
+            if (tempPion){
+                tempPion.moveTo(chanceCard.aideReal.caseX, chanceCard.aideReal.caseY);
+            }
+            if (tempPrison && chanceCard.aideReal.prison) {
+                tempPrison.down();
+            }
+        })
+
+        //Gere l'event de deplacement de joueur apres avoir pioché une carte chance de ce type
         this.ws.on("Carte chance deplacement", (chanceCard: {message: string, aideReal: {nbCase: number, caseX: number, caseY: number, depart: boolean, prison: boolean}}, player) => {
             (document.getElementsByClassName("chance-texte")[0] as HTMLElement).innerText = ""+chanceCard.message;
             (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "visible";
+
+            //Si le joueur a fini de lire il appuie sur Ok et va à la case choisie (la prison s'abaisse si la carte est une prison)
             (document.querySelector('#Ok') as HTMLElement).onclick = () => {
                 (document.getElementsByClassName("card-chance")[0] as HTMLElement).style.visibility = "hidden";
                 (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + (player.money);
@@ -144,6 +165,7 @@ export default class DorianGame extends SupportController{
                 if (tempPrison && chanceCard.aideReal.prison) {
                     tempPrison.down();
                 }
+                this.ws.emit("moveChance", chanceCard, player);
                 this.ws.emit("FinTour");
             }
             this.updateVariables();
@@ -151,10 +173,6 @@ export default class DorianGame extends SupportController{
 
         this.ws.on("joueur en prison", (player) => {
             const tempPrison: prison | undefined = (this.getObject("Prison") as prison | undefined);
-            const tempPion : playerPawn | undefined = (this.getObject("pion" + player.id) as playerPawn | undefined);
-            if (tempPion){
-                tempPion.moveTo(10, 0);
-            }
             if (tempPrison) {
                 tempPrison.down();
             }
@@ -170,21 +188,24 @@ export default class DorianGame extends SupportController{
 
         this.ws.on("UpdateHUD", (money) => {(document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + money;})
 
-        this.ws.on("MaisonPossible", (maxHouse: number, caseInfo: TownCard)=>{
+        //Si on peut ajouter une maison
+        this.ws.on("MaisonPossible", (maxHouse: number, caseInfo: TownCard, player: Players)=>{
 
-            console.log("Query test: ", (document.querySelector('#quit-house') as HTMLElement));
 
             this.displayCard(caseInfo, 2);
             (document.getElementsByClassName("card-action-maison")[0] as HTMLElement).style.visibility = "visible";
-            (document.querySelector('#one') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 1);}
+            console.log("max houses: ", maxHouse);
 
-            (document.querySelector('#two') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 2);}
+            //On attends que le joueur achete ou quitte le menu de selection
+            (document.querySelector('#one') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 1, player);}
 
-            (document.querySelector('#three') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 3);}
+            (document.querySelector('#two') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 2, player);}
 
-            (document.querySelector('#four') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 4);}
+            (document.querySelector('#three') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 3, player);}
 
-            (document.querySelector('#five') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 5);}
+            (document.querySelector('#four') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 4, player);}
+
+            (document.querySelector('#five') as HTMLElement).onclick = () => {this.achatNbMaison(maxHouse, caseInfo, 5, player);}
 
             (document.querySelector('#quit-house') as HTMLElement).onclick = () => {
                 this.ws.emit("FinTour");
@@ -193,16 +214,22 @@ export default class DorianGame extends SupportController{
 
         })
 
+        //Gere la situation ou la carte sur laquelle est le joueur est achetable
         this.ws.on("CasePossible", (caseInfo: any, player: Players, achat: boolean, id: number) => {
+
 
             this.displayCard(caseInfo, 1);
             (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "visible";
 
             (document.querySelector('#Buy') as HTMLElement).onclick = () => {
-                console.log("debug achat: ", achat, caseInfo.info.prix, player.money);
+
                 if (achat){
                     (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "hidden";
+
+                    //Envoie une requete serveur qui reverifiera si l'achat est possible et l'efectuera
                     this.ws.emit("Achat");
+
+                    //Modifie l'HUD
                     let playerPaying = this.getPlayerByName(player.name)
                     if(playerPaying != undefined){
                         playerPaying.money -= caseInfo.info.prix;
@@ -210,12 +237,16 @@ export default class DorianGame extends SupportController{
                         this.players.set(id, playerPaying);
                         this.updateVariables();
                     }
+
                     this.ws.emit("FinTour");
             }
                 else console.log("Tu ne peux pas acheter");
+
                 this.updateVariables();
             }
+
             (document.querySelector('#Quit') as HTMLElement).onclick = () => {
+
                 (document.getElementsByClassName("card-action")[0] as HTMLElement).style.visibility = "hidden";
                 this.ws.emit("FinTour");
                 this.updateVariables();
@@ -227,16 +258,28 @@ export default class DorianGame extends SupportController{
         this.updateVariables();
     }
 
-    private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number) {
-        if (maxHouse <= nbMaison && caseInfo.nbMaison + nbMaison <= 5) {
+    private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number, player: Players) {
+        console.log("max house: ", maxHouse, nbMaison, caseInfo.nbMaison + nbMaison)
+
+        //On effectue les verifiactions pour savoir si le joueur a le droit (les verifications sont refaites coté serveur pour éviter les erreurs)
+        if (maxHouse >= nbMaison && caseInfo.nbMaison + nbMaison <= 5) {
 
             this.ws.emit("achatMaison", nbMaison);
-            caseInfo.nbMaison = nbMaison;
+
+            caseInfo.nbMaison += nbMaison;
+            player.money -= caseInfo.info.maison*nbMaison
+
             this.cards.set(caseInfo.caseNb, caseInfo);
+            this.players.set(player.id, player);
+
+            (document.getElementsByClassName("user-money")[0] as HTMLElement).innerText = "" + player.money;
+            this.updateHouses(caseInfo.nbMaison, caseInfo.caseNb);
+            this.updateVariables();
             (document.getElementsByClassName("card-action-maison")[0] as HTMLElement).style.visibility = "hidden";
         }
     }
 
+    //Modifie les informations de la carte à display (index gere la carte à modifier car chacune des cartes a la meme class)
     private displayCard(caseInfo: TownCard, index: number): void {
         (document.getElementsByClassName("name")[index] as HTMLElement).innerText = ""+caseInfo.name;
         (document.getElementsByClassName("title")[index] as HTMLElement).style.backgroundColor = ""+caseInfo.info.color;
@@ -257,13 +300,14 @@ export default class DorianGame extends SupportController{
         this.registerObject(new de("dé", cube));
     }
 
-    private setupHouses(){
+    private setupHouses(cards: Map<number, Card>){
         const loader = new GLTFLoader();
+        //Boucle pour setup les maisons et les affilier à un nom.
         for (let i: number = 0; i < 9; ++i) {
-            this.addHousesOfCard(loader, 7.1 - 1.7767 * i, 8.32, i + 1, false);
-            this.addHousesOfCard(loader, -8.25  , 7.1 - 1.7767 * i, i + 11, true);
-            this.addHousesOfCard(loader, -7.1 + 1.7767 * i  , -8.3, i + 21, false);
-            this.addHousesOfCard(loader, 8.25  , -7.1 + 1.7767 * i, i + 31, true);
+            this.addHousesOfCard(loader, 7.1 - 1.7767 * i, 8.32, i + 1, false, cards.get(i+1));
+            this.addHousesOfCard(loader, -8.25  , 7.1 - 1.7767 * i, i + 11, true, cards.get(i+11));
+            this.addHousesOfCard(loader, -7.1 + 1.7767 * i  , -8.3, i + 21, false, cards.get(i+21));
+            this.addHousesOfCard(loader, 8.25  , -7.1 + 1.7767 * i, i + 31, true, cards.get(i+31));
         }
     }
 
@@ -288,6 +332,7 @@ export default class DorianGame extends SupportController{
 
     private setupPrison(loader: GLTFLoader) {
         this.loadGLTFSceneModel(loader, "DorianGame/prison.glb").then((obj) => {
+            //@ts-ignore
             this.registerObject(new prison("Prison", obj))
         });
     }
@@ -333,26 +378,61 @@ export default class DorianGame extends SupportController{
         });
     }
 
-    protected addHousesOfCard(loader: GLTFLoader, posx : number, posz : number, nbCase : number, rotate: boolean){
+    protected updateHouses(nbHouses: number, nbCase: number){
+        for(let i = 1; i<6;i++){
+            const maison = this.getObject("maison" + nbHouses + "-" + nbCase) as maison | undefined;
+            if (maison != undefined){
+                if (i == nbHouses) {
 
-        let tempCard = this.cards.get(nbCase)
-        if (tempCard instanceof TownCard){
+                    maison.changeVisible(true);
+                    maison.object3D.visible = true;
+                    maison.object3D.updateMatrix();
 
-            for(let i = 1; i<=5; i++){
-                this.loadGLTFSceneModel(loader, "DorianGame/maison"+ i +".glb").then((obj) => {
-
-                console.log("Help: ", tempCard, tempCard.nbMaison, i);
-                obj.visible = (tempCard.nbMaison == i);
-
-                obj.translateZ(posz);
-                obj.translateX(posx);
-
-                if (rotate) obj.rotateY(1.5708);
-
-                //maison1-9
-                this.registerObject(new maison("maison" + i + "-" + nbCase, obj, nbCase))
-                });
+                }
+                else {
+                    maison.changeVisible(false);
+                }
             }
+        }
+    }
+
+    //Ajoute les 5 types de maisons sur les cartes (seules les cartes qui on un nbMaison > 0 ont une maison visible)
+    addHousesOfCard(loader: GLTFLoader, posx : number, posz : number, nbCase : number, rotate: boolean, tempCard: Card | undefined){
+        if (tempCard?.type == "ville") {
+            const tempCardHelp = tempCard as TownCard | undefined;
+            if (tempCardHelp != undefined) {
+            for (let i = 1; i <= 5; i++) {
+
+                //Si la maison est à afficher
+                if (tempCardHelp.nbMaison == i) {
+                    this.loadGLTFSceneModel(loader, "DorianGame/maison" + i + ".glb").then((obj) => {
+
+
+                        obj.translateZ(posz);
+                        obj.translateX(posx);
+
+                        //rotate si la maison est sur les cotés
+                        if (rotate) obj.rotateY(1.5708);
+                        obj.updateMatrix();
+
+                        //Exemple pour la maison unique à la case 9: maison1-9
+                        const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
+                        this.registerObject(m)
+                        m.object3D.visible = true;
+                    })
+                }
+                //Si la maison n'est pas à afficher
+                else{
+                    this.loadGLTFSceneModel(loader, "DorianGame/maison" + i + ".glb").then((obj) => {
+
+                        const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
+                        m.object3D.visible = false;
+                        this.registerObject(m)
+
+                    })
+                }
+            }
+        }
         }
     }
 
@@ -389,7 +469,6 @@ export default class DorianGame extends SupportController{
     }
 
     selectObject(name: string) {
-        //console.log("Debug horrible: ", this.players, (this.selectedObject instanceof de))
         //Abaisse la carte d'information si l'objet cliqué est la même carte que celle deja en mémoire
         if (this.getObject(name) instanceof CaseSelector && name === this.previousObjectSelected?.getName()) {(document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(60vh)";}
         //Sinon on effectue le code classique
@@ -411,10 +490,9 @@ export default class DorianGame extends SupportController{
                 } else if (tempCard.type == "chance") {
                 } else if (tempCard.type == "bataille") {
                 } else if (tempCard.type == "ville"){
-                    //Convertir
                     //Ajoute les parametres propres aux villes dans la carte d'information
-
-                    (tempCard.user != undefined)? (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "La carte appartient actuellement à "+tempCard.user : (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "Aucune personne ne possède cette carte actuellement";
+                    const tempCardCity = tempCard as TownCard;
+                    (tempCardCity.user != undefined)? (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "La carte appartient actuellement à "+tempCardCity.user : (document.getElementsByClassName("user-card")[0] as HTMLElement).innerText = "Aucune personne ne possède cette carte actuellement";
                     (document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(0vh)";
                     this.displayCard(tempCard as TownCard, 0);
                 }
@@ -422,10 +500,13 @@ export default class DorianGame extends SupportController{
         }
     }
         if (this.selectedObject instanceof playerPawn) this.updateVariables();
+
+        //Lance le dé
         if (this.selectedObject instanceof de) this.lancerDe();
 
         }
 
+        //recupere les variables chez le serveur et les appliques au client
     updateVariables() : void {
         this.ws.emit("Update", (error: any, response: any) => {
             if(error) throw error;
@@ -441,18 +522,23 @@ export default class DorianGame extends SupportController{
                         tempPion.money = playerEnCours.money;
                     }
                 }
+                this.setupHouses(this.cards);
             }
         })
     }
 
+    //Lance le dé
     lancerDe() : void {
         this.ws.emit("Lancede", (error : any, response : any) => {
+
+            //Envoie une requete au serveur pour indiquer que le joueur a bien joué
             console.log("response lancerDe(): ", response);
             this.updateVariables();
             if (error) throw error;
             else{
                 const tempPion : playerPawn | undefined = (this.getObject(response.player.pawnName) as playerPawn | undefined);
 
+                //Avance le pion du nombre aleatoire choisi
                 if (tempPion){
                     for (let i: number = 0; i < response.random; i++) {
                         tempPion.moveCase();
