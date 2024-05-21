@@ -5,15 +5,17 @@ import PTServer from "../../PTServer";
 import {Card} from "../../DorianGame/cards/Card";
 import {cardConfig} from "../../DorianGame/cards/CardConfig";
 import {TownCard} from "../../DorianGame/cards/TownCard";
+import {Axios} from "../../../services";
 
-export interface Players{
+export interface Player {
     name: string;
     city: string[];
     exitPrison: number;
     tourInprison: number;
     money: number;
     caseNb: number;
-    id: number
+    id: number;
+    realUserId: number;
     playerName: string;
     pawnName: string;
 }
@@ -28,13 +30,12 @@ export default class DorianGame extends PTLobby {
 
     hasDice: boolean = true;
     cards: Map<number, Card>; // caseNb, Card
-    players: Map<number, Players>;
+    players: Map<number, Player>;
     theOnePlaying: number = 1;
     chances: Array<chance>;
     idOfPlayers: Array<number>;
     register: number = 1;
     canPlay: boolean = false;
-    helpTimeout: NodeJS.Timeout | undefined;
 
 
     constructor(uuid: string, game: string, visibility: "public" | "private", server: PTServer) {
@@ -60,6 +61,7 @@ export default class DorianGame extends PTLobby {
         this.idOfPlayers = new Array<number>();
         this.setupGame();
 
+        this.activeAntiEmptyLobby();
     }
 
     //Passe au joueur suivant et applique un timeout pour que le joueur
@@ -71,8 +73,8 @@ export default class DorianGame extends PTLobby {
     }
 
     //Permet de return le joueur qui a le nom passé en parametre parmis la liste des joueurs
-    protected getPlayerByName(name: string): Players | undefined {
-        let result: Players | undefined = undefined;
+    protected getPlayerByName(name: string): Player | undefined {
+        let result: Player | undefined = undefined;
         this.players.forEach(player => {
             if (player.name === name) {
                 result = player;
@@ -114,37 +116,65 @@ export default class DorianGame extends PTLobby {
         //On verifie si le joueur est existant
         if (!(this.players.get(this.idOfPlayers.indexOf(socket.data.user)+1))) {
 
-            //Si il n'existe on l'ajoute avec les valeur initiales
+            //Si il n'existe pas on l'ajoute avec les valeur initiales
             console.log("La liste des id socket des joueurs: ", this.idOfPlayers, "\nL'id du joueur venant de se connecter: ", socket.data.user);
-            this.players.set((this.register), {
-                name: "User" + socket.data.user,
-                city: [],
-                exitPrison: 0,
-                tourInprison: 0,
-                money: 150000,
-                caseNb: 0,
-                id: this.idOfPlayers.indexOf(socket.data.user)+1,
-                playerName: "User" + (this.idOfPlayers.indexOf(socket.data.user)+1),
-                pawnName: "pion" + (this.idOfPlayers.indexOf(socket.data.user)+1)
+
+            const form = new FormData()
+            form.append('userID', socket.data.user)
+
+            Axios.post('/server/user-info', form).then((response: any) => {
+
+
+                console.log(response.data)
+
+                this.players.set((this.register), {
+                    name: response.data.username,
+                    city: [],
+                    exitPrison: 0,
+                    tourInprison: 0,
+                    money: 150000,
+                    caseNb: 0,
+                    id: this.idOfPlayers.indexOf(socket.data.user)+1,
+                    realUserId: socket.data.user,
+                    playerName: "User" + (this.idOfPlayers.indexOf(socket.data.user)+1),
+                    pawnName: "pion" + (this.idOfPlayers.indexOf(socket.data.user)+1)
+                } as Player);
+
+                console.log('DEBUG: Joueur enregistré', this.players.get(this.register))
+
+                this.register += 1;
+
+
+
+                //On emit PlayerJoin pour chaques joueurs arrivés sur le serveur pour afficher leurs pions sur chacuns des clients
+
+                for (let i = 1; i <= this.players.size; i++) {
+                    this.server.io.to(this.uuid).emit("PlayerJoin", this.players.get(i));
+                }
+
+                //Lance la partie
+                if (this.players.size == 2 && this.status === 'waiting'){
+                    this.pushStatus('running');
+                    this.disableAntiEmptyLobby();
+                    this.helpTimeout = setTimeout(() => {this.forfeit(this.players.get(this.theOnePlaying))}, 100000);
+                    this.server.io.to(this.uuid).emit('start');
+                    this.canPlay = true;
+                } else {
+                    socket.emit('start');
+                }
+
             });
-            this.register += 1;
+        } else {
+            //On emit PlayerJoin pour chaques joueurs arrivés sur le serveur pour afficher leurs pions sur chacuns des clients
 
+            for (let i = 1; i <= this.players.size; i++) {
+                socket.emit("PlayerJoin", this.players.get(i));
+            }
 
+            socket.emit('start');
         }
 
         socket.join(this.uuid);
-        //console.log("debug: ", this.players, socket.data.user +"\n");
-
-        //On emit PlayerJoin pour chaques joueurs arrivés sur le serveur pour afficher leurs pions sur chacuns des clients
-        for (let i = 1; i <= this.players.size; i++) {
-            this.server.io.to(this.uuid).emit("PlayerJoin", this.players.get(i));
-
-        }
-
-        //Lance la partie
-        if (this.players.size == 2){
-            this.canPlay = true;
-        }
 
         socket.emit("UpdateHUD", this.players.get(this.idOfPlayers.indexOf(socket.data.user))?.money);
 
@@ -178,7 +208,7 @@ export default class DorianGame extends PTLobby {
         socket.on("Lancede", (callBack) => {
 
             //Verifie si le joueur qui a cliqué peut jouer
-            if ((this.idOfPlayers.indexOf(socket.data.user) + 1) == this.theOnePlaying && this.players.get(this.theOnePlaying) && this.canPlay) {
+            if ((this.idOfPlayers.indexOf(socket.data.user) + 1) == this.theOnePlaying && this.players.get(this.theOnePlaying) && this.canPlay && this.status === 'running') {
 
                 //Retire le timeout et en rajoute un nouveau (le timeout laisse 60 secondes au joueur pour jouer sinon il perds la partie)
                 clearTimeout(this.helpTimeout)
@@ -279,20 +309,28 @@ export default class DorianGame extends PTLobby {
         })
 
         //Fini le tour pour le joueur
-        socket.on("Faillite", (player: Players) => {
-
+        socket.on("Faillite", (player: Player) => {
             this.forfeit(player);
-
         })
 
         //Bouge le joueur vers la case indiquée par la carte chance
         socket.on("moveChance", (chanceValue, player) => {
             this.emitWithout(socket, "Carte chance deplacement all", chanceValue, player);
         })
+
+        socket.on("disconnect", () => {
+            this.removeSocket(socket.data.user);
+            console.log("The user " + socket.data.user + " leave the lobby " + this.uuid + ".");
+        });
+
+        socket.on('leave party', (callback) => {
+            if (this.status != "finished") this.forfeit(this.players.get(this.theOnePlaying));
+            callback(undefined, {status: 200});
+        })
     }
 
     //Verifie si la case depart est franchie
-    protected verifStart(player: Players, socket: Socket<DefaultEventsMap, DefaultEventsMap, any>): void {
+    protected verifStart(player: Player, socket: Socket<DefaultEventsMap, DefaultEventsMap, any>): void {
         if (player.caseNb >= 40) {
             player.caseNb -= 40;
             player.money += 20000;
@@ -301,12 +339,17 @@ export default class DorianGame extends PTLobby {
     }
 
     //Fait perdre le joueur
-    forfeit(player: Players| undefined): void{
-        if (player) {console.log("Le joueur ",player.name," a perdu");}
+    forfeit(player: Player | undefined): void{
+        if (player && this.players) {
+            this.pushStatus('finished')
+            setTimeout(() => {
+                this.server.io.to(this.uuid).disconnectSockets()
+            }, 25000)
+        }
     }
 
     //Gere les carte chances
-    protected caseChance(caseInfo: Card, player: Players, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
+    protected caseChance(caseInfo: Card, player: Player, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
         const chanceValue = this.chances[(Math.floor(Math.random()*this.chances.length))];
 
         //Si la carte chance est basé sur l'ajout ou le retrait d'argent
@@ -340,7 +383,7 @@ export default class DorianGame extends PTLobby {
 
 
     //Achete la case en cours
-    private achat(player: Players) {
+    private achat(player: Player) {
         const cardToSell = this.cards.get(player.caseNb);
         if (cardToSell != undefined && cardToSell instanceof TownCard) {
             if (player.money > cardToSell.info.prix && cardToSell.user == undefined) {
@@ -355,7 +398,7 @@ export default class DorianGame extends PTLobby {
     }
 
     //Gere les cartes villes
-    protected caseTown(caseInfo: TownCard, player: Players, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
+    protected caseTown(caseInfo: TownCard, player: Player, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
 
         //Si la case n'est pas occupée
         if (caseInfo.user == undefined) {
@@ -379,13 +422,13 @@ export default class DorianGame extends PTLobby {
         //Si le joueur est sur la case d'un autre
         else{
             //Ajouter un emit pour animation de retirer l'argent
-            let playerPaid: undefined | Players = this.getPlayerByName(caseInfo.user);
+            let playerPaid: undefined | Player = this.getPlayerByName(caseInfo.user);
             const prix = caseInfo.getPassagePrice();
 
-            if(playerPaid != undefined){
+            if(playerPaid){
 
                 //On ajoute l'argent du passage au joueur possedant la carte
-                if (player.money >= prix && caseInfo.user != undefined && playerPaid != undefined) {
+                if (player.money >= prix && caseInfo.user) {
                     player.money -= prix;
                     playerPaid.money += prix;
                     this.players.set(this.theOnePlaying, player);
@@ -402,7 +445,7 @@ export default class DorianGame extends PTLobby {
     }
 
     //Verifie si le joueur en entrée a toutes les cartes de la meme couleur passée en entrée
-    protected hasAllProperty(playerToCheck: Players, cardToCheck: TownCard): boolean {
+    protected hasAllProperty(playerToCheck: Player, cardToCheck: TownCard): boolean {
         let cardSameType: Array<string> = [];
         let nbCardSame: number = 0;
 
