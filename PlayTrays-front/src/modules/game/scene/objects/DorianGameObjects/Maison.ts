@@ -1,7 +1,7 @@
 import PTObject from "@/modules/game/scene/objects/PTObject";
 import type {Object3D} from "three";
 
-export class maison extends PTObject{
+export class Maison extends PTObject{
 
     nbCase: number
 

@@ -19,7 +19,7 @@ import {de} from "@/modules/game/scene/objects/DorianGameObjects/De";
 import {TownCard} from "@/modules/game/scene/objects/DorianGameObjects/cards/TownCard";
 import {cardConfig} from "@/modules/game/scene/objects/DorianGameObjects/cards/CardConfig";
 import {Card} from "@/modules/game/scene/objects/DorianGameObjects/cards/Card";
-import {maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
+import {Maison} from "@/modules/game/scene/objects/DorianGameObjects/Maison";
 import type {Prison} from "@/modules/game/scene/objects/DorianGameObjects/Prison";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
 import type {UserInterface} from "@/modules/utils/UserInterface";
@@ -411,7 +411,7 @@ export default class DorianGame extends SupportController{
 
     protected updateHouses(nbHouses: number, nbCase: number){
         for(let i = 1; i<6;i++){
-            const maison = this.getObject("maison" + nbHouses + "-" + nbCase) as maison | undefined;
+            const maison = this.getObject("maison" + nbHouses + "-" + nbCase) as Maison | undefined;
             if (maison != undefined){
                 if (i == nbHouses) {
 
@@ -447,7 +447,7 @@ export default class DorianGame extends SupportController{
                         obj.updateMatrix();
 
                         //Exemple pour la maison unique à la case 9: maison1-9
-                        const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
+                        const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
                         this.registerObject(m)
                         m.object3D.visible = true;
                     })
@@ -456,7 +456,7 @@ export default class DorianGame extends SupportController{
                 else{
                     ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
 
-                        const m = new maison("maison" + i + "-" + nbCase, obj, nbCase);
+                        const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
                         m.object3D.visible = false;
                         this.registerObject(m)
 
