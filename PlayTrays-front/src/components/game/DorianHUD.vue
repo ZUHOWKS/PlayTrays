@@ -351,7 +351,6 @@
   border-radius: 50%;
 }
 .money>.nbargent{
-  bacground-color: black;
   width: 100%;
   height: 100%;
 }

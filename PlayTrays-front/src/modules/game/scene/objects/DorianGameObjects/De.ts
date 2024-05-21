@@ -1,5 +1,5 @@
 import PTObject from "@/modules/game/scene/objects/PTObject";
-import {BoxGeometry, Mesh, MeshBasicMaterial, type Object3D, Vector3} from "three";
+import {type Object3D} from "three";
 
 
 export class de extends PTObject{
