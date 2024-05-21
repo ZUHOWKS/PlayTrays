@@ -18,8 +18,7 @@ coverage
 /cypress/screenshots/
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode
 .idea
 *.suo
 *.ntvs*
@@ -30,3 +29,23 @@ src/*.js
 .env
 
 *.tsbuildinfo
+
+# build
+*/build
+tmp
+
+# Secrets
+.env.local
+.env.production.local
+.env.development.local
+
+# Frontend assets compiled code
+public/assets
+
+# Build tools specific
+npm-debug.log
+yarn-error.log
+
+# Editors specific
+.fleet
+.vscode
