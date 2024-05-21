@@ -58,6 +58,7 @@ router.group(() => {
     router.group(() => {
       router.post('manifest', [ServerController, 'manifest'])
       router.post('legit-user', [ServerController, 'legitUser'])
+      router.post('user-info', [ServerController, 'userInfo'])
     }).prefix('server').use(middleware.authServer())
   }).prefix('v1')
 }).prefix('api')
