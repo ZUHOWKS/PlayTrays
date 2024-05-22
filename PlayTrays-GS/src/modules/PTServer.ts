@@ -191,7 +191,8 @@ export default class PTServer {
         });
 
         socket.on('delete lobby', (uuid: string) => {
-            this.lobbies.delete(uuid);
+            // le temps que le lobby expulse les joueurs du socket.
+            setTimeout(() => this.lobbies.delete(uuid), 30000);
         })
 
         socket.emit("update", this.capacity, this.getLobbiesList());
