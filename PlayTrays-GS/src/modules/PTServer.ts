@@ -158,6 +158,8 @@ export default class PTServer {
                 const response = (await Axios.post('/server/legit-user', formData));
                 console.log((response?.status) == 200 ? 'User is Authenticated !' : 'Authentification Error: Unauthorized !')
                 return (response?.status) == 200;
+            } else {
+                this.io.to('adonis').emit("update", this.capacity, this.getLobbiesList());
             }
         } catch (e) {
             console.error(e);
