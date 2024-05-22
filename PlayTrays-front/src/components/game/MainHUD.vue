@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {onMounted, ref, type Ref} from "vue";
+
+const endParty: Ref<HTMLElement | null> = ref(null)
+
+onMounted(() => {
+  endParty.value?.style.setProperty('visibility', 'hidden')
+})
 
 </script>
 
@@ -7,7 +14,7 @@
     <h2 class="starter-user" id="user1">_</h2>
     <h2 class="starter-user" id="user2">_</h2>
   </div>
-  <div class="end-annonce annonce">
+  <div class="end-annonce annonce" ref="endParty">
     <h2 id="userCongregated">_</h2>
     <h2>Win!</h2>
   </div>
