@@ -33,7 +33,6 @@ export default class Checkers extends PTLobby {
         super(uuid, game, visibility, server);
         this.pawns = [];
         this.setupGame();
-        this.activeAntiEmptyLobby();
     }
 
     /**
@@ -97,6 +96,8 @@ export default class Checkers extends PTLobby {
 
                             this.server.io.to(this.uuid).emit('timer', this.actualTimer);
                         }, 1000)
+                    } else {
+                        this.activeAntiEmptyLobby();
                     }
                 } else if (this.status === 'running') {
                     this.getUsernames().then((users) => socket.emit('start', {team: userTeam, canPlay: this.whoPlay == userTeam, timer: this.actualTimer}, users))

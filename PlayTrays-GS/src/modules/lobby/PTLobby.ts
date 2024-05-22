@@ -84,22 +84,36 @@ export default abstract class PTLobby {
         }
     }
 
+    /**
+     * Obtenir le status du lobby
+     */
     public getStatus(): "waiting" | "running" | "finished" {
         return this.status
     }
 
+    /**
+     * Push le nouveau status du lobby à Adonis
+     *
+     * @param newStatus
+     */
     public pushStatus(newStatus: "waiting" | "running" | "finished"): void {
         this.status = newStatus;
         this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
     }
 
+    /**
+     * Activer l'anti lobby vide
+     */
     public activeAntiEmptyLobby(): void {
         this.helpTimeout = setTimeout(() => {
             this.pushStatus('finished');
             this.server.io.to(this.uuid).disconnectSockets();
-        }, 120000)
+        }, 30000)
     }
 
+    /**
+     * Désactiver l'anti lobby vide
+     */
     public disableAntiEmptyLobby(): void {
         clearTimeout(this.helpTimeout)
     }
