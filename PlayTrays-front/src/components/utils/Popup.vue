@@ -88,7 +88,7 @@ function closePopup() {
 }
 
 .bloc-message>h2 {
-  font-size: 60px;
+  font-size: max(2.75vh, 3vw);
   margin: 2.5% 1% 0 1%;
   position: relative;
 }
@@ -125,9 +125,6 @@ function closePopup() {
     transform: scaleX(0.01);
   }
 }
-
-
-
 
 .bloc-message>span {
   font-size: 40px;
