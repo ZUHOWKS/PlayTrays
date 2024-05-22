@@ -12,7 +12,7 @@ import PTMatchmaking from "@/modules/utils/matchmaking/PTMatchmaking";
 import {PopupObject} from "@/modules/utils/Popup";
 import SocialWidget from "@/components/utils/SocialWidget.vue";
 import Notification from "@/components/utils/Notification.vue";
-import type {UserInterface, FriendInterface} from "@/modules/utils/UserInterface";
+import type {FriendInterface, UserInterface} from "@/modules/utils/UserInterface";
 import type {GroupInterface} from "@/modules/utils/GroupInterface";
 import LoaderFiller from "@/components/utils/LoaderFiller.vue";
 import {ADONIS_URL} from "@/config/serverConfig";
@@ -621,7 +621,7 @@ init();
   }
 
   .matchmaking-banner>p {
-    font-size: 25px;
+    font-size: max(1.85vh, 2vw);
     font-weight: 600;
     margin-right: 0.25%;
     width: max-content;
@@ -669,5 +669,10 @@ init();
     box-shadow: 0 0 15px rgba(0,0,0, 0.2);
   }
 
+  @media screen and (max-width: 800px) {
+    .matchmaking-banner>svg {
+      height: 2.75vh;
+    }
+  }
 
 </style>
