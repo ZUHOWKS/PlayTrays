@@ -1,15 +1,7 @@
 import SupportController from "@/modules/game/scene/SupportController";
 import type Actuator from "@/modules/game/scene/actionners/Actuator";
 import Tray from "@/modules/game/scene/objects/Tray";
-import {
-    BoxGeometry,
-    Mesh,
-    MeshBasicMaterial,
-    Object3D,
-    PerspectiveCamera,
-    Scene,
-    Vector3
-} from "three";
+import {BoxGeometry, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Scene, Vector3} from "three";
 import type {Ref} from "vue";
 import type {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import type {Socket} from "socket.io-client";
@@ -70,7 +62,7 @@ export default class CheckersClient extends SupportController {
                 setTimeout(() => {
                     (document.querySelector('.starter-user#user1') as HTMLElement).innerText = users[0];
                     (document.querySelector('.starter-user#user2') as HTMLElement).innerText = users[1];
-                }, 100)
+                }, 200)
 
             }, 1000);
             this.timer = gameInfo.timer;
