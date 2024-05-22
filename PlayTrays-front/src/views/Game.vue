@@ -243,7 +243,7 @@ function establishConnectionWithGameServer(uuid: string, game: string,  url: str
       lobbyUUID: uuid
     }
   });
-
+  ws.on('connect', () => (document.querySelector('.end-annonce') as HTMLElement).style.visibility = 'hidden')
   ws.on('connect_error', () => router.push('/app'))
   ws.on('disconnect', () => router.push('/app'))
 
@@ -361,7 +361,8 @@ function showGMenuOnPress (event: KeyboardEvent | null) {
 
 function leaveParty() {
   if (gameTray) gameTray.ws.emit('leave party', (error: any, response: any) => {
-   if (response.status == 200) ws.disconnect();
+    (document.querySelector('.end-annonce') as HTMLElement).style.visibility = 'hidden';
+    if (response.status == 200) ws.disconnect();
   })
 }
 

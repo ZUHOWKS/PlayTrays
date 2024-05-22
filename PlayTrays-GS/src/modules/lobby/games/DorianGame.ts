@@ -1,5 +1,5 @@
-import { Socket } from "socket.io";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
+import {Socket} from "socket.io";
+import {DefaultEventsMap} from "socket.io/dist/typed-events";
 import PTLobby from "../PTLobby";
 import PTServer from "../../PTServer";
 import {Card} from "../../DorianGame/cards/Card";
@@ -60,8 +60,6 @@ export default class DorianGame extends PTLobby {
         );
         this.idOfPlayers = new Array<number>();
         this.setupGame();
-
-        this.activeAntiEmptyLobby();
     }
 
     //Passe au joueur suivant et applique un timeout pour que le joueur
@@ -153,14 +151,16 @@ export default class DorianGame extends PTLobby {
                 }
 
                 //Lance la partie
-                if (this.players.size == 2 && this.status === 'waiting'){
+                if (this.players.size >= 2 && this.status === 'waiting'){
                     this.pushStatus('running');
                     this.disableAntiEmptyLobby();
                     this.helpTimeout = setTimeout(() => {this.forfeit(this.players.get(this.theOnePlaying))}, 100000);
                     this.server.io.to(this.uuid).emit('start');
                     this.canPlay = true;
-                } else {
+                } else if (this.status === 'running') {
                     socket.emit('start');
+                } else if (this.players.size < 2) {
+                    this.activeAntiEmptyLobby();
                 }
 
             });

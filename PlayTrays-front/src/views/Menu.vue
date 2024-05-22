@@ -290,14 +290,18 @@ function init() {
         // lorsque le socket est connecté
         ws.on('connect', () => {
           menuInfo.matchmaking.canStart = true;
-          getGroupInfo();
-          getFriendList().then(() => showLoader.value = false);
+          getFriendList().then(() => {
+            getGroupInfo();
+            showLoader.value = false;
+          });
         });
 
         ws.on('reconnect', () => {
           menuInfo.matchmaking.canStart = true;
-          getGroupInfo();
-          getFriendList().then(() => showLoader.value = false);
+          getFriendList().then(() => {
+            getGroupInfo();
+            showLoader.value = false;
+          });
         });
 
         // lors d'une déconnexion
