@@ -20,4 +20,4 @@ L'application est structurée en 3 entités : le front-end, le back-end et les s
 centrale, l'API Back, qui gére les utilisateurs sur le site. Voici la documentation détaillé de chacune de nos entités :
 - [Notre front avec VueJS.](./PlayTrays-front/README.md)
 - [Adonis, chef d'orchestre!](./PlayTrays-adonis/README.md)
-- [L'API Game Server, pour nos lobbies](./PlayTrays-GS/README.md)
+- [L'API Game Server, pour nos lobbies.](./PlayTrays-GS/README.md)
