@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {onMounted, type Ref, ref} from "vue";
-  import {useRouter} from "vue-router";
-  import AccountServices from "@/services/account_services";
+import {useRouter} from "vue-router";
+import AccountServices from "@/services/account_services";
 
-  const router = useRouter();
+const router = useRouter();
 
   if (AccountServices.isLogged()) router.push('/app');
 
@@ -38,18 +38,92 @@ function loginForm() {
     });
 
   }
+  onMounted(() => {
+    addEventListener("resize", (event) => {
+      const width = window.innerWidth;
+      if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
 
-  addEventListener("resize", (event) => {
-    window.location.reload()
-  }) 
+        signUpMode.value.style.visibility = "hidden"
+        loginMode.value.style.visibility = "hidden"
+
+
+        if (width > 800) {
+          signUpMode.value.style.transform = "translateY(0)"
+          registerFormContainer.value.style.transform = "translateY(0)"
+
+          loginMode.value.style.transform = "translateY(0)"
+          loginFormContainer.value.style.transform = "translateY(0)"
+          signFiller.value.style.top = "unset"
+
+
+          if (!isLoginMode.value) {
+            signUpMode.value.style.transform = "translateX(0)"
+            registerFormContainer.value.style.transform = "translateX(0)"
+
+
+            loginMode.value.style.transform = "translateX(200%)"
+            loginFormContainer.value.style.transform = "translateX(-200%)"
+
+            signFiller.value.style.left = "20%"
+
+          } else {
+            signUpMode.value.style.transform = "translateX(-200%)"
+            registerFormContainer.value.style.transform = "translateX(200%)"
+
+            loginMode.value.style.transform = "translateX(0)"
+            loginFormContainer.value.style.transform = "translateX(0)"
+
+            signFiller.value.style.left = "50%"
+          }
+        } else {
+          signUpMode.value.style.transform = "translateX(0)"
+          registerFormContainer.value.style.transform = "translateX(0)"
+
+          loginMode.value.style.transform = "translateX(0)"
+          loginFormContainer.value.style.transform = "translateX(0)"
+
+          signFiller.value.style.left = "unset"
+
+          if (!isLoginMode.value) {
+            signUpMode.value.style.transform = "translateY(0)"
+            registerFormContainer.value.style.transform = "translateY(0)"
+
+            loginMode.value.style.transform = "translateY(300%)"
+            loginFormContainer.value.style.transform = "translateY(-200%)"
+
+            signFiller.value.style.top = "15%"
+
+          } else {
+            signUpMode.value.style.transform = "translateY(-300%)"
+            registerFormContainer.value.style.transform = "translateY(200%)"
+
+            loginMode.value.style.transform = "translateY(0)"
+            loginFormContainer.value.style.transform = "translateY(0)"
+
+            signFiller.value.style.top = "50%"
+          }
+        }
+
+        setTimeout(() => {
+          //@ts-ignore
+          signUpMode.value.style.visibility = "visible"
+        }, 750)
+
+        setTimeout(() => {
+          //@ts-ignore
+          loginMode.value.style.visibility = "visible"
+        }, 750)
+      }
+    })
+  })
+
 
   function switchSignMode() {
 
     const width = window.innerWidth;
-    const height = window.innerHeight;
+    if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
+      if (width > 800) {
 
-    if (width > 800) {
-      if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
         isLoginMode.value = !isLoginMode.value
         if (!isLoginMode.value) {
           signUpMode.value.style.transform = "translateX(0)"
@@ -69,9 +143,7 @@ function loginForm() {
 
           signFiller.value.style.left = "50%"
         }
-      }
-    } else {
-      if (signUpMode.value && loginMode.value && signFiller.value && loginFormContainer.value && registerFormContainer.value) {
+      } else {
         isLoginMode.value = !isLoginMode.value
         if (!isLoginMode.value) {
           signUpMode.value.style.transform = "translateY(0)"
