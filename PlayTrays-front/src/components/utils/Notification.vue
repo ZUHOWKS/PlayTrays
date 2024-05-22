@@ -38,7 +38,7 @@ const props = defineProps(['notification'])
 
   .container>p {
     position: relative;
-    font-size: 25px;
+    font-size: max(1.25vh, 1.3vw);
     width: 110%;
   }
 
@@ -70,16 +70,23 @@ const props = defineProps(['notification'])
   }
 
   .action-icon {
-    height: 1.5vw;
+    height: max(1.5vh, 1.5vw);
     color: #009600;
     cursor: pointer;
     margin: 0 0.1% 0 0.5%;
   }
 
   .close-icon {
-    height: 1.5vw;
+    height: max(1.5vh, 1.5vw);
     color: #c80000;
     cursor: pointer;
     margin: 0 0.1%;
+  }
+
+  @media screen and (max-width: 800px) {
+    .container {
+      height: 6vh;
+      padding: 0.5% 1.25%;
+    }
   }
 </style>
