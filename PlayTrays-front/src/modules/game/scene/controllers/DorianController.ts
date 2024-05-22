@@ -88,7 +88,7 @@ export default class DorianGame extends SupportController{
 
         this.updateVariables();
 
-        if (loaderFiller) setTimeout(() => loaderFiller.value = false, 2500);
+        if (loaderFiller) setTimeout(() => loaderFiller.value = false, 15000);
 
         this.ws.on("PlayerJoin", (player : Player) : void => {
             this.setupPawn(player);

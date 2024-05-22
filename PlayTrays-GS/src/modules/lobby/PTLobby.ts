@@ -11,6 +11,7 @@ export default abstract class PTLobby {
     protected status: "waiting" | "running" | "finished" = "waiting";
     protected sockets: Map<number, Socket>;
     protected server: PTServer;
+    protected helpTimeout: NodeJS.Timeout | undefined;
 
     /**
      * Permet d'instancier un lobby.
@@ -87,4 +88,19 @@ export default abstract class PTLobby {
         return this.status
     }
 
+    public pushStatus(newStatus: "waiting" | "running" | "finished"): void {
+        this.status = newStatus;
+        this.server.io.to('adonis').emit('lobby_status', this.uuid, this.status);
+    }
+
+    public activeAntiEmptyLobby(): void {
+        this.helpTimeout = setTimeout(() => {
+            this.pushStatus('finished');
+            this.server.io.to(this.uuid).disconnectSockets();
+        }, 120000)
+    }
+
+    public disableAntiEmptyLobby(): void {
+        clearTimeout(this.helpTimeout)
+    }
 }
