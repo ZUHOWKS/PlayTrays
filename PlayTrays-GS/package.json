@@ -1,7 +1,7 @@
 {
   "name": "playtrays-game-server",
   "description": "L'objectif est de développer une application de jeux sur plateau, ergonomique, moderne et ouverte à tout type \r de public.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.ts",
   "scripts": {
     "dev": "npm run build && npm run start",

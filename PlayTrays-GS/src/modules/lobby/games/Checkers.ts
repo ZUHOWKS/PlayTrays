@@ -530,7 +530,7 @@ export default class Checkers extends PTLobby {
      * @private
      */
     private isWinBy(): "black" | "white" | null {
-        if (this.teamDeath(this.getBlackPawns())) return 'black';
+        if (this.teamDeath(this.getBlackPawns())) return 'white';
         else if (this.teamDeath(this.getWhitePawns())) return 'black';
         else return null;
     }
