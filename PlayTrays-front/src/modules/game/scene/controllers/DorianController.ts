@@ -61,7 +61,10 @@ export default class DorianGame extends SupportController{
         super.unselectObject();
     }
 
-    // Permet d'initialiser le jeu DorianGame lors du lancement de la page
+    /**
+     * Permet d'initialiser le jeu DorianGame lors du lancement de la page
+     * @param loaderFiller
+     */
     setup(loaderFiller?: Ref<boolean>): void {
 
         const controls: OrbitControls = this.getOrbitControls();
@@ -286,6 +289,15 @@ export default class DorianGame extends SupportController{
         this.updateVariables();
     }
 
+    /**
+     * Verifie si le joueur peut acheter et envoie le choix du client au serveur
+     *
+     * @param maxHouse
+     * @param caseInfo
+     * @param nbMaison
+     * @param player
+     * @private
+     */
     private achatNbMaison(maxHouse: number, caseInfo: TownCard, nbMaison: number, player: Player) {
         console.log("max house: ", maxHouse, nbMaison, caseInfo.nbMaison + nbMaison)
 
@@ -307,7 +319,13 @@ export default class DorianGame extends SupportController{
         }
     }
 
-    //Modifie les informations de la carte à display (index gere la carte à modifier car chacune des cartes a la meme class)
+    /**
+     * Modifie les informations de la carte à display (index gere la carte à modifier car chacune des cartes a la meme class)
+     *
+     * @param caseInfo
+     * @param index
+     * @private
+     */
     private displayCard(caseInfo: TownCard, index: number): void {
         (document.getElementsByClassName("name")[index] as HTMLElement).innerText = ""+caseInfo.name;
         (document.getElementsByClassName("title")[index] as HTMLElement).style.backgroundColor = ""+caseInfo.info.color;
@@ -321,6 +339,10 @@ export default class DorianGame extends SupportController{
         (document.getElementsByClassName("price-maison")[index] as HTMLElement).innerText = "£"+caseInfo.info.maison;
     }
 
+    /**
+     * Ajoute le modele de dé sur le plateau
+     * @private
+     */
     private setupDe() {
         ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, '/DorianGame/de_party.glb').then((cube) => {
             cube.scale.set(0.5,0.5, 0.5);
@@ -328,6 +350,12 @@ export default class DorianGame extends SupportController{
         })
     }
 
+    /**
+     * Ajoute les modeles de maisons/hotels sur le plateau
+     *
+     * @param cards
+     * @private
+     */
     private setupHouses(cards: Map<number, Card>){
         //Boucle pour setup les maisons et les affilier à un nom.
         for (let i: number = 0; i < 9; ++i) {
@@ -338,6 +366,11 @@ export default class DorianGame extends SupportController{
         }
     }
 
+    /**
+     * Ajoute les modeles de plans sur le plateau (les plans seront invisibles pour permettre d'activer la surbrillance)
+     *
+     * @private
+     */
     private setupPlanes() {
         //Ajout des plans des coins
         this.addPlaneOnTray(2.9, 2.9, 9.48458, 9.53537, "StartCard", 0);
@@ -357,6 +390,11 @@ export default class DorianGame extends SupportController{
         }
     }
 
+    /**
+     * Ajoute le modele de prison sur le plateau
+     *
+     * @private
+     */
     private setupPrison() {
         ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/prison.glb").then((obj) => {
             //@ts-ignore
@@ -364,6 +402,11 @@ export default class DorianGame extends SupportController{
         });
     }
 
+    /**
+     * Ajoute le modele de plateau
+     *
+     * @private
+     */
     private setupTray() {
         ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/dorianTray.glb").then((obj) => {
             const tray = new Tray("DorianTray", obj);
@@ -374,6 +417,11 @@ export default class DorianGame extends SupportController{
         });
     }
 
+    /**
+     * Ajoute les cartes et leurs information dans une map
+     *
+     * @private
+     */
     private setupCard() {
         this.cards.set(cardConfig.start, new Card(cardConfig.start, "start"))
         this.cards.set(cardConfig.prison, new Card(cardConfig.prison, "prison"))
@@ -393,6 +441,12 @@ export default class DorianGame extends SupportController{
         })
     }
 
+    /**
+     * Ajoute le pion et les informations de son joueur assigné
+     *
+     * @param player
+     * @private
+     */
     private setupPawn(player: Player) {
         ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/" + player.pawnName + ".glb").then((obj) => {
             this.registerObject(new playerPawn(player.pawnName, obj, player.name, player.money));
@@ -405,6 +459,13 @@ export default class DorianGame extends SupportController{
         });
     }
 
+    /**
+     * Ajoute les maisons existantes
+     *
+     * @param nbHouses
+     * @param nbCase
+     * @protected
+     */
     protected updateHouses(nbHouses: number, nbCase: number){
         for(let i = 1; i<6;i++){
             const maison = this.getObject("maison" + nbHouses + "-" + nbCase) as Maison | undefined;
@@ -423,47 +484,65 @@ export default class DorianGame extends SupportController{
         }
     }
 
-    //Ajoute les 5 types de maisons sur les cartes (seules les cartes qui on un nbMaison > 0 ont une maison visible)
-    addHousesOfCard(posx : number, posz : number, nbCase : number, rotate: boolean, tempCard: Card | undefined){
+    /**
+     * Ajoute les 5 types de maisons sur les cartes (seules les cartes qui on un nbMaison > 0 ont une maison visible)
+     *
+     * @param posx
+     * @param posz
+     * @param nbCase
+     * @param rotate
+     * @param tempCard
+     */
+    addHousesOfCard(posx : number, posz : number, nbCase : number, rotate: boolean, tempCard: Card | undefined) {
         if (tempCard?.type == "ville") {
             const tempCardHelp = tempCard as TownCard | undefined;
             if (tempCardHelp != undefined) {
-            for (let i = 1; i <= 5; i++) {
+                for (let i = 1; i <= 5; i++) {
 
-                //Si la maison est à afficher
-                if (tempCardHelp.nbMaison == i) {
-                    ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
+                    //Si la maison est à afficher
+                    if (tempCardHelp.nbMaison == i) {
+                        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
 
 
-                        obj.translateZ(posz);
-                        obj.translateX(posx);
+                            obj.translateZ(posz);
+                            obj.translateX(posx);
 
-                        //rotate si la maison est sur les cotés
-                        if (rotate) obj.rotateY(1.5708);
-                        obj.updateMatrix();
+                            //rotate si la maison est sur les cotés
+                            if (rotate) obj.rotateY(1.5708);
+                            obj.updateMatrix();
 
-                        //Exemple pour la maison unique à la case 9: maison1-9
-                        const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
-                        this.registerObject(m)
-                        m.object3D.visible = true;
-                    })
-                }
-                //Si la maison n'est pas à afficher
-                else{
-                    ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
+                            //Exemple pour la maison unique à la case 9: maison1-9
+                            const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
+                            this.registerObject(m)
+                            m.object3D.visible = true;
+                        })
+                    }
+                    //Si la maison n'est pas à afficher
+                    else {
+                        ModelLoader.loadGLTFSceneModel(ModelLoader.GLTF_LOADER, "DorianGame/maison" + i + ".glb").then((obj) => {
 
-                        const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
-                        m.object3D.visible = false;
-                        this.registerObject(m)
+                            const m = new Maison("maison" + i + "-" + nbCase, obj, nbCase);
+                            m.object3D.visible = false;
+                            this.registerObject(m)
 
-                    })
+                        })
+                    }
                 }
             }
         }
-        }
     }
 
-//Cree un plan et le register
+    /**
+     * Cree un plan et le register
+     *
+     * @param width
+     * @param height
+     * @param posx
+     * @param posz
+     * @param objectName
+     * @param nbCase
+     * @protected
+     */
     protected addPlaneOnTray(width : number, height : number, posx : number, posz : number, objectName : string, nbCase : number) : void {
         const geometry = new PlaneGeometry(width, height);
         const material = new MeshBasicMaterial( { color: 0x000000 } );
@@ -487,6 +566,10 @@ export default class DorianGame extends SupportController{
         this.unselectObject();
     }
 
+    /**
+     *
+     * @param name
+     */
     getPlayerByName(name: string): Player | undefined{
         let playerreturn: Player | undefined = undefined;
         this.players.forEach((player) => {if (player.name == name) {
@@ -495,6 +578,11 @@ export default class DorianGame extends SupportController{
         return playerreturn;
     }
 
+    /**
+     * Gere la selection du joueur
+     *
+     * @param name
+     */
     selectObject(name: string) {
         //Abaisse la carte d'information si l'objet cliqué est la même carte que celle deja en mémoire
         if (this.getObject(name) instanceof CaseSelector && name === this.previousObjectSelected?.getName()) {(document.getElementsByClassName("caseCard")[0] as HTMLElement).style.transform = "translateY(60vh)";}
@@ -533,7 +621,9 @@ export default class DorianGame extends SupportController{
 
         }
 
-        //recupere les variables chez le serveur et les appliques au client
+    /**
+     * recupere les variables chez le serveur et les appliques au client
+     */
     updateVariables() : void {
         this.ws.emit("Update", (error: any, response: any) => {
             if(error) throw error;
@@ -552,7 +642,9 @@ export default class DorianGame extends SupportController{
         })
     }
 
-    //Lance le dé
+    /**
+     * Lance le dé
+     */
     lancerDe() : void {
         this.ws.emit("Lancede", (error : any, response : any) => {
 

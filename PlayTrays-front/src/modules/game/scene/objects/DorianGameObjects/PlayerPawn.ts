@@ -40,7 +40,12 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
         this.case = {casePawnX : 0 ,casePawnY : 0}
     }
 
-    // Permet d'avancer jusque la case choisie
+    /**
+     * Permet d'avancer jusque la case choisie
+     *
+     * @param caseX
+     * @param caseY
+     */
     moveTo(caseX : number, caseY : number): void {
         //Gere la cas ou la case demandée est la même que celle ou est le pion
         if (this.case.casePawnX == caseX && this.case.casePawnY == caseY) {this.moveCase();}
@@ -54,7 +59,9 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
     rotate(x: number, y: number, z: number): void {
     }
 
-    //Affiche le hud du user contenu dans le pion
+    /**
+     * Affiche le hud du user contenu dans le pion
+     */
     select(): void {
         const userElem = (document.querySelector('#other-user') as HTMLElement);
         userElem.style.transform = 'translateX(0)';
@@ -67,7 +74,11 @@ export class playerPawn extends PTObject implements AnimationQueueInterface {
         userElem.style.transform = 'translateX(150%)';
     }
 
-    //Avance jusque la case suivante de l'objet
+    /**
+     * Avance jusque la case suivante de l'objet
+     *
+     * @param anim
+     */
     moveCase(anim: boolean = true) : void {
         //Initialisation de constantes utiles
         const GRANDSAUT : number = 2.325;
