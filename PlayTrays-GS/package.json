@@ -5,8 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "npm run build && npm run start",
-    "build": "tsc src/server.ts",
-    "start": "node src/server.js"
+    "build": "tsc --project tsconfig.json --outDir build",
+    "start": "node build/server.js"
   },
   "author": "ZUHOWKS",
   "license": "UNLICENSED",

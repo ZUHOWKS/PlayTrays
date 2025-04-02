@@ -46,6 +46,7 @@ export default class PTServer {
      */
     init(): void {
         this.initGames();
+        console.log('Init Server...');
         this.initWebSocketServer();
     }
 
@@ -62,7 +63,7 @@ export default class PTServer {
      * Initialiser le middleware et les évènements serveur
      * @private
      */
-    private initWebSocketServer(): void {
+    private async initWebSocketServer(): Promise<void> {
         this.io.use(async (socket, next) => await this.middleware(socket, next));
         this.io.on("connection", (socket) => {
             if (socket.data.authType == "server") {
@@ -80,10 +81,20 @@ export default class PTServer {
                 socket.disconnect();
             }
         })
-        this.io.listen(25525);
+
+
 
         // Manifester la présence du serveur jeu auprès de l'app
-        Axios.post('/server/manifest').then(() => console.log('Manifest successful !'));
+        const res = await Axios.post('/server/manifest')
+        if (res) {
+            if (res.status == 200) {
+                console.log('Server manifest successfully !')
+            } else {
+                console.log('Server manifest failed !')
+            }
+        } else {
+            console.log('Server manifest failed !')
+        }
     }
 
     /**
@@ -96,10 +107,13 @@ export default class PTServer {
      */
     private async middleware(socket: any, next: any): Promise<void> {
         const auth = socket.handshake.auth;
+        console.log('Authentification data: ', auth)
         if (auth) {
             if (await this.isServerAuthentificationValid(auth)) {
                 socket.data = {};
                 socket.data.authType = "server";
+
+                console.log("middleware: authentification valid");
                 return next();
             } else if(await this.isUserAuthentificationValid(auth)) {
                 socket.data = {};
@@ -107,6 +121,8 @@ export default class PTServer {
                 socket.data.user = auth.user;
                 socket.data.token = auth.token;
                 socket.data.lobbyUUID = auth.lobbyUUID;
+
+                console.log("middleware: authentification valid");
                 return next();
             } else {
                 console.log("middleware: authentification invalid");

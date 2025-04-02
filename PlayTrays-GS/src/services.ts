@@ -1,9 +1,8 @@
 import axios from "axios";
-import {ADONIS_URL} from "./config/serverConfig";
 
 
 const Axios = axios.create({
-    baseURL: ADONIS_URL + "/api/v1"
+    baseURL: process.env.SERVER_HOST + "/api/v1"
 });
 
 /**
@@ -11,12 +10,12 @@ const Axios = axios.create({
  * dans le body.
  */
 Axios.interceptors.request.use(request => {
+
     const identifier = process.env.SERVER_IDENTIFIER;
     const token = process.env.SERVER_TOKEN;
 
     if (identifier && token) {
-        request.data.append('identifier', identifier);
-        request.data.append('token', token);
+        request.headers['Authorization'] = `Bearer ${identifier}:${token}`;
     }
 
     return request;

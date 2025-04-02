@@ -1,0 +1,33 @@
+services:
+  playtrays-back:
+    build: .
+    image: playtrays-back
+    container_name: playtrays-back
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres-master
+    networks:
+      - playtrays-network
+    depends_on:
+      - postgres-master  # L'application attend que la base de données soit prête
+    command: >
+      sh -c "node ace migration:run --force &&
+             node ace db:seed &&
+             pnpm run start"
+  postgres-master:
+    image: postgres:latest
+    container_name: postgres_master_db
+    restart: always
+    env_file:
+      - .db.env
+    networks:
+      - playtrays-network
+    ports:
+      - "5432:5432"
+networks:
+  playtrays-network:
+    driver: bridge

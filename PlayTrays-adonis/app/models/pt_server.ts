@@ -31,6 +31,7 @@ export default class PTServer extends BaseModel {
    * avec celles qui persistent en DB.
    */
   public initConnection() {
+    logger.log('info', 'Init connection to server ' + this.name + '...')
     const ws = io(this.url, {
       auth: {
         identifier: env.get('GS_' + this.id + '_IDENTIFIER'),
@@ -38,7 +39,9 @@ export default class PTServer extends BaseModel {
       }
     });
 
-    logger.log('info', 'Try to connect to the server ' + this.name + '...')
+    ws.on('connect_error', (error: any) => {
+      logger.log('error', 'Error connection to server ' + this.name + ' : ' + error.message)
+    })
 
     // Lorsque que le socket est connecté
     ws.on('connect', async () => {

@@ -1,0 +1,60 @@
+services:
+  playtrays-front:
+    build:
+      context: ./PlayTrays-front
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    env_file:
+      - ./PlayTrays-front/.env
+    environment:
+      - NODE_ENV=production
+  playtrays-gs-1:
+    build:
+      context: ./PlayTrays-GS
+      dockerfile: Dockerfile
+    networks:
+      - playtrays-network
+    depends_on:
+      - playtrays-back  # L'application attend que le back-end soit prêt
+    ports:
+      - "25565:25565"
+    env_file:
+      - ./PlayTrays-GS/.env
+    environment:
+      - NODE_ENV=production
+  playtrays-back:
+    build:
+      context: ./PlayTrays-adonis
+      dockerfile: Dockerfile
+    image: playtrays-back
+    container_name: playtrays-back
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./PlayTrays-adonis/.env
+    environment:
+      DB_HOST: postgres-master
+    networks:
+      - playtrays-network
+    depends_on:
+      - postgres-master  # L'application attend que la base de données soit prête
+    command: >
+      sh -c "node ace migration:run --force &&
+             node ace db:seed &&
+             pnpm run start"
+  postgres-master:
+    image: postgres:latest
+    container_name: postgres_master_db
+    restart: always
+    env_file:
+      - ./PlayTrays-adonis/.db.env
+    networks:
+      - playtrays-network
+    ports:
+      - "5432:5432"
+      -
+networks:
+  playtrays-network:
+    driver: bridge
