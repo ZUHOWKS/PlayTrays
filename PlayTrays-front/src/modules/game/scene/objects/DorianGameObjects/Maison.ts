@@ -11,6 +11,9 @@ export class Maison extends PTObject{
         this.nbCase = nbCase
     }
 
+    /**
+     * @param isVisible
+     */
     changeVisible(isVisible: boolean): void {
         this.object3D.visible = isVisible;
     }

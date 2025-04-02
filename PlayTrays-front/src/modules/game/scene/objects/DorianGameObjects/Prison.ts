@@ -14,6 +14,16 @@ export class Prison extends PTObject implements AnimationQueueInterface{
         this.animationQueue = new AnimationQueue();
         this.object3D.visible = false;
     }
+
+    /**
+     * Avance jusque la coordonnée selectionnée en choisissant la
+     *
+     * @param x
+     * @param y
+     * @param z
+     * @param duration
+     * @param finalCallback
+     */
     //@ts-ignore
     moveTo(x: number, y: number, z: number, duration : number, finalCallback? : any): void {
         const vectDepart : Vector3 = this.object3D.position.clone();
@@ -51,14 +61,19 @@ export class Prison extends PTObject implements AnimationQueueInterface{
 
     unselect(): void {
     }
-    //Descend la prison
+
+    /**
+     * Descend la prison
+     */
     down() : void{
         this.moveTo(0,0, 0, 100)
         this.isUp = false;
 
     }
 
-    //Remonte la prison
+    /**
+     * Remonte la prison
+     */
     up() : void {
         this.moveTo(0,100, 0, 1000, () => {
             this.object3D.visible = false;

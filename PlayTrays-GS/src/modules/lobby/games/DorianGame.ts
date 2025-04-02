@@ -62,7 +62,9 @@ export default class DorianGame extends PTLobby {
         this.setupGame();
     }
 
-    //Passe au joueur suivant et applique un timeout pour que le joueur
+    /**
+     * Passe au joueur suivant et applique un timeout pour que le joueur
+     */
     public finTour(): void{
         clearTimeout(this.helpTimeout)
         this.theOnePlaying = (this.theOnePlaying >= this.players.size) ? 1 : this.theOnePlaying + 1;
@@ -70,7 +72,12 @@ export default class DorianGame extends PTLobby {
         this.helpTimeout = setTimeout(() => {this.forfeit(this.players.get(this.theOnePlaying))}, 100000);
     }
 
-    //Permet de return le joueur qui a le nom passé en parametre parmis la liste des joueurs
+    /**
+     * Permet de return le joueur qui a le nom passé en parametre parmis la liste des joueurs
+     *
+     * @param name
+     * @protected
+     */
     protected getPlayerByName(name: string): Player | undefined {
         let result: Player | undefined = undefined;
         this.players.forEach(player => {
@@ -81,7 +88,11 @@ export default class DorianGame extends PTLobby {
         return result;
     }
 
-    //Instancie les cartes
+    /**
+     * Instancie les cartes
+     *
+     * @protected
+     */
     protected setupGame(): void {
 
         this.cards.set(cardConfig.start, new Card(cardConfig.start, "start"))
@@ -104,7 +115,11 @@ export default class DorianGame extends PTLobby {
 
     }
 
-    //Instancie les sockets
+    /**
+     * Instancie les sockets
+     *
+     * @param socket
+     */
     registerNewSocket(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void {
         this.sockets.set(socket.data.user, socket);
 
@@ -329,7 +344,13 @@ export default class DorianGame extends PTLobby {
         })
     }
 
-    //Verifie si la case depart est franchie
+    /**
+     * Verifie si la case depart est franchie
+     *
+     * @param player
+     * @param socket
+     * @protected
+     */
     protected verifStart(player: Player, socket: Socket<DefaultEventsMap, DefaultEventsMap, any>): void {
         if (player.caseNb >= 40) {
             player.caseNb -= 40;
@@ -338,7 +359,11 @@ export default class DorianGame extends PTLobby {
         }
     }
 
-    //Fait perdre le joueur
+    /**
+     * Fait perdre le joueur
+     *
+     * @param player
+     */
     forfeit(player: Player | undefined): void{
         if (player && this.players) {
             this.pushStatus('finished')
@@ -348,7 +373,14 @@ export default class DorianGame extends PTLobby {
         }
     }
 
-    //Gere les carte chances
+    /**
+     * Gere les carte chances
+     *
+     * @param caseInfo
+     * @param player
+     * @param socket
+     * @protected
+     */
     protected caseChance(caseInfo: Card, player: Player, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
         const chanceValue = this.chances[(Math.floor(Math.random()*this.chances.length))];
 
@@ -382,7 +414,12 @@ export default class DorianGame extends PTLobby {
     }
 
 
-    //Achete la case en cours
+    /**
+     * Achete la case en cours
+     *
+     * @param player
+     * @private
+     */
     private achat(player: Player) {
         const cardToSell = this.cards.get(player.caseNb);
         if (cardToSell != undefined && cardToSell instanceof TownCard) {
@@ -397,7 +434,14 @@ export default class DorianGame extends PTLobby {
         }
     }
 
-    //Gere les cartes villes
+    /**
+     * Gere les cartes villes
+     *
+     * @param caseInfo
+     * @param player
+     * @param socket
+     * @protected
+     */
     protected caseTown(caseInfo: TownCard, player: Player, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>){
 
         //Si la case n'est pas occupée
@@ -444,7 +488,13 @@ export default class DorianGame extends PTLobby {
         }
     }
 
-    //Verifie si le joueur en entrée a toutes les cartes de la meme couleur passée en entrée
+    /**
+     * Verifie si le joueur en entrée a toutes les cartes de la meme couleur passée en entrée
+     *
+     * @param playerToCheck
+     * @param cardToCheck
+     * @protected
+     */
     protected hasAllProperty(playerToCheck: Player, cardToCheck: TownCard): boolean {
         let cardSameType: Array<string> = [];
         let nbCardSame: number = 0;
