@@ -1,0 +1,8 @@
+
+services:
+  playtrays-front:
+    build: .
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production

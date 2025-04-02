@@ -13,18 +13,25 @@ export default class AuthServerMiddleware {
    * @param next
    */
   async handle({request, response}: HttpContext, next: NextFn) {
-    const { identifier, token }: {identifier: string, token: string} = request.only(['identifier', 'token'])
+    const authHeader = request.header('Authorization');
 
-    if (identifier && token) {
-      const servers = await db.from('pt_servers').count('* as total');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
 
-      for (let i: number = 1; i <= servers[0].total; i++) {
+      const [identifier, token] = authHeader.slice(7).split(':');
 
-        if (env.get("GS_" + i + "_IDENTIFIER") === identifier && env.get("GS_" + i + "_TOKEN") === token) {
-          return next()
+      if (identifier && token) {
+        const servers = await db.from('pt_servers').count('* as total');
+
+        for (let i: number = 1; i <= servers[0].total; i++) {
+
+          if (env.get("GS_" + i + "_IDENTIFIER") === identifier && env.get("GS_" + i + "_TOKEN") === token) {
+            return next()
+          }
         }
       }
     }
+
+
 
     return response.abort("Error Middleware!")
   }

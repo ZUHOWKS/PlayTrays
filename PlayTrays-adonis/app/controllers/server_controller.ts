@@ -13,7 +13,8 @@ export default class ServerController {
    * (Actualise l'état du serveur en DB)
    */
   async manifest({request, response}: HttpContext) {
-    const { identifier }: {identifier: string} = request.only(['identifier'])
+    console.log("Manifesting the server...")
+    const identifier = request.header('Authorization')?.split(' ')[1]?.split(':')[0];
     const idInTab: number = this.idTab.indexOf(identifier) + 1
 
     if (idInTab > 0 && this.idTab[idInTab-1]) {

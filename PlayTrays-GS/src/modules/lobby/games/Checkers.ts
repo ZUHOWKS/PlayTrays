@@ -271,7 +271,10 @@ export default class Checkers extends PTLobby {
 
                                     actions.forEach((action) => {
                                         // @ts-ignore
-                                        this.getPawn(action.pawnKilled)?.dead = true; // l'action comporte toujours un pion tué
+                                        const pawnToKill = this.getPawn(action.pawnKilled);
+                                        if (pawnToKill) {
+                                            pawnToKill.dead = true;
+                                        }
                                     })
                                     this.actualTimer = 90;
                                     this.emitWithout(socket, "pawn action", actions);
@@ -327,7 +330,10 @@ export default class Checkers extends PTLobby {
 
                                     actions.forEach((action) => {
                                         // @ts-ignore
-                                        this.getPawn(action.pawnKilled)?.dead = true; // l'action comporte toujours un pion tué
+                                        const pawnToKill = this.getPawn(action.pawnKilled);
+                                        if (pawnToKill) {
+                                            pawnToKill.dead = true;
+                                        }
                                     })
 
                                     if (pawn.queen) {

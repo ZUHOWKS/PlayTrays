@@ -15,7 +15,6 @@ import Notification from "@/components/utils/Notification.vue";
 import type {FriendInterface, UserInterface} from "@/modules/utils/UserInterface";
 import type {GroupInterface} from "@/modules/utils/GroupInterface";
 import LoaderFiller from "@/components/utils/LoaderFiller.vue";
-import {ADONIS_URL} from "@/config/serverConfig";
 import * as THREE from "three";
 import {useWindowSize} from "@vueuse/core";
 import {ModelLoader} from "@/modules/utils/scene/ModelLoader";
@@ -278,7 +277,7 @@ function init() {
         user.value.updatedAt = response.data.updatedAt;
         user.value.createdAt = response.data.createdAt;
 
-        ws = io(ADONIS_URL, {
+        ws = io(import.meta.env.VITE_ADONIS_URL, {
           auth: {
             user: user.value.id,
             token: AccountServices.getToken(),

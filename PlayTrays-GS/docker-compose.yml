@@ -1,0 +1,11 @@
+services:
+  playtrays-gs-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "25565:25565"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production

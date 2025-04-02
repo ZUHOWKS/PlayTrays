@@ -5,6 +5,7 @@ import PTServerSockets from "../modules/pt_server_sockets.js";
 import AdonisWS from "#services/adonis_ws";
 import User from "#models/user";
 import Lobby from "#models/lobby";
+import logger from "@adonisjs/core/services/logger";
 
 
 export default class PTServer extends BaseModel {
@@ -30,6 +31,7 @@ export default class PTServer extends BaseModel {
    * avec celles qui persistent en DB.
    */
   public initConnection() {
+    logger.log('info', 'Init connection to server ' + this.name + '...')
     const ws = io(this.url, {
       auth: {
         identifier: env.get('GS_' + this.id + '_IDENTIFIER'),
@@ -37,14 +39,18 @@ export default class PTServer extends BaseModel {
       }
     });
 
+    ws.on('connect_error', (error: any) => {
+      logger.log('error', 'Error connection to server ' + this.name + ' : ' + error.message)
+    })
+
     // Lorsque que le socket est connecté
     ws.on('connect', async () => {
-      this.setOnline().then(() => console.log('Server ' + this.name + ' online !'))
+      this.setOnline().then(() => logger.log('info', 'Server ' + this.name + ' online !'))
     })
 
     // Lorsqu'il est déconnecté
     ws.on('disconnect', async () => {
-      this.setOffline().then(() => console.log('Server ' + this.name + ' offline !'))
+      this.setOffline().then(() => logger.log('info', 'Server ' + this.name + ' offline !'))
     })
 
     // Mettre à jour les lobbies
