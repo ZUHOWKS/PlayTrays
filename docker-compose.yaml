@@ -55,7 +55,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - var/lib/playtrays/postgres_data:/var/lib/postgresql/data
+      - /var/lib/playtrays/postgres_data:/var/lib/postgresql/data
 networks:
   playtrays-network:
     driver: bridge
